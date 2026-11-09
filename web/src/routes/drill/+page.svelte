@@ -70,8 +70,6 @@
 	const PALE: Record<Kind, string> = { good: 'paleGreen', bad: 'paleRed', own: 'paleBlue' };
 	/** Moves tried after answering that keep a chip of their own. */
 	const MAX_TRIES = 2;
-	/** Moves of the game shown before the line under review; the rest fold into "…". */
-	const PATH_SHOWN = 4;
 
 	let phase = $state<Phase>('loading');
 	let queue = $state<string[]>([]);
@@ -107,6 +105,8 @@
 	let boardWidth = $state(0);
 	/** The move row under the board, kept scrolled to the move on the board. */
 	let movesEl = $state<HTMLElement | undefined>();
+	/** The chip row, kept scrolled to the selected line. */
+	let chipsEl = $state<HTMLElement | undefined>();
 	let explainRun = 0;
 	/** Explanations written ahead of time (scripts/explanations.ts), by `${position key}|${habit}`. */
 	let explanations = $state.raw<Record<string, Explanation>>({});
@@ -172,13 +172,67 @@
 		return list;
 	});
 	const chipOf = (key: string | null) => chips.find((c) => c.key === key);
+	/** A line's first move without its number: every line starts from the drill position. */
+	const chipSan = (key: string) => lineOf(key)[0]?.san ?? (line && key ? sanOf(line.pos, key) : '…');
+	/** Evaluations as the analysis saved them where it has one (so they match the verdict), else the live engine's. */
+	const evalOf = (key: string): Eval | undefined => {
+		if (!card) return evals[key];
+		if (result && key === result.played && result.eval) return result.eval;
+		return card.answers.find((a) => a.uci === key)?.eval ?? (key === card.card.wrong ? card.wrongEval : undefined) ?? evals[key];
+	};
 	const kindOf = (key: string): Kind => chipOf(key)?.kind ?? 'own';
 
 	/** The line on the board and how far along it: 0 at the drill position, -1 looking back through the game. */
 	const viewKey = $derived(pv?.key ?? selected);
 	const viewN = $derived(pv ? pv.n : phase === 'result' && cursor === end ? 0 : -1);
 	const visibleFacts = $derived(answerShown ? facts : facts.filter((f) => f.about !== 'main'));
-	const lineNotes = (key: string | null): Note[] => (key === null || !result ? [] : notesFor(visibleFacts, key, { main, wrong: wrongMove }));
+	/** Checked facts for the other lines (a sound alternative, the habit after another mistake, moves tried). */
+	const extraFacts = $derived.by(() => {
+		const out: Record<string, Fact[]> = {};
+		if (!card || !line || !result) return out;
+		for (const c of chips) {
+			if (c.key === (main ?? '') || c.key === wrongMove || !lines[c.key]) continue;
+			const input = { pos: line.pos, path: card.card.path };
+			out[c.key] =
+				c.kind === 'bad'
+					? explainFacts({ ...input, wrong: c.key, wrongLine: lines[c.key] })
+					: explainFacts({ ...input, wrong: '', main: c.key, mainLine: lines[c.key] });
+		}
+		return out;
+	});
+	const lineNotes = (key: string | null): Note[] => {
+		if (key === null || !result) return [];
+		const notes = notesFor(visibleFacts, key, { main, wrong: wrongMove });
+		const extra = extraFacts[key];
+		if (!extra) return notes;
+		const role = kindOf(key) === 'bad' ? { wrong: key } : { main: key };
+		return [...notes, ...notesFor(extra, key, role)].sort((a, b) => a.n - b.n);
+	};
+	/**
+	 * What a line's move is and how it compares with the best move, for every line but the main one: "Also fine:
+	 * +0.31, close to Nf6 (+0.20)". The main move isn't named while it's still to be found.
+	 */
+	const summary = (key: string): string => {
+		const chip = chipOf(key);
+		if (!chip || !card || !line || !result || key === (main ?? '')) return '';
+		if (chip.tag === 'Checking…') return `Checking ${numbered(key)}…`;
+		const label =
+			chip.kind !== 'bad'
+				? key === result.played
+					? 'Your move is also good'
+					: 'Also fine'
+				: key === card.card.wrong
+					? `Your habit (${card.wrongCount}×)`
+					: key === result.played
+						? 'Not quite'
+						: 'A mistake';
+		const mine = evalOf(key);
+		const best = answerShown && main ? sanOf(line.pos, main) : 'the best move';
+		if (!mine || !card.eval) return `${label}.`;
+		return chip.kind === 'bad'
+			? `${label}: ${formatEval(mine)}, where ${best} keeps ${formatEval(card.eval)}.`
+			: `${label}: ${formatEval(mine)}, close to ${best} (${formatEval(card.eval)}).`;
+	};
 	const viewNotes = $derived(lineNotes(viewKey));
 	const notesHere = $derived(viewN >= 0 ? viewNotes.filter((n) => n.n === viewN) : []);
 	/** The written explanation, split between what it says about the habit and about the taught move. */
@@ -229,7 +283,7 @@
 		const labels = boardWidth >= LABEL_MIN_PX;
 		const overview = chips.flatMap((c) =>
 			arrow(c.key || lineOf(c.key)[0]?.uci, c.key === selected ? SOLID[c.kind] : PALE[c.kind]).map((s) =>
-				labels && evals[c.key] ? { ...s, label: { text: formatEvalShort(evals[c.key]) } } : s
+				labels && evalOf(c.key) ? { ...s, label: { text: formatEvalShort(evalOf(c.key)) } } : s
 			)
 		);
 		return [...overview, ...drawn];
@@ -237,10 +291,11 @@
 	/** The eval bar, once the card is answered: the drill position, or the line on the board. */
 	const shownEval: Eval | undefined = $derived.by(() => {
 		if (phase !== 'result' || !result) return undefined;
-		if (pv) return evals[pv.key] ?? (pv.key === result.played ? result.eval : undefined);
+		if (pv) return evalOf(pv.key);
 		return cursor === end ? card?.eval : undefined;
 	});
 	/** Under the board when there's no note for the move on it: which line and move it is, or what to do. */
+	const lineSummary = $derived(viewN === 1 && viewKey !== null ? summary(viewKey) : '');
 	const caption = $derived.by(() => {
 		if (phase !== 'result' || !result) return '';
 		if (pv) {
@@ -599,6 +654,14 @@
 		else await start();
 	});
 
+	// Keep the selected line's chip in view.
+	$effect(() => {
+		void [selected, chips.length];
+		const row = chipsEl;
+		const chip = row?.querySelector<HTMLElement>('.selected');
+		if (row && chip) row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+	});
+
 	// Keep the move on the board (or the move to find, or the line's first move) in view in the move row.
 	$effect(() => {
 		void [pv, cursor, phase, selected, lines];
@@ -678,7 +741,7 @@
 			</div>
 		</section>
 	{:else if card && line && shown}
-		{@const from = phase === 'result' && !fullPath ? Math.max(0, end - PATH_SHOWN) : 0}
+		{@const from = phase === 'result' && !fullPath && cursor >= end ? end : 0}
 		<div class="stage">
 			<!-- Everything for exploring the lines is on or right under the board. -->
 			<div class="board-col">
@@ -703,7 +766,7 @@
 				</div>
 
 				{#if phase === 'result' && chips.length}
-					<div class="chips" role="group" aria-label="Lines to review">
+					<div class="chips" role="group" aria-label="Lines to review" bind:this={chipsEl}>
 						{#each chips as c, i (c.key)}
 							<button
 								class="chip-line {c.kind}"
@@ -717,8 +780,8 @@
 											size={13}
 										/>{:else}<span class="dot"></span>{/if}
 								</span>
-								<span class="num">{numbered(c.key)}</span>
-								{#if evals[c.key]}<span class="num ev">{formatEvalShort(evals[c.key])}</span>{/if}
+								<span class="num">{chipSan(c.key)}</span>
+								{#if evalOf(c.key)}<span class="num ev">{formatEvalShort(evalOf(c.key))}</span>{/if}
 							</button>
 						{/each}
 					</div>
@@ -728,7 +791,7 @@
 				<div class="navrow">
 					<button class="icon-btn" onclick={() => step(-1)} aria-label="Previous move" title="Previous move (←)"><Icon name="chevron-left" size={18} /></button>
 					<nav class="moves" bind:this={movesEl} aria-label="Moves">
-						{#if from > 0}<button class="mv more" onclick={() => (fullPath = true)} title="Show all the moves">…</button>{/if}
+						{#if from > 0}<button class="mv more" onclick={() => (fullPath = true)} title="Show the game’s moves">…</button>{/if}
 						{#each line.plies.slice(from) as ply, j (from + j)}
 							<button class="mv num past" class:current={!pv && cursor === from + j + 1} onclick={() => goTo(from + j + 1)}>
 								{#if ply.white}<span class="faint">{ply.moveNumber}.</span>{:else if j === 0}<span class="faint">{ply.moveNumber}…</span>{/if}{ply.san}
@@ -785,11 +848,14 @@
 							{#if away}<button class="text-btn" onclick={() => goTo(end)}>Back to the position</button>{/if}
 							<button class="text-btn" onclick={showMain}>Show it</button>
 						</p>
-					{:else if notesHere.length}
-						<ul class="notes">
-							{#each notesHere as n, i (i)}<li class={n.tone}>{n.text}</li>{/each}
-						</ul>
-					{:else if viewN === 0 && answerShown && written}
+					{:else if lineSummary || notesHere.length}
+						{#if lineSummary}<p class="summary {kindOf(viewKey ?? '')}">{lineSummary}</p>{/if}
+						{#if notesHere.length}
+							<ul class="notes">
+								{#each notesHere as n, i (i)}<li class={n.tone}>{n.text}</li>{/each}
+							</ul>
+						{/if}
+					{:else if viewN >= 0 && answerShown && written}
 						<p class="headline-note">{written.headline}</p>
 					{:else if caption}
 						<p class="faint">{caption}</p>
@@ -877,9 +943,10 @@
 						<section class="story">
 							{#if chip}
 								<div class="story-head {chip.kind}">
-									{numbered(key)} · {chip.tag}{#if evals[key]}<span class="num"> · {formatEval(evals[key])}</span>{/if}
+									{numbered(key)} · {chip.tag}{#if evalOf(key)}<span class="num"> · {formatEval(evalOf(key))}</span>{/if}
 								</div>
 							{/if}
+							{#if summary(key)}<p class="said">{summary(key)}</p>{/if}
 							{#each said as s, i (i)}<p class="said">{s}</p>{/each}
 							{#if listed.length}
 								<ul class="notes">
@@ -1052,6 +1119,7 @@
 
 	/* One row of chips; more scroll sideways. */
 	.chips {
+		position: relative;
 		display: flex;
 		gap: 6px;
 		overflow-x: auto;
@@ -1070,7 +1138,7 @@
 		align-items: center;
 		gap: 6px;
 		height: 32px;
-		padding: 0 11px 0 5px;
+		padding: 0 10px 0 4px;
 		border-radius: 999px;
 		border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line));
 		color: var(--text);
@@ -1101,8 +1169,8 @@
 	.chip-line .mark {
 		display: inline-grid;
 		place-items: center;
-		width: 22px;
-		height: 22px;
+		width: 20px;
+		height: 20px;
 		border-radius: 50%;
 		color: var(--c);
 		background: color-mix(in srgb, var(--c) 20%, transparent);
@@ -1251,6 +1319,24 @@
 	.headline-note {
 		font-weight: 650;
 		color: var(--text);
+	}
+
+	.summary {
+		flex: 1 1 100%;
+		font-weight: 600;
+		color: color-mix(in srgb, var(--c, var(--text)) 75%, var(--text));
+	}
+
+	.summary.good {
+		--c: var(--win);
+	}
+
+	.summary.bad {
+		--c: var(--loss);
+	}
+
+	.summary.own {
+		--c: var(--book);
 	}
 
 	.title {
@@ -1606,6 +1692,19 @@
 
 		.desktop {
 			display: none;
+		}
+
+		/* The top bar already says Correct / Not quite: keep just the detail. */
+		.verdict .headline {
+			display: none;
+		}
+
+		.verdict {
+			padding: 10px 14px;
+		}
+
+		.verdict > p:first-of-type {
+			margin-top: 0;
 		}
 
 		.foot .foot-row p {
