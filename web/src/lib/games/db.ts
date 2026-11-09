@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import type { Eval, Masters } from '../analysis/score';
 import type { Game } from './types';
 
 /** Bump when Game's shape or MAX_PLY changes: stored months are then re-fetched. */
@@ -20,13 +21,27 @@ export interface MetaRecord {
 	value: unknown;
 }
 
+/** Evaluations are facts about positions, shared by every user and kept forever. */
+export interface EvalRecord extends Eval {
+	key: number;
+}
+
+export interface MastersRecord extends Masters {
+	key: number;
+	/** Not looked up because the line had already left master theory. */
+	skipped?: boolean;
+}
+
 class Db extends Dexie {
 	months!: Table<MonthRecord, string>;
 	meta!: Table<MetaRecord, string>;
+	evals!: Table<EvalRecord, number>;
+	masters!: Table<MastersRecord, number>;
 
 	constructor() {
 		super('chess-trainer');
 		this.version(1).stores({ months: 'id, user', meta: 'key' });
+		this.version(2).stores({ months: 'id, user', meta: 'key', evals: 'key', masters: 'key' });
 	}
 }
 

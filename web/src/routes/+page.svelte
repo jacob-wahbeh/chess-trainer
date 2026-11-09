@@ -1,6 +1,9 @@
 <script lang="ts">
-	import { app, saveSettings, settings, sync } from '$lib/state.svelte';
+	import { analysis, app, saveSettings, settings, sync } from '$lib/state.svelte';
 	import { data } from '$lib/worker/client';
+	import type { LeakList } from '$lib/worker/data.worker';
+	import AnalysisStatus from '$lib/ui/AnalysisStatus.svelte';
+	import LeakCard from '$lib/ui/LeakCard.svelte';
 	import { score, type Color } from '$lib/games/types';
 	import type { FamilyRow } from '$lib/tree/openings';
 	import { count, describeFilter, exploreHref, pct, timeAgo } from '$lib/format';
@@ -9,6 +12,19 @@
 
 	let username = $state(settings.username);
 	let top = $state<Record<Color, FamilyRow[]> | null>(null);
+	let leaks = $state<LeakList | null>(null);
+
+	$effect(() => {
+		void analysis.version;
+		if (!app.summary) return;
+		let cancelled = false;
+		data()
+			.leaks()
+			.then((l) => {
+				if (!cancelled) leaks = l;
+			});
+		return () => (cancelled = true);
+	});
 
 	$effect(() => {
 		if (!app.summary) return;
@@ -122,12 +138,17 @@
 
 	<a class="btn btn-quiet all" href="/lines">Browse all your lines <Icon name="arrow" size={18} /></a>
 
-	<section class="next">
-		<div class="label">Next up</div>
-		<p class="dim">
-			Drills on the first move in each line where you leave theory or lose ground, with the reason
-			behind the right move.
-		</p>
+	<section class="leaks">
+		<div class="list-head">
+			<h2>Costliest first mistakes</h2>
+			{#if leaks?.leaks.length}<a class="faint small" href="/leaks">All {leaks.leaks.length}</a>{/if}
+		</div>
+		<AnalysisStatus />
+		{#each leaks?.leaks.slice(0, 3) ?? [] as leak (`${leak.key} ${leak.uci}`)}
+			<LeakCard {leak} />
+		{:else}
+			{#if !analysis.running}<p class="faint small">No costly first mistakes found in your common lines yet.</p>{/if}
+		{/each}
 	</section>
 {/if}
 
@@ -314,15 +335,15 @@
 		width: 100%;
 	}
 
-	.next {
+	.leaks {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 		margin-top: 28px;
-		padding: 18px;
-		border: 1px dashed var(--line);
-		border-radius: var(--radius);
 	}
 
-	.next p {
-		margin: 6px 0 0;
+	.leaks .list-head {
+		padding: 0 2px;
 	}
 
 	@media (max-width: 720px) {

@@ -17,10 +17,24 @@
 		/** Legal destinations; omit for a board that can't be moved on. */
 		dests?: Map<Key, Key[]>;
 		shapes?: DrawShape[];
+		coordinates?: boolean;
+		/** A static thumbnail: no interaction or animation. */
+		viewOnly?: boolean;
 		onMove?: (orig: Key, dest: Key) => void;
 	}
 
-	let { fen, orientation = 'white', turnColor = 'white', lastMove, check = false, dests, shapes = [], onMove }: Props = $props();
+	let {
+		fen,
+		orientation = 'white',
+		turnColor = 'white',
+		lastMove,
+		check = false,
+		dests,
+		shapes = [],
+		coordinates = true,
+		viewOnly = false,
+		onMove
+	}: Props = $props();
 
 	let el: HTMLDivElement;
 	let cg: Api | undefined;
@@ -32,7 +46,8 @@
 			turnColor,
 			lastMove,
 			check,
-			coordinates: true,
+			coordinates,
+			viewOnly,
 			movable: {
 				free: false,
 				color: dests ? turnColor : undefined,
@@ -43,7 +58,7 @@
 			premovable: { enabled: false },
 			draggable: { enabled: !!dests },
 			selectable: { enabled: !!dests },
-			animation: { enabled: true, duration: 180 },
+			animation: { enabled: !viewOnly, duration: 180 },
 			highlight: { lastMove: true, check: true },
 			drawable: { enabled: true, visible: true, autoShapes: shapes }
 		};

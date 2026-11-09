@@ -8,6 +8,8 @@ export interface Edge extends Stats {
 
 export interface TreeNode extends Stats {
 	edges: Map<string, Edge>;
+	/** One game that reached the position, and at which ply: enough to rebuild its FEN. */
+	ref: { game: Game; ply: number };
 }
 
 /** Position key -> how often the user's games reached it and what was played next. */
@@ -23,7 +25,7 @@ export function buildTree(games: Iterable<Game>): Tree {
 			if (seen.has(key)) break;
 			seen.add(key);
 			let node = tree.get(key);
-			if (!node) tree.set(key, (node = { ...emptyStats(), edges: new Map() }));
+			if (!node) tree.set(key, (node = { ...emptyStats(), edges: new Map(), ref: { game, ply: i } }));
 			addResult(node, game.result);
 			if (i < game.ucis.length) {
 				const uci = game.ucis[i];

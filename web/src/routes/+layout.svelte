@@ -10,6 +10,7 @@
 	const NAV: { href: string; label: string; icon: IconName }[] = [
 		{ href: '/', label: 'Today', icon: 'home' },
 		{ href: '/lines', label: 'Lines', icon: 'lines' },
+		{ href: '/leaks', label: 'Mistakes', icon: 'target' },
 		{ href: '/settings', label: 'Settings', icon: 'settings' }
 	];
 

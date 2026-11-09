@@ -1,6 +1,6 @@
 # Opening trainer web app — plan & design
 
-Status: plan only, nothing built. Priorities: **speed** and **elegant UX/UI**.
+Status: milestones 1–2 built in `web/` (import, lines, explorer, analysis, costly first mistakes). Priorities: **speed** and **elegant UX/UI**.
 
 ## 1. What it does
 

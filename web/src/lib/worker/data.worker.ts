@@ -1,10 +1,16 @@
-// Owns games, IndexedDB and the position trees so the UI thread never parses or counts anything.
+// Owns games, IndexedDB, the position trees and the analysis so the UI thread never parses or counts anything.
 import * as Comlink from 'comlink';
+import { Chess } from 'chessops/chess';
+import { replayUcis } from '../chess/pgn';
+import { positionKey } from '../chess/zobrist';
+import { findLeaks, judge, type Leak, type Verdict } from '../analysis/classify';
+import { runAnalysis, type AnalysisHost, type AnalysisOptions, type AnalysisProgress } from '../analysis/runner';
+import type { Eval, Masters } from '../analysis/score';
 import { fetchArchiveList, fetchMonth, isFinal, normalizeGame } from '../games/chesscom';
 import { db, monthId, PARSE_VERSION } from '../games/db';
 import { addResult, emptyStats, type Color, type Filter, type Game, type Stats, type TimeClass } from '../games/types';
 import { buildOpeningIndex, deepestOpening, groupLines, type Opening, type OpeningIndex } from '../tree/openings';
-import { buildTree, mainLine, nodeView, type Tree } from '../tree/tree';
+import { buildTree, mainLine, nodeView, type NodeView, type Tree } from '../tree/tree';
 
 export interface Summary {
 	user: string;
@@ -24,6 +30,25 @@ export interface SyncProgress {
 	games: number;
 }
 
+export interface NodeDetail extends NodeView {
+	eval?: Eval;
+	masters?: Masters;
+	/** Judgement of each move the user played here (only when it is the user's turn). */
+	verdicts?: Verdict[];
+}
+
+export interface LeakView extends Leak {
+	opening?: string;
+}
+
+export interface LeakList {
+	leaks: LeakView[];
+	departures: number;
+	games: number;
+}
+
+const ROOT = positionKey(Chess.default());
+
 let user = '';
 let filter: Filter = { timeClasses: [], sinceMonth: '0000-00' };
 let all: Game[] = [];
@@ -31,15 +56,30 @@ let filtered: Record<Color, Game[]> = { white: [], black: [] };
 let trees: Record<Color, Tree> = { white: new Map(), black: new Map() };
 let openings: Promise<OpeningIndex> | undefined;
 
+const evals = new Map<number, Eval>();
+const masters = new Map<number, Masters>();
+let caches: Promise<void> | undefined;
+let minReach = 3;
+/** Bumped to cancel a running analysis (filters or games changed). */
+let run = 0;
+let lastProgress: AnalysisProgress | null = null;
+
 const loadOpenings = () =>
 	(openings ??= fetch('/openings.json')
 		.then((r) => r.json())
 		.then(buildOpeningIndex));
 
+const loadCaches = () =>
+	(caches ??= (async () => {
+		for (const { key, ...value } of await db.evals.toArray()) evals.set(key, value);
+		for (const { key, total, moves } of await db.masters.toArray()) masters.set(key, { total, moves });
+	})());
+
 const monthStart = (month: string) => Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1) / 1000;
 const lastSyncKey = () => `lastSync/${user.toLowerCase()}`;
 
 async function apply(): Promise<Summary> {
+	run++;
 	const since = filter.sinceMonth === '0000-00' ? 0 : monthStart(filter.sinceMonth);
 	const classes = new Set(filter.timeClasses);
 	const games = all.filter((g) => g.end >= since && classes.has(g.timeClass));
@@ -55,12 +95,18 @@ async function apply(): Promise<Summary> {
 	return { user, stored: all.length, games: games.length, byColor, byTimeClass, lastSync };
 }
 
+/** Rebuilds a tree position from the game that first reached it. */
+function position(key: number): Chess | undefined {
+	const node = trees.white.get(key) ?? trees.black.get(key);
+	return node ? replayUcis(node.ref.game.ucis.slice(0, node.ref.ply)).pos : undefined;
+}
+
 const api = {
 	/** Loads stored games (no network) and builds the trees for `f`. */
 	async load(u: string, f: Filter): Promise<Summary> {
 		user = u;
 		filter = f;
-		const months = await db.months.where('user').equals(u.toLowerCase()).toArray();
+		const [months] = await Promise.all([db.months.where('user').equals(u.toLowerCase()).toArray(), loadCaches()]);
 		all = months.filter((m) => m.version === PARSE_VERSION).flatMap((m) => m.games);
 		return apply();
 	},
@@ -95,8 +141,16 @@ const api = {
 		return groupLines(filtered[color], await loadOpenings());
 	},
 
-	node(color: Color, key: number) {
-		return nodeView(trees[color], key);
+	async node(color: Color, key: number, userTurn: boolean): Promise<NodeDetail | null> {
+		const view = nodeView(trees[color], key);
+		if (!view) return null;
+		await loadCaches();
+		return {
+			...view,
+			eval: evals.get(key),
+			masters: masters.get(key),
+			verdicts: userTurn ? judge(trees[color].get(key)!, key, color, evals, masters) : undefined
+		};
 	},
 
 	mainLine(color: Color, key: number) {
@@ -106,6 +160,66 @@ const api = {
 	/** Name of the deepest named position along a path's keys. */
 	async openingAt(keys: number[]): Promise<Opening | undefined> {
 		return deepestOpening(keys, await loadOpenings());
+	},
+
+	/**
+	 * Evaluates the user's common positions and looks up master theory, saving everything as it goes.
+	 * Resolves when done or cancelled (a newer analysis, or filters/games changed).
+	 */
+	async analyze(opts: AnalysisOptions, host: AnalysisHost): Promise<AnalysisProgress> {
+		const id = ++run;
+		minReach = opts.minReach;
+		await loadCaches();
+		lastProgress = await runAnalysis(
+			{
+				trees,
+				root: ROOT,
+				evals,
+				masters,
+				position,
+				saveEvals: async (entries) => {
+					await db.evals.bulkPut(entries.map(([key, value]) => ({ key, ...value })));
+				},
+				saveMasters: async (key, value, skipped) => {
+					await db.masters.put({ key, ...value, skipped });
+				},
+				cancelled: () => id !== run
+			},
+			opts,
+			{
+				evaluate: (fen, depth) => host.evaluate(fen, depth),
+				progress: (p) => {
+					lastProgress = p;
+					host.progress(p);
+				}
+			}
+		);
+		return lastProgress;
+	},
+
+	cancelAnalysis() {
+		run++;
+	},
+
+	analysisProgress() {
+		return lastProgress;
+	},
+
+	/** The costliest first departures, with opening names; both colors when `color` is omitted. */
+	async leaks(color?: Color): Promise<LeakList> {
+		await loadCaches();
+		const index = await loadOpenings();
+		const colors: Color[] = color ? [color] : ['white', 'black'];
+		const reports = colors.map((c) => findLeaks(filtered[c], trees[c], c, evals, masters, minReach));
+		const leaks = reports
+			.flatMap((r) => r.leaks)
+			.sort((a, b) => b.points - a.points)
+			.map((leak) => ({ ...leak, opening: deepestOpening(replayUcis(leak.path).keys, index)?.name }));
+		return {
+			leaks,
+			departures: reports.reduce((s, r) => s + r.departures, 0),
+			games: reports.reduce((s, r) => s + r.games, 0)
+		};
 	},
 
 	async clear(u: string) {

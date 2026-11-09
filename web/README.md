@@ -29,6 +29,12 @@ archives (`../data/<user>/archives`) and prints counts comparable to the Python 
 - `src/lib/chess/` — position keys (Zobrist), PGN parsing, move/SAN helpers
 - `src/lib/games/` — Chess.com import, game model, IndexedDB schema
 - `src/lib/tree/` — position tree and opening-name grouping
-- `src/lib/worker/` — data worker (owns games, storage and trees) and its client
-- `src/lib/engine/` — Stockfish worker pool
-- `src/routes/` — Today, Lines, Explore, Settings, Bench
+- `src/lib/analysis/` — move judgement (win%, book, repertoire), costly first mistakes, and the background
+  analysis job (Lichess cloud evals + local Stockfish + masters lookups)
+- `src/lib/lichess/` — "Log in with Lichess" (OAuth PKCE)
+- `src/lib/worker/` — data worker (owns games, storage, trees and analysis) and its client
+- `src/lib/engine/` — Stockfish worker pool and UCI parsing
+- `src/routes/` — Today, Lines, Explore, Mistakes (`/leaks`), Settings, Bench, Lichess login callback
+
+`npx vite-node scripts/analyze-node.ts [user] [since] [masters-cache-dir]` runs the full analysis job in Node with
+native Stockfish (`../engine/stockfish`) and live Lichess cloud evals (set `LICHESS_TOKEN` for masters lookups).

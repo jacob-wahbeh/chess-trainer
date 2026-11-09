@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { app, applyFilter, currentFilter, saveSettings, settings, sync } from '$lib/state.svelte';
+	import { analysis, analyze, app, applyFilter, currentFilter, lichess, saveSettings, setLichess, settings, sync } from '$lib/state.svelte';
+	import { canUseOAuth, lichessUsername, startLichessLogin } from '$lib/lichess/oauth';
 	import { data } from '$lib/worker/client';
+	import AnalysisStatus from '$lib/ui/AnalysisStatus.svelte';
 	import type { TimeClass } from '$lib/games/types';
 	import { count, timeAgo } from '$lib/format';
 	import Icon from '$lib/ui/Icon.svelte';
@@ -21,6 +23,33 @@
 
 	let username = $state(settings.username);
 	let confirmClear = $state(false);
+	let tokenInput = $state('');
+	let showToken = $state(!canUseOAuth());
+	let lichessError = $state('');
+
+	async function useToken(event: SubmitEvent) {
+		event.preventDefault();
+		lichessError = '';
+		const token = tokenInput.trim();
+		try {
+			setLichess({ token, username: await lichessUsername(token) });
+			tokenInput = '';
+			void analyze();
+		} catch (err) {
+			lichessError = err instanceof Error ? err.message : String(err);
+		}
+	}
+
+	function disconnect() {
+		setLichess(null);
+		void analyze();
+	}
+
+	function setMinReach(n: number) {
+		settings.minReach = n;
+		saveSettings();
+		void analyze();
+	}
 
 	function toggleClass(id: TimeClass) {
 		const next = settings.timeClasses.includes(id)
@@ -87,6 +116,55 @@
 			<button aria-pressed={settings.periodMonths === p.months} onclick={() => setPeriod(p.months)}>{p.label}</button>
 		{/each}
 	</div>
+</section>
+
+<section class="group">
+	<div class="label">Lichess · master theory</div>
+	{#if lichess.token}
+		<div class="card info">
+			<div>
+				<div>Connected as <strong>{lichess.username}</strong></div>
+				<div class="faint small">Moves are checked against the Lichess masters database.</div>
+			</div>
+			<button class="btn btn-quiet" onclick={disconnect}>Disconnect</button>
+		</div>
+	{:else}
+		<p class="dim small explain">
+			A free Lichess account lets the app check your moves against master games (book = played in at least 1% of
+			master games). Only your username is read.
+		</p>
+		{#if canUseOAuth()}
+			<button class="btn btn-primary connect" onclick={startLichessLogin}>Log in with Lichess</button>
+			{#if !showToken}<button class="text-btn" onclick={() => (showToken = true)}>Use a personal token instead</button>{/if}
+		{/if}
+		{#if showToken}
+			<form class="row" onsubmit={useToken}>
+				<input class="input" bind:value={tokenInput} placeholder="Personal token (lip_…)" autocapitalize="off" spellcheck="false" />
+				<button class="btn btn-quiet" disabled={!tokenInput.trim()}>Save</button>
+			</form>
+			<p class="faint small">
+				Create one at <a href="https://lichess.org/account/oauth/token/create" target="_blank" rel="noreferrer">lichess.org/account/oauth/token</a>
+				with no permissions checked.
+			</p>
+		{/if}
+		{#if lichessError}<p class="error">{lichessError}</p>{/if}
+	{/if}
+</section>
+
+<section class="group">
+	<div class="label">Analysis</div>
+	<div class="dim small">Analyse positions you've reached at least</div>
+	<div class="segmented" role="group" aria-label="Minimum times reached">
+		{#each [2, 3, 5, 10] as n (n)}
+			<button aria-pressed={settings.minReach === n} onclick={() => setMinReach(n)}>{n}×</button>
+		{/each}
+	</div>
+	<AnalysisStatus />
+	{#if !analysis.running && analysis.progress}
+		<div class="faint small num">
+			Up to date · {analysis.progress.evals.total ? `${analysis.progress.evals.done} new positions evaluated in the last run` : 'all positions already evaluated'}
+		</div>
+	{/if}
 </section>
 
 <section class="group">
@@ -172,6 +250,29 @@
 	.error {
 		color: var(--loss);
 		margin: 0;
+	}
+
+	.explain {
+		margin: 0;
+	}
+
+	.connect {
+		align-self: flex-start;
+	}
+
+	.text-btn {
+		align-self: flex-start;
+		color: var(--accent);
+		font-weight: 560;
+		font-size: 14px;
+	}
+
+	a {
+		color: var(--accent);
+	}
+
+	strong {
+		font-weight: 650;
 	}
 
 	.danger {

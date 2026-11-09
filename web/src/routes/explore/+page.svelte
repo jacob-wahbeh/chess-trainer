@@ -6,15 +6,17 @@
 	import { makeUci, parseUci } from 'chessops/util';
 	import type { DrawShape } from 'chessground/draw';
 	import type { Key } from 'chessground/types';
-	import { app } from '$lib/state.svelte';
+	import { analysis, app } from '$lib/state.svelte';
 	import { data } from '$lib/worker/client';
 	import { score, type Color } from '$lib/games/types';
-	import type { NodeView } from '$lib/tree/tree';
+	import type { NodeDetail } from '$lib/worker/data.worker';
+	import type { Eval } from '$lib/analysis/score';
 	import type { Opening } from '$lib/tree/openings';
 	import { continuation, sanOf, walk } from '$lib/chess/line';
 	import { count, pct } from '$lib/format';
 	import Board from '$lib/ui/Board.svelte';
 	import Icon from '$lib/ui/Icon.svelte';
+	import LabelChip from '$lib/ui/LabelChip.svelte';
 	import ResultBar from '$lib/ui/ResultBar.svelte';
 
 	const color: Color = $derived(page.url.searchParams.get('c') === 'black' ? 'black' : 'white');
@@ -24,15 +26,16 @@
 	const key = $derived(line.keys[line.keys.length - 1]);
 
 	let flipped = $state(false);
-	let node = $state<NodeView | null | undefined>(undefined);
+	let node = $state<NodeDetail | null | undefined>(undefined);
 	let main = $state<string[]>([]);
 	let opening = $state<Opening | undefined>(undefined);
 
 	$effect(() => {
+		void analysis.version;
 		if (!app.summary) return;
-		const [c, k] = [color, key];
+		const [c, k, mine] = [color, key, line.pos.turn === color];
 		let cancelled = false;
-		Promise.all([data().node(c, k), data().mainLine(c, k)]).then(([n, m]) => {
+		Promise.all([data().node(c, k, mine), data().mainLine(c, k)]).then(([n, m]) => {
 			if (cancelled) return;
 			node = n;
 			main = m;
@@ -56,15 +59,30 @@
 	const dests = $derived(chessgroundDests(line.pos) as Map<Key, Key[]>);
 	const mainPlies = $derived(continuation(line.pos, main));
 
-	// The most common moves as arrows: the top one solid, the next two faint.
-	const shapes: DrawShape[] = $derived(
-		(node?.moves ?? []).slice(0, 3).flatMap((m, i) => {
-			const move = parseUci(m.uci);
-			if (!move) return [];
-			const [orig, dest] = chessgroundMove(move) as Key[];
-			return [{ orig, dest, brush: i === 0 ? 'blue' : 'paleBlue' }];
-		})
-	);
+	const arrow = (uci: string, brush: string): DrawShape[] => {
+		const move = parseUci(uci);
+		if (!move) return [];
+		const [orig, dest] = chessgroundMove(move) as Key[];
+		return [{ orig, dest, brush }];
+	};
+	const best = $derived(node?.eval?.best);
+	// Engine's choice in green, then the most common moves (top one solid, next two faint).
+	const shapes: DrawShape[] = $derived([
+		...(best ? arrow(best, 'green') : []),
+		...(node?.moves ?? [])
+			.slice(0, 3)
+			.filter((m) => m.uci !== best)
+			.flatMap((m, i) => arrow(m.uci, i === 0 ? 'blue' : 'paleBlue'))
+	]);
+	const verdictOf = (uci: string) => node?.verdicts?.find((v) => v.uci === uci);
+	const bestUnplayed = $derived(best && yourTurn && node && !node.moves.some((m) => m.uci === best) ? best : undefined);
+
+	/** "+0.6" / "−1.2" / "#3", White's point of view like any engine display. */
+	function formatEval(e: Eval): string {
+		if (e.mate !== undefined) return `${e.mate < 0 ? '−' : ''}#${Math.abs(e.mate)}`;
+		const v = (e.cp ?? 0) / 100;
+		return `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}`;
+	}
 
 	function go(next: string[]) {
 		const m = next.length ? `&m=${next.join(',')}` : '';
@@ -97,6 +115,11 @@
 		<div class="title">
 			{#if opening}<span class="eco num">{opening.eco}</span>{/if}
 			<span class="opening">{opening?.name ?? 'Starting position'}</span>
+			{#if node?.eval}
+				<span class="eval num" title="{node.eval.src === 'cloud' ? 'Lichess cloud' : 'Stockfish'} · depth {node.eval.depth}">
+					{formatEval(node.eval)}
+				</span>
+			{/if}
 		</div>
 		<Board
 			fen={line.fen}
@@ -155,9 +178,13 @@
 				<h2 class="section">{yourTurn ? 'Your moves' : 'Their replies'}</h2>
 				<ul class="moves">
 					{#each node.moves as m (m.uci)}
+						{@const v = verdictOf(m.uci)}
 						<li>
 							<button class="move" onclick={() => go([...ucis, m.uci])}>
-								<span class="san">{sanOf(line.pos, m.uci)}</span>
+								<span class="san">
+									{sanOf(line.pos, m.uci)}
+									{#if v?.label}<LabelChip label={v.label} drop={v.drop} />{/if}
+								</span>
 								<span class="num dim">{count(m.n)}</span>
 								<span class="num share">{pct(m.n / node.n)}</span>
 								<span class="mbar"><ResultBar stats={m} height={5} /></span>
@@ -165,7 +192,18 @@
 							</button>
 						</li>
 					{/each}
+					{#if bestUnplayed}
+						<li>
+							<button class="move engine" onclick={() => go([...ucis, bestUnplayed])}>
+								<span class="san">{sanOf(line.pos, bestUnplayed)} <span class="engine-tag">Engine's choice</span></span>
+								<span class="faint never">never played</span>
+							</button>
+						</li>
+					{/if}
 				</ul>
+				{#if yourTurn && node.masters && node.masters.total >= 20}
+					<p class="faint small num">{count(node.masters.total)} master games reached this position.</p>
+				{/if}
 			{:else}
 				<p class="faint">Your games stop here (only the first 15 moves of each game are kept).</p>
 			{/if}
@@ -224,6 +262,32 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.eval {
+		margin-left: auto;
+		flex: none;
+		font-size: 13px;
+		font-weight: 650;
+		padding: 2px 8px;
+		border-radius: 6px;
+		background: var(--bg-elev-2);
+		color: var(--text-2);
+	}
+
+	.engine-tag {
+		font-size: 12px;
+		font-weight: 650;
+		color: var(--win);
+	}
+
+	.never {
+		grid-column: 2 / -1;
+		font-size: 13px;
+	}
+
+	.small {
+		font-size: 13px;
 	}
 
 	.controls {
@@ -317,7 +381,7 @@
 	.move {
 		width: 100%;
 		display: grid;
-		grid-template-columns: 4.2em 3.4em 3em minmax(40px, 1fr) 3em;
+		grid-template-columns: minmax(6.5em, 1.6fr) 3.4em 3em minmax(36px, 1fr) 3em;
 		gap: 12px;
 		align-items: center;
 		padding: 10px 8px;
@@ -331,6 +395,10 @@
 	}
 
 	.san {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
 		font-weight: 650;
 		font-size: 16px;
 	}
