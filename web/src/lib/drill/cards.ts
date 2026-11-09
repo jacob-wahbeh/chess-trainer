@@ -1,13 +1,12 @@
-// Drill cards: one per costly first mistake, scheduled with FSRS (https://github.com/open-spaced-repetition).
+// Drill cards: one per costly first mistake. Each keeps a streak of first-try answers: three in a row and it's
+// known, a miss resets it, and so does repeating the mistake in a real game. The drill goes through the whole
+// deck in order of need (buildDeck); there are no dates or intervals.
 import type { Chess } from 'chessops/chess';
 import { makeUci } from 'chessops/util';
-import { createEmptyCard, fsrs, Rating, State, type Card, type Grade } from 'ts-fsrs';
 import { positionKey } from '../chess/zobrist';
 import type { Leak } from '../analysis/classify';
 import { INACCURACY, MISTAKE, THEORY_MIN_GAMES, whiteCp, winPercent, type Eval, type Masters } from '../analysis/score';
 import type { Color } from '../games/types';
-
-export { Rating, State, type Grade };
 
 export interface CardRecord {
 	/** `${user}|${color}|${position key}|${wrong move}` */
@@ -23,12 +22,20 @@ export interface CardRecord {
 	points: number;
 	/** Games where it was the first departure, when last synced. */
 	first: number;
+	/** The first and the latest game where it was the first departure (ms). */
+	since: number;
+	last: number;
 	created: number;
-	/** First review (ms); counts toward the daily new-card limit. */
-	introduced?: number;
-	fsrs: Card;
-	/** fsrs.due in ms, for sorting without Date objects. */
-	due: number;
+	/** First-try answers in a row; a miss resets it. */
+	streak: number;
+	/** Times drilled (only the first time a card comes up in a sitting counts). */
+	seen: number;
+	/** When it was last drilled (ms). */
+	lastSeen?: number;
+	/** The last time it was drilled was a miss. */
+	missed?: boolean;
+	/** The mistake came up again in a game played after the card was last drilled (that game's end, ms). */
+	playedAgain?: number;
 	suspended?: boolean;
 }
 
@@ -38,8 +45,14 @@ export const ACCEPT_DROP = 3;
 export const ACCEPT_MASTER_SHARE = 0.05;
 /** Master main moves this common are accepted unless the engine calls them an inaccuracy. */
 export const POPULAR_MASTER_SHARE = 0.1;
-
-export const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9 });
+/** First-try answers in a row that make a card known. */
+export const KNOWN_STREAK = 3;
+/** A mistake you first made this recently counts as new from your recent games. */
+export const RECENT_MS = 14 * 86_400_000;
+/** One known card is mixed in after this many others, so known cards stay fresh. */
+const KNOWN_EVERY = 8;
+/** Cards within a group are shuffled in blocks this big: roughly in order of need, but never the same order. */
+const SHUFFLE_BLOCK = 10;
 
 /** Leaks worth a card: at least ~10 win% lost in total, or a single big mistake. */
 const MIN_CARD_POINTS = 0.1;
@@ -48,7 +61,6 @@ export const cardWorthy = (leak: Leak) => leak.points >= MIN_CARD_POINTS || leak
 export const cardId = (user: string, color: Color, key: number, wrong: string) => `${user.toLowerCase()}|${color}|${key}|${wrong}`;
 
 export function newCard(leak: Leak, user: string, now = Date.now()): CardRecord {
-	const card = createEmptyCard(new Date(now));
 	return {
 		id: cardId(user, leak.color, leak.key, leak.uci),
 		user: user.toLowerCase(),
@@ -58,50 +70,88 @@ export function newCard(leak: Leak, user: string, now = Date.now()): CardRecord 
 		path: leak.path,
 		points: leak.points,
 		first: leak.first,
+		since: leak.since * 1000,
+		last: leak.last * 1000,
 		created: now,
-		fsrs: card,
-		due: now
+		streak: 0,
+		seen: 0
 	};
 }
 
-export interface Session {
+/**
+ * A card brought up to date with the latest analysis of your games. Repeating the mistake in a game played after
+ * the card was last drilled sends it back to the start: streak 0, at the front of the deck.
+ */
+export function refreshCard(card: CardRecord, leak: Leak): CardRecord {
+	const next: CardRecord = { ...card, points: leak.points, first: leak.first, since: leak.since * 1000, last: leak.last * 1000 };
+	if (card.seen && card.lastSeen !== undefined && next.last > card.lastSeen && next.last !== card.playedAgain) {
+		next.playedAgain = next.last;
+		next.streak = 0;
+	}
+	return next;
+}
+
+export type Status = 'new' | 'learning' | 'known';
+export const statusOf = (card: CardRecord): Status => (!card.seen ? 'new' : card.streak >= KNOWN_STREAK ? 'known' : 'learning');
+const isRecent = (card: CardRecord, now: number) => !card.seen && card.since >= now - RECENT_MS;
+
+/** A drill result: right or wrong the first time the card came up in a sitting. */
+export function recordAnswer(card: CardRecord, correct: boolean, now = Date.now()): CardRecord {
+	return { ...card, streak: correct ? card.streak + 1 : 0, seen: card.seen + 1, lastSeen: now, missed: !correct, playedAgain: undefined };
+}
+
+export interface Deck {
+	/** Every card to drill, in order of need. */
 	ids: string[];
-	/** Practice once the scheduled cards are done: cards due later today, new cards past today's limit, then the rest. */
-	extra: string[];
-	due: number;
+	/** Mistakes repeated in a game after drilling them, cards missed last time, and new ones from recent games. */
+	playedAgain: number;
+	missed: number;
+	recent: number;
+	/** By status (new includes the recent ones). */
 	fresh: number;
+	learning: number;
+	known: number;
 	total: number;
-	/** Next time a card becomes due after this session (ms), if any. */
-	nextDue?: number;
 }
 
-const startOfDay = (now: number, days = 0) => {
-	const d = new Date(now);
-	d.setHours(24 * days, 0, 0, 0);
-	return d.getTime();
-};
-
-/** Due reviews first (most overdue first), then the costliest new cards up to today's remaining allowance. */
-export function buildSession(cards: CardRecord[], newPerDay: number, now = Date.now()): Session {
+/**
+ * The whole deck in order of need: mistakes you played again in a game, cards you missed last time, new mistakes
+ * from your recent games (costliest first), cards you're learning (the one practised longest ago first), older new
+ * cards (costliest first), and known cards, one mixed in every few cards so they stay fresh.
+ */
+export function buildDeck(cards: CardRecord[], now = Date.now(), random = Math.random): Deck {
 	const active = cards.filter((c) => !c.suspended);
-	const introducedToday = active.filter((c) => (c.introduced ?? 0) >= startOfDay(now)).length;
-	const due = active.filter((c) => c.fsrs.state !== State.New && c.due <= now).sort((a, b) => a.due - b.due);
-	const unseen = active.filter((c) => c.fsrs.state === State.New).sort((a, b) => b.points - a.points);
-	const allowance = Math.max(0, newPerDay - introducedToday);
-	const fresh = unseen.slice(0, allowance);
-	const later = active.filter((c) => c.fsrs.state !== State.New && c.due > now).sort((a, b) => a.due - b.due);
-	const tomorrow = startOfDay(now, 1);
+	const leastRecent = (a: CardRecord, b: CardRecord) => (a.lastSeen ?? 0) - (b.lastSeen ?? 0);
+	const costliest = (a: CardRecord, b: CardRecord) => b.points - a.points;
+	const again = active.filter((c) => c.playedAgain).sort((a, b) => b.playedAgain! - a.playedAgain!);
+	const rest = active.filter((c) => !c.playedAgain);
+	const missed = rest.filter((c) => c.seen && c.missed).sort(leastRecent);
+	const recent = rest.filter((c) => isRecent(c, now)).sort(costliest);
+	const learning = rest.filter((c) => statusOf(c) === 'learning' && !c.missed).sort(leastRecent);
+	const older = rest.filter((c) => !c.seen && !isRecent(c, now)).sort(costliest);
+	const known = rest.filter((c) => statusOf(c) === 'known' && !c.missed).sort(leastRecent);
+	const mix = (group: CardRecord[]) => group.flatMap((_, i) => (i % SHUFFLE_BLOCK ? [] : shuffled(group.slice(i, i + SHUFFLE_BLOCK), random)));
+	const main = [again, missed, recent, learning, older].flatMap(mix);
+	const ids: string[] = [];
+	const k = mix(known);
+	for (let i = 0; i < main.length; i++) {
+		ids.push(main[i].id);
+		if ((i + 1) % KNOWN_EVERY === 0 && k.length) ids.push(k.shift()!.id);
+	}
+	ids.push(...k.map((c) => c.id));
 	return {
-		ids: [...due, ...fresh].map((c) => c.id),
-		extra: [...later.filter((c) => c.due < tomorrow), ...unseen.slice(allowance), ...later.filter((c) => c.due >= tomorrow)].map((c) => c.id),
-		due: due.length,
-		fresh: fresh.length,
-		total: active.length,
-		nextDue: later[0]?.due
+		ids,
+		playedAgain: again.length,
+		missed: missed.length,
+		recent: recent.length,
+		fresh: active.filter((c) => !c.seen).length,
+		learning: active.filter((c) => statusOf(c) === 'learning').length,
+		known: active.filter((c) => statusOf(c) === 'known').length,
+		total: active.length
 	};
 }
 
-/** A shuffled copy (Fisher-Yates): each session meets its cards in a new order. */
+/** A shuffled copy (Fisher-Yates). */
 export function shuffled<T>(items: T[], random = Math.random): T[] {
 	const out = [...items];
 	for (let i = out.length - 1; i > 0; i--) {
@@ -109,22 +159,6 @@ export function shuffled<T>(items: T[], random = Math.random): T[] {
 		[out[i], out[j]] = [out[j], out[i]];
 	}
 	return out;
-}
-
-export function review(card: CardRecord, grade: Grade, now = Date.now()): CardRecord {
-	const next = scheduler.next(card.fsrs, new Date(now), grade).card;
-	return { ...card, fsrs: next, due: next.due.getTime(), introduced: card.introduced ?? now };
-}
-
-/** When each grade would schedule the card next (ms). */
-export function previewDue(card: CardRecord, now = Date.now()): Record<Grade, number> {
-	const p = scheduler.repeat(card.fsrs, new Date(now));
-	return {
-		[Rating.Again]: p[Rating.Again].card.due.getTime(),
-		[Rating.Hard]: p[Rating.Hard].card.due.getTime(),
-		[Rating.Good]: p[Rating.Good].card.due.getTime(),
-		[Rating.Easy]: p[Rating.Easy].card.due.getTime()
-	} as Record<Grade, number>;
 }
 
 export interface Answer {
@@ -199,20 +233,6 @@ export function dropOf(pos: Chess, before: Eval | undefined, after: Eval | undef
 	if (!before || !after) return null;
 	const sign = pos.turn === 'white' ? 1 : -1;
 	return Math.max(0, winPercent(sign * whiteCp(before)) - winPercent(sign * whiteCp(after)));
-}
-
-/** An answer that takes this long was a struggle to remember. */
-const SLOW_MS = 15_000;
-
-/**
- * Grade from how the attempt went (the drill grades for you): any miss is a lapse, a long think is Hard, and a
- * quick, confident answer on a known card is Easy.
- */
-export function autoGrade(a: { correctFirstTry: boolean; ms: number; state: State }): Grade {
-	if (!a.correctFirstTry) return Rating.Again;
-	if (a.ms >= SLOW_MS) return Rating.Hard;
-	if (a.state === State.Review && a.ms < 2500) return Rating.Easy;
-	return Rating.Good;
 }
 
 export const isInaccuracy = (drop: number | null) => drop !== null && drop >= INACCURACY;

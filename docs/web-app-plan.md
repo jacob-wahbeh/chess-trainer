@@ -8,7 +8,7 @@ Status: milestones 1–3 built in `web/` (import, lines, explorer, analysis, cos
    the lines you actually play are sorted by how often you reach them.
 2. Walks each line and finds the **first move where you go wrong**: a book deviation,
    inaccuracy, mistake, or blunder.
-3. Turns each of those into a drill card (Lotus-style), scheduled with spaced repetition.
+3. Turns each of those into a drill card (Lotus-style), tracked by streaks: three right in a row and it's known; a miss, or repeating the mistake in a game, starts it over.
 4. Explains **why**: the concrete refutation, the principle behind it, and, for lines that
    start the same but need different moves (e.g. Najdorf 6.Be3 vs 6.Bg5), the deciding
    difference, so you can work it out over the board if you forget.
@@ -68,7 +68,7 @@ imports to the last 12 months and load older games on request.
 │     │                                                                                │
 │  Eval scheduler ── 1. IndexedDB cache ─ 2. Lichess cloud-eval (one request at a time)│
 │                └── 3. Stockfish 19 lite worker pool (N = cores − 1; 2 on iPhone)     │
-│  IndexedDB (Dexie): games · positions · evals · cards (FSRS) · explanations          │
+│  IndexedDB (Dexie): games · positions · evals · streak cards · explanations          │
 │  Service worker: app shell + engine .wasm cached → instant, offline                  │
 └──────────────────────────────────────────────────────────────────────────────────────┘
           │ (only for explanations + sync)
@@ -291,7 +291,6 @@ Principles:
 | Rules / PGN / FEN | `chessops` 0.15 | GPL-3.0 |
 | Engine | Stockfish 19 lite, single-threaded (`stockfish.js` v19.0.1) | GPL-3.0 |
 | Storage | `dexie` 4 (IndexedDB) | Apache-2.0 |
-| Spaced repetition | `ts-fsrs` 6 | MIT |
 | Opening names | `lichess-org/chess-openings` | CC0 |
 | Hosting | Cloudflare Pages (static) + one Cloudflare Worker (explanations + sync) | free tiers |
 

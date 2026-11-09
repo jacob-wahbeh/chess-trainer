@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { replaySans, replayUcis } from '../chess/pgn';
 import type { Leak } from '../analysis/classify';
 import type { Eval, Masters } from '../analysis/score';
-import { acceptedMoves, autoGrade, buildSession, mainMove, newCard, previewDue, Rating, review, shuffled, State, type Answer, type CardRecord } from './cards';
+import { acceptedMoves, buildDeck, mainMove, newCard, recordAnswer, refreshCard, shuffled, statusOf, type Answer, type CardRecord } from './cards';
 
-const leak = (uci: string, points: number, path: string[] = ['e2e4', 'e7e5']): Leak => ({
+const DAY = 86_400_000;
+const NOW = new Date('2026-11-09T12:00:00').getTime();
+
+/** A leak first played `daysAgo` days ago (and last then too). */
+const leak = (uci: string, points: number, path: string[] = ['e2e4', 'e7e5'], daysAgo = 60): Leak => ({
 	key: replayUcis(path).keys.at(-1)!,
 	uci,
 	color: 'white',
@@ -13,70 +17,68 @@ const leak = (uci: string, points: number, path: string[] = ['e2e4', 'e7e5']): L
 	drop: 12,
 	count: 10,
 	first: 8,
+	since: (NOW - daysAgo * DAY) / 1000,
+	last: (NOW - daysAgo * DAY) / 1000,
 	points,
 	share: null,
 	masters: []
 });
 
-const DAY = 86_400_000;
-const NOW = new Date('2026-11-09T12:00:00').getTime();
+/** Keeps every shuffle in order, so the deck order can be checked. */
+const inOrder = () => 0.999;
+const card = (uci: string, points: number, extra: Partial<CardRecord> = {}, daysAgo = 60): CardRecord => ({
+	...newCard(leak(uci, points, ['e2e4', 'e7e5'], daysAgo), 'me', NOW - 100 * DAY),
+	...extra
+});
 
-describe('buildSession', () => {
-	it('puts due reviews first, then the costliest new cards within the daily allowance', () => {
-		const a = newCard(leak('f1c4', 3.0), 'me', NOW - 10 * DAY);
-		const b = newCard(leak('d2d3', 1.0), 'me', NOW);
-		const c = newCard(leak('b1c3', 2.0), 'me', NOW);
-		const reviewed = review(a, Rating.Good, NOW - 10 * DAY); // due again well before NOW
-		const s = buildSession([reviewed, b, c], 1, NOW);
-		expect(s.ids).toEqual([reviewed.id, c.id]);
-		expect([s.due, s.fresh, s.total]).toEqual([1, 1, 3]);
+describe('buildDeck', () => {
+	it('orders the deck by need: played again, missed, new from recent games, learning, older new cards', () => {
+		const older = card('d2d3', 9);
+		const recent = card('b1c3', 1, {}, 3);
+		const learningOld = card('f1c4', 2, { seen: 2, streak: 1, lastSeen: NOW - 5 * DAY });
+		const learningNew = card('f1b5', 2, { seen: 1, streak: 1, lastSeen: NOW - DAY });
+		const missed = card('g1f3', 2, { seen: 1, missed: true, lastSeen: NOW - DAY });
+		const again = card('d1h5', 2, { seen: 3, streak: 0, lastSeen: NOW - 9 * DAY, playedAgain: NOW - 2 * DAY });
+		const deck = buildDeck([older, recent, learningNew, learningOld, missed, again], NOW, inOrder);
+		expect(deck.ids).toEqual([again.id, missed.id, recent.id, learningOld.id, learningNew.id, older.id]);
+		expect(deck).toMatchObject({ playedAgain: 1, missed: 1, recent: 1, fresh: 2, learning: 4, known: 0, total: 6 });
 	});
 
-	it('counts cards introduced today against the new-card limit', () => {
-		const a = review(newCard(leak('f1c4', 3.0), 'me', NOW), Rating.Good, NOW - 1000);
-		const b = newCard(leak('d2d3', 1.0), 'me', NOW);
-		expect(buildSession([a, b], 1, NOW).fresh).toBe(0);
-		expect(buildSession([a, b], 2, NOW).fresh).toBe(1);
+	it('mixes in one known card every eight cards and keeps the rest for the end', () => {
+		const learning = Array.from({ length: 9 }, (_, i) => card(`a2a${i}`, 1, { seen: 1, streak: 1, lastSeen: NOW - (20 - i) * DAY }));
+		const known = [card('h2h3', 1, { seen: 4, streak: 3, lastSeen: NOW - 30 * DAY }), card('h2h4', 1, { seen: 4, streak: 4, lastSeen: NOW - 10 * DAY })];
+		const ids = buildDeck([...known, ...learning], NOW, inOrder).ids;
+		expect(ids).toEqual([...learning.slice(0, 8).map((c) => c.id), known[0].id, learning[8].id, known[1].id]);
 	});
 
-	it('offers extra practice once the scheduled cards are done', () => {
-		const learning = review(newCard(leak('f1c4', 3.0), 'me', NOW), Rating.Good, NOW - 1000); // back in minutes
-		const known = review(review(newCard(leak('g1f3', 5.0), 'me', NOW), Rating.Easy, NOW - 30 * DAY), Rating.Easy, NOW - 20 * DAY);
-		const unseen = newCard(leak('d2d3', 1.0), 'me', NOW);
-		const s = buildSession([known, unseen, learning], 1, NOW);
-		expect(known.due).toBeGreaterThan(NOW + DAY);
-		expect(s.ids).toEqual([]);
-		expect(s.extra).toEqual([learning.id, unseen.id, known.id]);
-	});
-
-	it('skips suspended cards and reports the next due time', () => {
-		const a: CardRecord = { ...newCard(leak('f1c4', 3.0), 'me', NOW), suspended: true };
-		const b = review(newCard(leak('d2d3', 1.0), 'me', NOW), Rating.Good, NOW);
-		const s = buildSession([a, b], 5, NOW);
-		expect(s.ids).toEqual([]);
-		expect(s.extra).toEqual([b.id]);
-		expect(s.nextDue).toBe(b.due);
+	it('skips suspended cards', () => {
+		const deck = buildDeck([card('f1c4', 3, { suspended: true }), card('d2d3', 1)], NOW, inOrder);
+		expect(deck.total).toBe(1);
+		expect(deck.ids).toHaveLength(1);
 	});
 });
 
-describe('review and preview', () => {
-	it('schedules Again sooner than Good sooner than Easy, and records the first review', () => {
-		const card = newCard(leak('f1c4', 3.0), 'me', NOW);
-		const p = previewDue(card, NOW);
-		expect(p[Rating.Again]).toBeLessThan(p[Rating.Good]);
-		expect(p[Rating.Good]).toBeLessThanOrEqual(p[Rating.Easy]);
-		const next = review(card, Rating.Good, NOW);
-		expect(next.introduced).toBe(NOW);
-		expect(next.fsrs.state).not.toBe(State.New);
-		expect(next.due).toBe(next.fsrs.due.getTime());
+describe('streaks', () => {
+	it('counts first-try answers in a row: three make a card known, a miss starts again', () => {
+		let c = card('f1c4', 3);
+		expect(statusOf(c)).toBe('new');
+		c = recordAnswer(c, true, NOW);
+		expect([c.streak, c.seen, c.lastSeen, c.missed, statusOf(c)]).toEqual([1, 1, NOW, false, 'learning']);
+		c = recordAnswer(recordAnswer(c, true, NOW), true, NOW);
+		expect(statusOf(c)).toBe('known');
+		c = recordAnswer(c, false, NOW);
+		expect([c.streak, c.missed, statusOf(c)]).toEqual([0, true, 'learning']);
 	});
 
-	it('grades misses as Again and quick answers on known cards as Easy', () => {
-		expect(autoGrade({ correctFirstTry: false, ms: 1000, state: State.Review })).toBe(Rating.Again);
-		expect(autoGrade({ correctFirstTry: true, ms: 1000, state: State.Review })).toBe(Rating.Easy);
-		expect(autoGrade({ correctFirstTry: true, ms: 1000, state: State.New })).toBe(Rating.Good);
-		expect(autoGrade({ correctFirstTry: true, ms: 9000, state: State.Review })).toBe(Rating.Good);
-		expect(autoGrade({ correctFirstTry: true, ms: 20000, state: State.Review })).toBe(Rating.Hard);
+	it('sends a card back to the front when its mistake turns up in a game played after drilling it', () => {
+		const drilled = recordAnswer(recordAnswer(card('f1c4', 3), true, NOW - 10 * DAY), true, NOW - 10 * DAY);
+		const replayed = refreshCard(drilled, leak('f1c4', 4, ['e2e4', 'e7e5'], 2));
+		expect([replayed.playedAgain, replayed.streak, replayed.points]).toEqual([NOW - 2 * DAY, 0, 4]);
+		// Games from before the drill, or a card never drilled, change nothing but the numbers.
+		expect(refreshCard(drilled, leak('f1c4', 4, ['e2e4', 'e7e5'], 20)).playedAgain).toBeUndefined();
+		expect(refreshCard(card('f1c4', 3), leak('f1c4', 4, ['e2e4', 'e7e5'], 2)).playedAgain).toBeUndefined();
+		// Drilling it again clears the flag.
+		expect(recordAnswer(replayed, true, NOW).playedAgain).toBeUndefined();
 	});
 });
 

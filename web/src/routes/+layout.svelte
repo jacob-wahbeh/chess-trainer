@@ -26,7 +26,8 @@
 	}
 
 	const progress = $derived(app.progress ? app.progress.done / app.progress.total : 0.04);
-	const todo = $derived(drill.due + drill.fresh);
+	/** Cards that need attention: mistakes played again, misses, and new ones from recent games. */
+	const todo = $derived(drill.attention);
 	/** Drills are a focus mode: no tab bar on phones. */
 	const focus = $derived(page.route.id?.startsWith('/drill') ?? false);
 

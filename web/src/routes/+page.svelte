@@ -99,32 +99,40 @@
 		{#if app.error}<span class="error"> · {app.error}</span>{/if}
 	</p>
 
-	{@const todo = drill.due + drill.fresh}
-	<a class="drill-cta card" class:done={!todo} href={`${base}${drill.total ? '/drill' : '/leaks'}`}>
-		<div>
+	{@const needs = [
+		drill.playedAgain && `${drill.playedAgain} played again in your games`,
+		drill.missed && `${drill.missed} missed last time`,
+		drill.recent && `${drill.recent} new from your recent games`
+	].filter(Boolean)}
+	<a class="drill-cta card" class:done={!needs.length} href={`${base}${drill.total ? '/drill' : '/leaks'}`}>
+		<div class="cta-body">
 			<div class="label">Drill</div>
 			<div class="cta-title">
-				{#if todo}
-					{todo} {todo === 1 ? 'card' : 'cards'} · ~{Math.max(1, Math.round((todo * 25) / 60))} min
+				{#if needs.length}
+					{needs.join(' · ')}
 				{:else if drill.total}
-					All caught up
+					{drill.known} of {drill.total} known
 				{:else if analysis.running}
 					Preparing your cards…
 				{:else}
 					No cards yet
 				{/if}
 			</div>
-			<div class="faint small">
-				{#if todo}
-					{drill.due} due · {drill.fresh} new from your costliest first mistakes
-				{:else if drill.total}
-					Practice ahead anytime · {drill.total} cards in rotation
-				{:else if analysis.running}
-					Cards are created from your first mistakes as soon as the engine pass finishes.
-				{:else}
-					No costly first mistakes found in your common lines yet.
-				{/if}
-			</div>
+			{#if drill.total}
+				<div class="deck-bar" aria-hidden="true">
+					<span class="known" style:width="{(100 * drill.known) / drill.total}%"></span>
+					<span class="learning" style:width="{(100 * drill.learning) / drill.total}%"></span>
+				</div>
+				<div class="faint small num">{drill.known} known · {drill.learning} learning · {drill.fresh} new</div>
+			{:else}
+				<div class="faint small">
+					{#if analysis.running}
+						Cards are created from your first mistakes as soon as the engine pass finishes.
+					{:else}
+						No costly first mistakes found in your common lines yet.
+					{/if}
+				</div>
+			{/if}
 		</div>
 		{#if drill.total}<span class="play"><Icon name="play" size={22} /></span>{/if}
 	</a>
@@ -309,6 +317,37 @@
 	.drill-cta.done {
 		border-color: var(--line);
 		background: var(--bg-elev);
+	}
+
+	.cta-body {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		flex: 1;
+		min-width: 0;
+	}
+
+	/* The deck at a glance: known (green), learning (blue), the rest new. */
+	.deck-bar {
+		display: flex;
+		height: 6px;
+		margin-top: 6px;
+		border-radius: 999px;
+		overflow: hidden;
+		background: var(--bg-elev-2);
+	}
+
+	.deck-bar span {
+		display: block;
+		transition: width 240ms var(--ease);
+	}
+
+	.deck-bar .known {
+		background: var(--win);
+	}
+
+	.deck-bar .learning {
+		background: var(--book);
 	}
 
 	.cta-title {

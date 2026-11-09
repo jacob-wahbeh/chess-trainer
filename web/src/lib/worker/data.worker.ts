@@ -9,19 +9,18 @@ import { runAnalysis, type AnalysisHost, type AnalysisOptions, type AnalysisProg
 import { INACCURACY, type Eval, type Masters } from '../analysis/score';
 import {
 	acceptedMoves,
-	buildSession,
+	buildDeck,
 	cardId,
 	cardWorthy,
 	dropOf,
 	mainMove,
 	newCard,
-	previewDue,
-	review as reviewCard,
+	recordAnswer,
+	refreshCard,
 	type Answer,
 	type CardRecord,
-	type Grade,
-	type MainWhy,
-	type Session
+	type Deck,
+	type MainWhy
 } from '../drill/cards';
 import { fetchArchiveList, fetchMonth, isFinal, normalizeGame } from '../games/chesscom';
 import { db, monthId, PARSE_VERSION } from '../games/db';
@@ -84,8 +83,6 @@ export interface CardDetail {
 	/** Times the user reached the position / played the habitual move there, with current filters. */
 	reached: number;
 	wrongCount: number;
-	/** When each grade would schedule the card next (ms). */
-	intervals: Record<Grade, number>;
 }
 
 const ROOT = positionKey(Chess.default());
@@ -269,7 +266,10 @@ const api = {
 		};
 	},
 
-	/** Creates cards for new costly first mistakes and refreshes priorities of existing ones. Returns the card count. */
+	/**
+	 * Creates cards for new costly first mistakes and brings existing ones up to date (a mistake repeated in a game
+	 * after drilling it goes back to the front). Returns the card count.
+	 */
 	async syncCards(): Promise<number> {
 		if (!user) return 0;
 		const { leaks } = await api.leaks();
@@ -278,15 +278,20 @@ const api = {
 		for (const leak of leaks) {
 			if (!cardWorthy(leak)) continue;
 			const old = existing.get(cardId(user, leak.color, leak.key, leak.uci));
-			if (!old) puts.push(newCard(leak, user));
-			else if (old.points !== leak.points || old.first !== leak.first) puts.push({ ...old, points: leak.points, first: leak.first });
+			if (!old) {
+				puts.push(newCard(leak, user));
+				continue;
+			}
+			const next = refreshCard(old, leak);
+			const changed = (['points', 'first', 'since', 'last', 'playedAgain', 'streak'] as const).some((k) => next[k] !== old[k]);
+			if (changed) puts.push(next);
 		}
 		if (puts.length) await db.cards.bulkPut(puts);
 		return db.cards.where('user').equals(user.toLowerCase()).count();
 	},
 
-	async session(newPerDay: number): Promise<Session> {
-		return buildSession(await db.cards.where('user').equals(user.toLowerCase()).toArray(), newPerDay);
+	async deck(): Promise<Deck> {
+		return buildDeck(await db.cards.where('user').equals(user.toLowerCase()).toArray());
 	},
 
 	async cardDetail(id: string): Promise<CardDetail | null> {
@@ -321,14 +326,14 @@ const api = {
 			opening: deepestOpening(keys, await loadOpenings())?.name,
 			reached: node?.n ?? 0,
 			wrongCount: node?.edges.get(card.wrong)?.n ?? 0,
-			intervals: previewDue(card)
 		};
 	},
 
-	async review(id: string, grade: Grade): Promise<CardRecord | null> {
+	/** Saves a drill result: right or wrong the first time the card came up in this sitting. */
+	async record(id: string, correct: boolean): Promise<CardRecord | null> {
 		const card = await db.cards.get(id);
 		if (!card) return null;
-		const next = reviewCard(card, grade);
+		const next = recordAnswer(card, correct);
 		await db.cards.put(next);
 		return next;
 	},

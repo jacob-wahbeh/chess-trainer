@@ -72,8 +72,10 @@ export interface Leak {
 	after?: Eval;
 	/** Times the move was played here. */
 	count: number;
-	/** Games where this was the first departure. */
+	/** Games where this was the first departure, and the first and latest of them (unix seconds). */
 	first: number;
+	since: number;
+	last: number;
 	/** Approximate game points lost to it as a first departure: first × max(drop, 1) / 100. */
 	points: number;
 	best?: string;
@@ -133,6 +135,8 @@ export function findLeaks(
 						after: v.after,
 						count: v.count,
 						first: 0,
+						since: game.end,
+						last: game.end,
 						points: 0,
 						best: evals.get(key)?.best,
 						share: v.share,
@@ -146,6 +150,8 @@ export function findLeaks(
 				);
 			}
 			leak.first++;
+			leak.since = Math.min(leak.since, game.end);
+			leak.last = Math.max(leak.last, game.end);
 			break;
 		}
 	}

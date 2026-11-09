@@ -42,7 +42,7 @@ archives (`../data/<user>/archives`) and prints counts comparable to the Python 
 - `src/lib/analysis/` — move judgement (win%, book, repertoire), costly first mistakes, and the background
   analysis job (Lichess cloud evals + local Stockfish + masters lookups)
 - `src/lib/lichess/` — "Log in with Lichess" (OAuth PKCE)
-- `src/lib/drill/` — drill cards: FSRS scheduling, sessions, accepted answers, thematic answers, auto-grading
+- `src/lib/drill/` — drill cards: streaks (3 first-try answers in a row = known), the deck in order of need (mistakes played again in games, misses, new mistakes from recent games, learning, new, known), accepted and thematic answers
 - `src/lib/explain/` — checked facts for every card (material, threats, forks, principles) and the guardrail
   for written explanations
 - `src/lib/worker/` — data worker (owns games, storage, trees, analysis and cards) and its client

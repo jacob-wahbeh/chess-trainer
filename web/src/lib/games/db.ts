@@ -45,6 +45,27 @@ class Db extends Dexie {
 		this.version(1).stores({ months: 'id, user', meta: 'key' });
 		this.version(2).stores({ months: 'id, user', meta: 'key', evals: 'key', masters: 'key' });
 		this.version(3).stores({ months: 'id, user', meta: 'key', evals: 'key', masters: 'key', cards: 'id, user' });
+		// Cards move from spaced-repetition dates to streaks: practised ones start as learning, the rest stay new.
+		this.version(4)
+			.stores({ months: 'id, user', meta: 'key', evals: 'key', masters: 'key', cards: 'id, user' })
+			.upgrade((tx) =>
+				tx
+					.table('cards')
+					.toCollection()
+					.modify((card: Record<string, unknown>) => {
+						const fsrs = card.fsrs as { reps?: number; last_review?: Date } | undefined;
+						const practised = (fsrs?.reps ?? 0) > 0;
+						card.streak = practised ? 1 : 0;
+						card.seen = practised ? 1 : 0;
+						if (practised && fsrs?.last_review) card.lastSeen = new Date(fsrs.last_review).getTime();
+						// Game dates arrive with the next card sync; until then the card counts as an older mistake.
+						card.since ??= 0;
+						card.last ??= 0;
+						delete card.fsrs;
+						delete card.due;
+						delete card.introduced;
+					})
+			);
 	}
 }
 

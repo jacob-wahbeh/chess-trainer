@@ -12,7 +12,7 @@
 	import { chessopsUci } from '$lib/analysis/runner';
 	import { formatEval, formatEvalShort, whiteCp, type Eval } from '$lib/analysis/score';
 	import { continuation, formatPlies, positions, sanOf, walk, type Ply, type Walk } from '$lib/chess/line';
-	import { ACCEPT_DROP, autoGrade, dropOf, Rating, shuffled, State, type Grade } from '$lib/drill/cards';
+	import { ACCEPT_DROP, dropOf, KNOWN_STREAK, statusOf, type CardRecord } from '$lib/drill/cards';
 	import { EnginePool, type EvalResult } from '$lib/engine/pool';
 	import { sourceLink, type Explanation } from '$lib/explain/check';
 	import { explainFacts, passTurn, type Fact, type Shape } from '$lib/explain/facts';
@@ -70,6 +70,9 @@
 	const PALE: Record<Kind, string> = { good: 'paleGreen', bad: 'paleRed', own: 'paleBlue' };
 	/** Moves tried after answering that keep a chip of their own. */
 	const MAX_TRIES = 2;
+	/** A missed card comes back this many cards later for practice, at most MAX_REPEATS times in a sitting. */
+	const REPEAT_GAP = 5;
+	const MAX_REPEATS = 2;
 
 	let phase = $state<Phase>('loading');
 	let queue = $state<string[]>([]);
@@ -82,8 +85,8 @@
 	let result = $state<Result | null>(null);
 	let revealed = $state(false);
 	let firstTry = $state(true);
-	/** Picked from how the attempt went (autoGrade): a miss, a long think, or a quick answer. */
-	let grade = $state<Grade>(Rating.Good);
+	/** The card already came up in this sitting (after a miss): practice only, its streak doesn't change. */
+	let repeat = $state(false);
 	/** Engine continuations keyed by their first move ('' = the engine's own choice when no answer is known). */
 	let lines = $state.raw<Record<string, Ply[]>>({});
 	/** The start of a line (the move, and the reply to a mistake) until the engine's continuation arrives. */
@@ -111,15 +114,9 @@
 	/** Explanations written ahead of time (scripts/explanations.ts), by `${position key}|${habit}`. */
 	let explanations = $state.raw<Record<string, Explanation>>({});
 	let stats = $state({ done: 0, firstTry: 0 });
-	let nextDue = $state<number | undefined>(undefined);
-	/** Cards to keep practicing with once this session is done. */
-	let more = $state<string[]>([]);
-	/** Whether the current card is ahead of schedule: only a miss is recorded. */
-	let practicing = $state(false);
-	/** Extra-practice cards not yet recorded; new cards among them are learned normally. */
-	let practice = new Set<string>();
+	/** Cards that came up in this sitting, and how often each missed one was brought back. */
+	const appeared = new Set<string>();
 	const requeued = new Map<string, number>();
-	let askedAt = 0;
 	let introTimer: ReturnType<typeof setTimeout> | undefined;
 	let playTimer: ReturnType<typeof setTimeout> | undefined;
 	let engine: Promise<EnginePool> | undefined;
@@ -345,49 +342,35 @@
 		fullPath = false;
 		if (i >= queue.length) {
 			phase = 'done';
-			const s = await data().session(settings.newPerDay);
-			nextDue = s.nextDue;
-			more = [...shuffled(s.ids), ...shuffled(s.extra)];
-			practice = new Set(s.extra);
 			void refreshDrill();
 			return;
 		}
 		index = i;
+		repeat = appeared.has(queue[i]);
+		appeared.add(queue[i]);
 		const detail = await data().cardDetail(queue[i]);
 		if (!detail) return load(i + 1);
 		card = detail;
-		practicing = practice.has(detail.card.id) && detail.card.fsrs.state !== State.New;
 		startIntro();
 	}
 
-	/** Scheduled cards first; with none left, extra practice so there is always something to drill. */
+	/** The whole deck in order of need (buildDeck), or the one card picked on the Mistakes page. */
 	async function start() {
 		if (!settings.username) return;
 		await data().syncCards();
-		// One chosen card (Drill on a mistake): practised like extra practice, so only a miss is recorded.
 		const only = page.url.searchParams.get('card');
-		if (only && (await data().cardDetail(only))) return begin([only], [only]);
-		const s = await data().session(settings.newPerDay);
-		nextDue = s.nextDue;
-		// Scheduled cards come first, then extra practice; each group in a new order every time.
-		if (s.ids.length || s.extra.length) begin([...shuffled(s.ids), ...shuffled(s.extra)], s.extra);
+		if (only && (await data().cardDetail(only))) return begin([only]);
+		const deck = await data().deck();
+		if (deck.ids.length) begin(deck.ids);
 		else phase = 'empty';
 	}
 
-	function begin(ids: string[], extra: string[]) {
-		practice = new Set(extra);
+	function begin(ids: string[]) {
+		appeared.clear();
 		requeued.clear();
+		stats = { done: 0, firstTry: 0 };
 		queue = ids;
 		void load(0);
-	}
-
-	/** Cards that come due mid-session (learning steps, a miss a few cards ago) move up to come next. */
-	async function promoteDue() {
-		const s = await data().session(settings.newPerDay);
-		const due = s.ids.filter((id) => id !== queue[index]);
-		if (!due.length) return;
-		for (const id of due) practice.delete(id);
-		queue = [...queue.slice(0, index + 1), ...due, ...queue.slice(index + 1).filter((id) => !due.includes(id))];
 	}
 
 	function startIntro() {
@@ -408,7 +391,6 @@
 		clearTimeout(introTimer);
 		cursor = at;
 		phase = 'ask';
-		askedAt = performance.now();
 	}
 
 	/** Steps through the game up to the drill position, then on into the line under review. */
@@ -495,7 +477,6 @@
 
 	async function answer(uci: string) {
 		if (!card || !line) return;
-		const ms = performance.now() - askedAt;
 		const next = after(line.pos, uci);
 		seed = { ...seed, [uci]: continuation(line.pos, [uci]) };
 		selected = uci;
@@ -524,7 +505,6 @@
 		// A sound alternative: the main move stays hidden so it can still be found.
 		seeking = r.kind !== 'wrong' && main !== undefined && uci !== main;
 		phase = 'result';
-		grade = autoGrade({ correctFirstTry: firstTry, ms, state: card.card.fsrs.state });
 		void explain(card.card.id, r);
 	}
 
@@ -593,7 +573,6 @@
 		tries = [];
 		cursor = end;
 		phase = 'ask';
-		askedAt = performance.now();
 	}
 
 	/** Shows the main move on the drill position, as the solid green arrow among the lines. */
@@ -609,20 +588,38 @@
 		if (!card || phase !== 'result') return;
 		const id = card.card.id;
 		phase = 'loading';
-		// Practising ahead never pushes a card further out, but a miss brings it back sooner.
-		const record = !practicing || grade === Rating.Again;
-		if (record) {
-			await data().review(id, grade);
-			practice.delete(id);
+		// Only the first time a card comes up in a sitting counts toward its streak.
+		if (!repeat) {
+			await data().record(id, firstTry);
+			stats.done++;
+			if (firstTry) stats.firstTry++;
+			void refreshDrill();
 		}
-		stats.done++;
-		if (firstTry) stats.firstTry++;
-		if (record && grade === Rating.Again && (requeued.get(id) ?? 0) < 2) {
+		// A miss comes back a few cards later for practice.
+		if (!firstTry && (requeued.get(id) ?? 0) < MAX_REPEATS) {
 			requeued.set(id, (requeued.get(id) ?? 0) + 1);
-			queue = [...queue, id];
+			const at = Math.min(queue.length, index + 1 + REPEAT_GAP);
+			queue = [...queue.slice(0, at), id, ...queue.slice(at)];
 		}
-		await promoteDue();
 		await load(index + 1);
+	}
+
+	/** What the answer did to the card's streak, shown above Continue. */
+	function outcome(c: CardRecord): string {
+		if (repeat) return firstTry ? 'Practice round: right this time.' : 'Practice round: it comes back again soon.';
+		if (!firstTry) return 'Back to 0 · it comes back in a few cards.';
+		const n = c.streak + 1;
+		if (n < KNOWN_STREAK) return `${n} in a row · ${KNOWN_STREAK - n} more and it’s known.`;
+		return n === KNOWN_STREAK ? 'Known: 3 in a row.' : `Known · ${n} in a row.`;
+	}
+
+	/** Where the card stands, shown with the position. */
+	function standing(c: CardRecord): string {
+		if (repeat) return 'practice round';
+		if (c.playedAgain) return `played again in a game on ${new Date(c.playedAgain).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+		if (c.missed) return 'missed last time';
+		const status = statusOf(c);
+		return status === 'new' ? 'new' : status === 'known' ? 'known' : `${c.streak} in a row`;
 	}
 
 	async function skipForGood() {
@@ -647,15 +644,6 @@
 			else return;
 		} else return;
 		e.preventDefault();
-	}
-
-	function interval(dueMs: number) {
-		const m = Math.max(1, (dueMs - Date.now()) / 60_000);
-		if (m < 60) return `${Math.round(m)}m`;
-		if (m < 1440) return `${Math.round(m / 60)}h`;
-		const d = m / 1440;
-		if (d < 30) return `${Math.round(d)}d`;
-		return d < 365 ? `${Math.round(d / 30)}mo` : `${(d / 365).toFixed(1)}y`;
 	}
 
 	const moveNo = (p: Ply, i: number) => (p.white ? `${p.moveNumber}.` : i === 0 ? `${p.moveNumber}…` : '');
@@ -745,12 +733,12 @@
 		</section>
 	{:else if phase === 'done'}
 		<section class="center card">
-			<div class="label">Session complete</div>
+			<div class="label">{queue.length > 1 ? 'Whole deck done' : 'Done'}</div>
 			<h2>{stats.done} {stats.done === 1 ? 'card' : 'cards'} · {pct(stats.done ? stats.firstTry / stats.done : 0)} first try</h2>
-			<p class="dim">{#if nextDue}Next scheduled review in {interval(nextDue)}.{:else}You're all caught up.{/if}</p>
+			<p class="dim">{drill.known} of {drill.total} cards known.</p>
 			<div class="actions">
-				{#if more.length}<button class="btn btn-primary" onclick={() => begin(more, [...practice])}>Keep practicing</button>{/if}
-				<a class="btn {more.length ? 'btn-quiet' : 'btn-primary'}" href="{base}/">Done</a>
+				<button class="btn btn-primary" onclick={() => ((phase = 'loading'), void start())}>Go again</button>
+				<a class="btn btn-quiet" href="{base}/">Done</a>
 			</div>
 		</section>
 	{:else if card && line && shown}
@@ -860,7 +848,7 @@
 					{:else if phase === 'ask'}
 						<p class="phone">
 							<strong>Your move</strong>
-							<span class="faint">· reached {card.reached}×{#if card.card.fsrs.state === State.New} · new card{:else if practicing} · extra practice{/if}</span>
+							<span class="faint">· {standing(card.card)} · reached {card.reached}×</span>
 						</p>
 					{:else if phase === 'checking'}
 						<p class="faint">Checking…</p>
@@ -896,7 +884,7 @@
 					<div class="prompt desktop">
 						<h2>{phase === 'intro' ? 'Here’s the position…' : phase === 'checking' ? 'Checking…' : 'Your move'}</h2>
 						<p class="dim">
-							You reached this position {card.reached} {card.reached === 1 ? 'time' : 'times'}{#if card.card.fsrs.state === State.New} · new card{:else if practicing} · extra practice{/if}
+							You reached this position {card.reached} {card.reached === 1 ? 'time' : 'times'} · {standing(card.card)}
 						</p>
 						{#if phase === 'intro'}<p class="faint small">Click the board to skip</p>{/if}
 						{#if phase === 'ask'}<p class="faint small">← → to step through the moves</p>{/if}
@@ -1012,13 +1000,7 @@
 							</div>
 						{:else}
 							<div class="foot-row">
-								<p class="faint small">
-									{#if practicing}
-										Extra practice: {firstTry ? 'this card keeps its schedule' : 'the miss brings this card back sooner'}.
-									{:else}
-										{grade === Rating.Again ? 'Missed, so it comes back' : 'Next review'} in {interval(card.intervals[grade])}.
-									{/if}
-								</p>
+								<p class="small streak" class:miss={!firstTry}>{outcome(card.card)}</p>
 								<details class="menu">
 									<summary aria-label="More options" title="More options">⋯</summary>
 									<div class="menu-body card">
@@ -1671,6 +1653,15 @@
 
 	.foot-row p {
 		margin: 0;
+	}
+
+	.streak {
+		color: var(--win);
+		font-weight: 600;
+	}
+
+	.streak.miss {
+		color: var(--text-2);
 	}
 
 	.menu {

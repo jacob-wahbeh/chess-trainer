@@ -12,15 +12,13 @@ export interface Settings {
 	periodMonths: number;
 	/** Positions reached fewer times than this are not analysed. */
 	minReach: number;
-	/** New drill cards introduced per day. */
-	newPerDay: number;
 	/** How fast drills replay the moves leading to each position. */
 	introSpeed: 'slow' | 'normal' | 'fast';
 }
 
 const STORAGE_KEY = 'chess-trainer/settings';
 const LICHESS_KEY = 'chess-trainer/lichess';
-const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, newPerDay: 10, introSpeed: 'normal' };
+const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, introSpeed: 'normal' };
 /** Re-sync in the background when the last sync is older than this. */
 const STALE_SECONDS = 6 * 3600;
 /** Local Stockfish depth: matched deep Lichess evals as well as native Stockfish in the research. */
@@ -52,23 +50,25 @@ export const analysis = $state({
 	version: 0
 });
 
+/** The drill deck's counts (see buildDeck); `attention` is what the badge shows. */
 export const drill = $state({
-	due: 0,
+	playedAgain: 0,
+	missed: 0,
+	recent: 0,
 	fresh: 0,
+	learning: 0,
+	known: 0,
 	total: 0,
-	nextDue: undefined as number | undefined
+	attention: 0
 });
 
-/** Recounts today's drill queue (and the home-screen badge, where supported). */
+/** Recounts the deck (and the home-screen badge, where supported): mistakes played again, misses, recent ones. */
 export async function refreshDrill() {
 	if (!settings.username) return;
-	const s = await data().session(settings.newPerDay);
-	drill.due = s.due;
-	drill.fresh = s.fresh;
-	drill.total = s.total;
-	drill.nextDue = s.nextDue;
+	const { ids: _ids, ...counts } = await data().deck();
+	Object.assign(drill, counts, { attention: counts.playedAgain + counts.missed + counts.recent });
 	const nav = navigator as Navigator & { setAppBadge?: (n: number) => Promise<void> };
-	nav.setAppBadge?.(s.due + s.fresh).catch(() => {});
+	nav.setAppBadge?.(drill.attention).catch(() => {});
 }
 
 async function syncCards() {

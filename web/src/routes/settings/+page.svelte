@@ -48,12 +48,6 @@
 
 	let confirmReset = $state(false);
 
-	function setNewPerDay(n: number) {
-		settings.newPerDay = n;
-		saveSettings();
-		void refreshDrill();
-	}
-
 	async function resetDrills() {
 		if (!confirmReset) {
 			confirmReset = true;
@@ -189,19 +183,13 @@
 
 <section class="group">
 	<div class="label">Drills</div>
-	<div class="dim small">New cards per day</div>
-	<div class="segmented" role="group" aria-label="New cards per day">
-		{#each [5, 10, 15, 25] as n (n)}
-			<button aria-pressed={settings.newPerDay === n} onclick={() => setNewPerDay(n)}>{n}</button>
-		{/each}
-	</div>
 	<div class="dim small">Position setup speed</div>
 	<div class="segmented" role="group" aria-label="Position setup speed">
 		{#each [['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']] as const as [speed, label] (speed)}
 			<button aria-pressed={settings.introSpeed === speed} onclick={() => ((settings.introSpeed = speed), saveSettings())}>{label}</button>
 		{/each}
 	</div>
-	<div class="faint small num">{drill.total} cards · {drill.due} due now · {drill.fresh} new today</div>
+	<div class="faint small num">{drill.total} cards · {drill.known} known · {drill.learning} learning · {drill.fresh} new</div>
 	<button class="danger" onclick={resetDrills} disabled={!drill.total}>
 		{confirmReset ? 'Tap again to reset all drill progress' : 'Reset drill progress'}
 	</button>

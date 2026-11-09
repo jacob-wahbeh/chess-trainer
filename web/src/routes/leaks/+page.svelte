@@ -12,22 +12,43 @@
 
 	/** Played as a first mistake at least this often: a habit worth drilling first. */
 	const HABIT = 5;
+	/** Cards shown per section at first and per "Show more": hundreds of boards at once freeze a phone. */
+	const PAGE = 24;
+	/** While the analysis runs the list is refreshed at most this often (it reports progress every few seconds). */
+	const REFRESH_MS = 15_000;
 
 	const param = $derived(page.url.searchParams.get('c'));
 	const color: Color | undefined = $derived(param === 'white' || param === 'black' ? param : undefined);
 	let list = $state<LeakList | null>(null);
+	let habitsShown = $state(PAGE);
+	let oneOffsShown = $state(PAGE);
+	/** When and for which colour the list was last loaded. */
+	let loaded = { at: 0, color: undefined as Color | undefined };
 
 	$effect(() => {
 		void analysis.version;
 		if (!app.summary) return;
 		const c = color;
 		let cancelled = false;
-		data()
-			.leaks(c)
-			.then((l) => {
-				if (!cancelled) list = l;
-			});
-		return () => (cancelled = true);
+		// A new colour loads at once; progress while the analysis runs only every REFRESH_MS.
+		const wait = list && analysis.running && c === loaded.color ? Math.max(0, loaded.at + REFRESH_MS - Date.now()) : 0;
+		const timer = setTimeout(async () => {
+			const l = await data().leaks(c);
+			if (cancelled) return;
+			loaded = { at: Date.now(), color: c };
+			list = l;
+		}, wait);
+		return () => {
+			cancelled = true;
+			clearTimeout(timer);
+		};
+	});
+
+	// Each colour starts with the first page again.
+	$effect(() => {
+		void color;
+		habitsShown = PAGE;
+		oneOffsShown = PAGE;
 	});
 
 	const habits = $derived(list?.leaks.filter((l) => l.first >= HABIT) ?? []);
@@ -59,15 +80,21 @@
 {#if list && habits.length}
 	<h2 class="section">Habits <span class="faint">· first mistake in {HABIT}+ games</span></h2>
 	<div class="grid">
-		{#each habits as leak (`${leak.key} ${leak.uci}`)}<LeakCard {leak} />{/each}
+		{#each habits.slice(0, habitsShown) as leak (`${leak.key} ${leak.uci}`)}<LeakCard {leak} />{/each}
 	</div>
+	{#if habits.length > habitsShown}
+		<button class="btn btn-quiet more" onclick={() => (habitsShown += PAGE)}>Show more · {habits.length - habitsShown} left</button>
+	{/if}
 {/if}
 
 {#if list && oneOffs.length}
 	<h2 class="section">One-offs <span class="faint">· fewer than {HABIT} games</span></h2>
 	<div class="grid">
-		{#each oneOffs as leak (`${leak.key} ${leak.uci}`)}<LeakCard {leak} />{/each}
+		{#each oneOffs.slice(0, oneOffsShown) as leak (`${leak.key} ${leak.uci}`)}<LeakCard {leak} />{/each}
 	</div>
+	{#if oneOffs.length > oneOffsShown}
+		<button class="btn btn-quiet more" onclick={() => (oneOffsShown += PAGE)}>Show more · {oneOffs.length - oneOffsShown} left</button>
+	{/if}
 {/if}
 
 {#if list && !list.leaks.length && !analysis.running}
@@ -110,5 +137,10 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
 		gap: 10px;
+	}
+
+	.more {
+		width: 100%;
+		margin-top: 10px;
 	}
 </style>
