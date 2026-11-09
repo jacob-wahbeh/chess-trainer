@@ -41,6 +41,13 @@ export interface FactInput {
 	mainLine?: Ply[];
 	/** The opponent's engine line if it were their turn again (from passTurn), to find what they threaten. */
 	threat?: Ply[] | null;
+	/**
+	 * Evaluations after the taught and the failing move, in centipawns from the player's side. Material that
+	 * changes hands while the engine still rates the position level was a gambit, so it isn't reported as simply
+	 * won or lost.
+	 */
+	mainEval?: number;
+	wrongEval?: number;
 }
 
 const VALUE: Record<Role, number> = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 100 };
@@ -48,6 +55,8 @@ const NUMBER = ['no', 'a', 'two', 'three', 'four', 'five', 'six', 'seven', 'eigh
 const MAX_FACTS = 6;
 /** Material is compared once the captures in this many plies have settled. */
 const MATERIAL_WINDOW = 10;
+/** Material counts as paid for when the evaluation moves less than this per pawn (centipawns) in its direction. */
+const PAID_PER_PAWN = 50;
 
 const minor = (role: Role) => role === 'knight' || role === 'bishop';
 const times = (n: number) => (n === 1 ? 'once' : n === 2 ? 'twice' : `${NUMBER[n] ?? n} times`);
@@ -380,7 +389,7 @@ function threatShapes(passed: Chess, threat: Ply[], swing: Swing): Shape[] {
 }
 
 /** Facts for a card, most concrete first: what the failing move allows, then what the taught move does. */
-export function explainFacts({ pos, path, wrong, wrongLine, main, mainLine, threat }: FactInput): Fact[] {
+export function explainFacts({ pos, path, wrong, wrongLine, main, mainLine, threat, mainEval, wrongEval }: FactInput): Fact[] {
 	const facts: Fact[] = [];
 	const me = pos.turn;
 	const them = name(opposite(me));
@@ -408,11 +417,15 @@ export function explainFacts({ pos, path, wrong, wrongLine, main, mainLine, thre
 			facts.push({ about: 'wrong', text: `${san} allows mate: ${formatPlies(bad.slice(0, n))}.`, line: wrong, n, shapes: matedKing(pos, bad, n, 'red') });
 		} else if (swing && !swing.mate && value(swing.lost) - value(swing.won) >= 1) {
 			const shapes = captureSquares(pos, bad, swing.n, opposite(me)).map((sq) => ring(sq, 'red'));
-			facts.push({ about: 'wrong', text: `${san} loses ${describeMaterial(swing.lost, swing.won)}${shown(bad, swing.n)}.`, line: wrong, n: swing.n, shapes });
+			const material = `${describeMaterial(swing.lost, swing.won)}${shown(bad, swing.n)}`;
+			// Still level for the engine: a gambit, not a loss.
+			const gambit = wrongEval !== undefined && wrongEval > -(value(swing.lost) - value(swing.won)) * PAID_PER_PAWN;
+			const text = gambit ? `${san} gives up ${material}, but gets enough play for it.` : `${san} loses ${material}.`;
+			facts.push({ about: 'wrong', text, line: wrong, n: swing.n, shapes });
 			// Only a double attack that actually wins one of its targets explains the loss.
 			const fork = findFork(pos, bad);
 			const pays = fork && capturesOn(pos, bad.slice(0, swing.n), fork.n, fork.squares);
-			if (fork && pays) {
+			if (fork && pays && !gambit) {
 				const shapes = fork.squares.map((sq): Shape => ({ orig: makeSquare(fork.from), dest: makeSquare(sq), brush: 'red' }));
 				facts.push({ about: 'wrong', text: `${numbered(bad[fork.n - 1])} ${forkText(fork.targets)}.`, line: wrong, n: fork.n, shapes });
 			}
@@ -450,7 +463,11 @@ export function explainFacts({ pos, path, wrong, wrongLine, main, mainLine, thre
 			facts.push({ about: 'main', text: `${san} leads to mate: ${formatPlies(good.slice(0, n))}.`, line: main, n, shapes: matedKing(pos, good, n, 'green') });
 		} else if (swing && !swing.mate && value(swing.won) - value(swing.lost) >= 1) {
 			const shapes = captureSquares(pos, good, swing.n, me).map((sq) => ring(sq, 'green'));
-			facts.push({ about: 'main', text: `${san} wins ${describeMaterial(swing.won, swing.lost)}${shown(good, swing.n)}.`, line: main, n: swing.n, shapes });
+			const material = `${describeMaterial(swing.won, swing.lost)}${shown(good, swing.n)}`;
+			// Only level for the engine: the opponent gambited it.
+			const gambit = mainEval !== undefined && mainEval < (value(swing.won) - value(swing.lost)) * PAID_PER_PAWN;
+			const text = gambit ? `${san} picks up ${material}, but ${them} gets enough play for it.` : `${san} wins ${material}.`;
+			facts.push({ about: 'main', text, line: main, n: swing.n, shapes });
 		}
 		// A check that drives the king out, or a quiet move that threatens mate.
 		const after = pos.clone();

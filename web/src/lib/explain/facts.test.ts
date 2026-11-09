@@ -87,6 +87,20 @@ describe('explainFacts', () => {
 		]);
 	});
 
+	it('calls material a gambit when the engine still rates the position level', () => {
+		const { pos, path, plies: bad } = setup(['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Nd4'], ['Nxe5', 'Qg5', 'Bxf7+', 'Ke7', 'O-O', 'Qxe5', 'Bb3']);
+		const level = explainFacts({ pos, path, wrong: bad[0].uci, wrongLine: bad, wrongEval: -20 }).map((f) => f.text);
+		// A level evaluation: given up for play, and the fork no longer explains a loss.
+		expect(level).toEqual(['4.Nxe5 gives up a knight for two pawns: 4.Nxe5 Qg5 5.Bxf7+ Ke7 6.O-O Qxe5, but gets enough play for it.']);
+		expect(explainFacts({ pos, path, wrong: bad[0].uci, wrongLine: bad, wrongEval: -250 })[0].text).toMatch(/^4\.Nxe5 loses a knight/);
+
+		const moves = ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Nf6', 'Ng5', 'Nxe4'];
+		const { pos: p2, path: path2, plies: good } = setup(moves, ['Bxf7+', 'Ke7', 'd4', 'h6', 'Nxe4', 'Kxf7', 'd5', 'Nd4', 'c3', 'Nb5']);
+		const texts = (mainEval: number) => explainFacts({ pos: p2, path: path2, wrong: 'a2a3', main: good[0].uci, mainLine: good, mainEval }).map((f) => f.text);
+		expect(texts(10)).toContain('5.Bxf7+ picks up a pawn, but Black gets enough play for it.');
+		expect(texts(120)).toContain('5.Bxf7+ wins a pawn.');
+	});
+
 	it('names a threat only when it wins material, and says when the habit allows it', () => {
 		const moves = ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'd6', 'd4', 'Bg4'];
 		const { pos, path } = setup(moves);

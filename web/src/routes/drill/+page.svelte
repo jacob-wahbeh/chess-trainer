@@ -10,7 +10,7 @@
 	import type { DrawShape } from 'chessground/draw';
 	import type { Key } from 'chessground/types';
 	import { chessopsUci } from '$lib/analysis/runner';
-	import { formatEval, formatEvalShort, type Eval } from '$lib/analysis/score';
+	import { formatEval, formatEvalShort, whiteCp, type Eval } from '$lib/analysis/score';
 	import { continuation, formatPlies, positions, sanOf, walk, type Ply, type Walk } from '$lib/chess/line';
 	import { ACCEPT_DROP, autoGrade, dropOf, Rating, shuffled, State, type Grade } from '$lib/drill/cards';
 	import { EnginePool, type EvalResult } from '$lib/engine/pool';
@@ -141,7 +141,17 @@
 	/** Checked facts about the failing move and the taught one, from the engine lines as they arrive. */
 	const facts: Fact[] = $derived.by(() => {
 		if (!card || !line || !result || !wrongMove) return [];
-		return explainFacts({ pos: line.pos, path: card.card.path, wrong: wrongMove, wrongLine: lines[wrongMove], main, mainLine: main ? lines[main] : undefined, threat });
+		return explainFacts({
+			pos: line.pos,
+			path: card.card.path,
+			wrong: wrongMove,
+			wrongLine: lines[wrongMove],
+			main,
+			mainLine: main ? lines[main] : undefined,
+			threat,
+			mainEval: main !== undefined ? playerCp(evalOf(main)) : undefined,
+			wrongEval: playerCp(evalOf(wrongMove))
+		});
 	});
 	const progress = $derived(queue.length ? Math.min(1, index / queue.length) : 0);
 
@@ -174,6 +184,8 @@
 	const chipOf = (key: string | null) => chips.find((c) => c.key === key);
 	/** A line's first move without its number: every line starts from the drill position. */
 	const chipSan = (key: string) => lineOf(key)[0]?.san ?? (line && key ? sanOf(line.pos, key) : '…');
+	/** An evaluation in centipawns from the player's side. */
+	const playerCp = (e: Eval | undefined) => (e ? whiteCp(e) * (color === 'white' ? 1 : -1) : undefined);
 	/** Evaluations as the analysis saved them where it has one (so they match the verdict), else the live engine's. */
 	const evalOf = (key: string): Eval | undefined => {
 		if (!card) return evals[key];
@@ -193,10 +205,11 @@
 		for (const c of chips) {
 			if (c.key === (main ?? '') || c.key === wrongMove || !lines[c.key]) continue;
 			const input = { pos: line.pos, path: card.card.path };
+			const after = playerCp(evalOf(c.key));
 			out[c.key] =
 				c.kind === 'bad'
-					? explainFacts({ ...input, wrong: c.key, wrongLine: lines[c.key] })
-					: explainFacts({ ...input, wrong: '', main: c.key, mainLine: lines[c.key] });
+					? explainFacts({ ...input, wrong: c.key, wrongLine: lines[c.key], wrongEval: after })
+					: explainFacts({ ...input, wrong: '', main: c.key, mainLine: lines[c.key], mainEval: after });
 		}
 		return out;
 	});
@@ -767,6 +780,15 @@
 
 				{#if phase === 'result' && chips.length}
 					<div class="chips" role="group" aria-label="Lines to review" bind:this={chipsEl}>
+						<button
+							class="chip-line home"
+							class:selected={!pv && cursor === end}
+							onclick={() => goTo(end)}
+							aria-label="Back to the position"
+							title="Back to the position, with every line as an arrow"
+						>
+							<Icon name="target" size={16} />
+						</button>
 						{#each chips as c, i (c.key)}
 							<button
 								class="chip-line {c.kind}"
@@ -855,12 +877,12 @@
 								{#each notesHere as n, i (i)}<li class={n.tone}>{n.text}</li>{/each}
 							</ul>
 						{/if}
-					{:else if viewN >= 0 && answerShown && written}
+					{:else if answerShown && written && (viewN === 0 || (viewN > 0 && (viewKey === (main ?? '') || viewKey === card.card.wrong)))}
 						<p class="headline-note">{written.headline}</p>
 					{:else if caption}
 						<p class="faint">{caption}</p>
 					{/if}
-					{#if away && !seeking}<button class="text-btn back" onclick={() => goTo(end)}>Back to the position</button>{/if}
+					{#if away && phase !== 'result'}<button class="text-btn back" onclick={() => goTo(end)}>Back to the position</button>{/if}
 				</div>
 			</div>
 
@@ -1121,7 +1143,7 @@
 	.chips {
 		position: relative;
 		display: flex;
-		gap: 6px;
+		gap: 5px;
 		overflow-x: auto;
 		scrollbar-width: none;
 	}
@@ -1137,16 +1159,24 @@
 		flex-shrink: 0;
 		align-items: center;
 		gap: 6px;
-		height: 32px;
-		padding: 0 10px 0 4px;
+		height: 30px;
+		padding: 0 9px 0 4px;
 		border-radius: 999px;
 		border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line));
 		color: var(--text);
 		font-weight: 620;
-		font-size: 14px;
+		font-size: 13px;
 		transition:
 			background 120ms var(--ease),
 			border-color 120ms var(--ease);
+	}
+
+	.chip-line.home {
+		--c: var(--text-3);
+		justify-content: center;
+		width: 30px;
+		padding: 0;
+		color: var(--text-2);
 	}
 
 	.chip-line.good {
@@ -1169,8 +1199,8 @@
 	.chip-line .mark {
 		display: inline-grid;
 		place-items: center;
-		width: 20px;
-		height: 20px;
+		width: 18px;
+		height: 18px;
 		border-radius: 50%;
 		color: var(--c);
 		background: color-mix(in srgb, var(--c) 20%, transparent);
@@ -1185,7 +1215,7 @@
 
 	.chip-line .ev {
 		color: var(--text-2);
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 600;
 	}
 
@@ -1692,6 +1722,22 @@
 
 		.desktop {
 			display: none;
+		}
+
+		.story {
+			order: 1;
+		}
+
+		.verdict {
+			order: 2;
+		}
+
+		.idea {
+			order: 3;
+		}
+
+		.foot {
+			order: 4;
 		}
 
 		/* The top bar already says Correct / Not quite: keep just the detail. */
