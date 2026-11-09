@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { analysis, analyze, app, applyFilter, currentFilter, drill, lichess, refreshDrill, saveSettings, setLichess, settings, sync } from '$lib/state.svelte';
 	import { canUseOAuth, lichessUsername, startLichessLogin } from '$lib/lichess/oauth';
 	import { data } from '$lib/worker/client';
@@ -227,7 +228,7 @@
 
 <section class="group">
 	<div class="label">Developer</div>
-	<a class="card link-row" href="/bench">
+	<a class="card link-row" href="{base}/bench">
 		<div>
 			<div>Engine benchmark</div>
 			<div class="faint small">Measure Stockfish speed on this device</div>

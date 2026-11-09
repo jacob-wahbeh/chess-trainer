@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { analysis, app, drill, saveSettings, settings, sync } from '$lib/state.svelte';
 	import { data } from '$lib/worker/client';
 	import type { LeakList } from '$lib/worker/data.worker';
@@ -99,7 +100,7 @@
 	</p>
 
 	{@const todo = drill.due + drill.fresh}
-	<a class="drill-cta card" class:done={!todo} href={drill.total ? '/drill' : '/leaks'}>
+	<a class="drill-cta card" class:done={!todo} href={`${base}${drill.total ? '/drill' : '/leaks'}`}>
 		<div>
 			<div class="label">Drill</div>
 			<div class="cta-title">
@@ -150,7 +151,7 @@
 			<section class="card list">
 				<div class="list-head">
 					<h2>Most played as {color}</h2>
-					<a class="faint small" href="/lines?c={color}">All</a>
+					<a class="faint small" href="{base}/lines?c={color}">All</a>
 				</div>
 				{#each top?.[color] ?? [] as fam (fam.name)}
 					<a class="row" href={exploreHref(color, fam.ucis)}>
@@ -166,12 +167,12 @@
 		{/each}
 	</div>
 
-	<a class="btn btn-quiet all" href="/lines">Browse all your lines <Icon name="arrow" size={18} /></a>
+	<a class="btn btn-quiet all" href="{base}/lines">Browse all your lines <Icon name="arrow" size={18} /></a>
 
 	<section class="leaks">
 		<div class="list-head">
 			<h2>Costliest first mistakes</h2>
-			{#if leaks?.leaks.length}<a class="faint small" href="/leaks">All {leaks.leaks.length}</a>{/if}
+			{#if leaks?.leaks.length}<a class="faint small" href="{base}/leaks">All {leaks.leaks.length}</a>{/if}
 		</div>
 		<AnalysisStatus />
 		{#each leaks?.leaks.slice(0, 3) ?? [] as leak (`${leak.key} ${leak.uci}`)}

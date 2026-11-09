@@ -7,6 +7,8 @@ export default {
 	kit: {
 		// Single-page app: every route falls back to the client-rendered shell.
 		adapter: adapter({ fallback: 'index.html' }),
+		// Served from a sub-path on GitHub Pages (/chess-trainer); empty for local dev and other hosts.
+		paths: { base: process.env.BASE_PATH ?? '' },
 		// Registered manually in production only (a dev service worker would serve stale files).
 		serviceWorker: { register: false }
 	}

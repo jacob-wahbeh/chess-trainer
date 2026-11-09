@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { normalizeMove } from 'chessops/chess';
@@ -79,7 +80,7 @@
 
 	function go(next: string[]) {
 		const m = next.length ? `&m=${next.join(',')}` : '';
-		goto(`/explore?c=${color}${m}`, { keepFocus: true, noScroll: true });
+		goto(`${base}/explore?c=${color}${m}`, { keepFocus: true, noScroll: true });
 	}
 
 	function onMove(orig: Key, dest: Key) {

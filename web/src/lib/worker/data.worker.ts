@@ -105,8 +105,11 @@ let minReach = 3;
 let run = 0;
 let lastProgress: AnalysisProgress | null = null;
 
+/** The app's base path (e.g. /chess-trainer on GitHub Pages), set by the client before any other call. */
+let base = '';
+
 const loadOpenings = () =>
-	(openings ??= fetch('/openings.json')
+	(openings ??= fetch(`${base}/openings.json`)
 		.then((r) => r.json())
 		.then(buildOpeningIndex));
 
@@ -143,6 +146,9 @@ function position(key: number): Chess | undefined {
 }
 
 const api = {
+	setBase(path: string) {
+		base = path;
+	},
 	/** Loads stored games (no network) and builds the trees for `f`. */
 	async load(u: string, f: Filter): Promise<Summary> {
 		user = u;

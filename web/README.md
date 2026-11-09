@@ -24,6 +24,13 @@ npm run build      # static site in build/
 The service worker (`src/service-worker.ts`) is only registered in production builds (`npm run build && npm run preview`),
 and browsers only allow it on https:// or localhost.
 
+## Deploy
+
+Every push to `main` publishes the app to GitHub Pages at https://jacob-wahbeh.github.io/chess-trainer/
+(`.github/workflows/deploy-pages.yml`: type check, tests, then `BASE_PATH=/chess-trainer npm run build`). One-time
+setup: repo Settings → Pages → Source: GitHub Actions. Links and fetches go through `base` from `$app/paths` so the
+app works from that sub-path; the data worker gets it from the client (`setBase`).
+
 `npx vite-node scripts/compare-python.ts` runs the import + tree code over the Python CLI's cached
 archives (`../data/<user>/archives`) and prints counts comparable to the Python research.
 

@@ -1,5 +1,6 @@
 // "Log in with Lichess" via OAuth 2 + PKCE. Lichess accepts any client_id without registering an app, and
 // no scopes are requested: the token only proves identity, which the masters explorer requires.
+import { base } from '$app/paths';
 
 export interface LichessAuth {
 	token: string;
@@ -8,7 +9,7 @@ export interface LichessAuth {
 
 const CLIENT_ID = 'openings-trainer';
 const PENDING_KEY = 'chess-trainer/lichess-oauth';
-const redirectUri = () => `${location.origin}/lichess`;
+const redirectUri = () => `${location.origin}${base}/lichess`;
 
 const base64url = (bytes: Uint8Array) =>
 	btoa(String.fromCharCode(...bytes))

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { analysis, lichess } from '$lib/state.svelte';
 	import { count } from '$lib/format';
 
@@ -37,10 +38,10 @@
 		{/if}
 
 		{#if p.authError}
-			<p class="warn">Your Lichess login expired. <a href="/settings">Reconnect</a> to keep checking theory.</p>
+			<p class="warn">Your Lichess login expired. <a href="{base}/settings">Reconnect</a> to keep checking theory.</p>
 		{:else if !lichess.token}
 			<p class="dim small">
-				Moves are judged by the engine only. <a href="/settings">Connect Lichess</a> to also check them against master games.
+				Moves are judged by the engine only. <a href="{base}/settings">Connect Lichess</a> to also check them against master games.
 			</p>
 		{/if}
 		{#if p.error}<p class="warn small">{p.error}</p>{/if}

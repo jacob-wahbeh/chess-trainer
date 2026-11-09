@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import '../app.css';
 	import { onMount, type Snippet } from 'svelte';
 	import { dev } from '$app/environment';
@@ -16,17 +17,18 @@
 		{ href: '/settings', label: 'Settings', icon: 'settings' }
 	];
 
+	/** By route, so it works under a base path (GitHub Pages). */
 	function isActive(href: string) {
-		const path = page.url.pathname;
-		if (href === '/') return path === '/';
-		if (href === '/lines') return path.startsWith('/lines') || path.startsWith('/explore');
-		return path.startsWith(href);
+		const route = page.route.id ?? '';
+		if (href === '/') return route === '/';
+		if (href === '/lines') return route.startsWith('/lines') || route.startsWith('/explore');
+		return route.startsWith(href);
 	}
 
 	const progress = $derived(app.progress ? app.progress.done / app.progress.total : 0.04);
 	const todo = $derived(drill.due + drill.fresh);
 	/** Drills are a focus mode: no tab bar on phones. */
-	const focus = $derived(page.url.pathname.startsWith('/drill'));
+	const focus = $derived(page.route.id?.startsWith('/drill') ?? false);
 
 	onMount(() => {
 		void boot();
@@ -34,7 +36,7 @@
 			// After a deploy the new worker takes over; reload once so the page and its cached assets match.
 			const updating = !!navigator.serviceWorker.controller;
 			navigator.serviceWorker.addEventListener('controllerchange', () => updating && location.reload(), { once: true });
-			void navigator.serviceWorker.register('/service-worker.js');
+			void navigator.serviceWorker.register(`${base}/service-worker.js`);
 		}
 	});
 </script>
@@ -44,10 +46,10 @@
 {/if}
 
 <header class="top" class:focus>
-	<a href="/" class="brand"><img src="/favicon.svg" alt="" width="24" height="24" />Openings</a>
+	<a href="{base}/" class="brand"><img src="{base}/favicon.svg" alt="" width="24" height="24" />Openings</a>
 	<nav>
 		{#each NAV as item (item.href)}
-			<a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+			<a href={base + item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
 				{item.label}{#if item.href === '/drill' && todo}<span class="badge num">{todo}</span>{/if}
 			</a>
 		{/each}
@@ -60,7 +62,7 @@
 
 <nav class="tabbar" class:hidden={focus}>
 	{#each NAV as item (item.href)}
-		<a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+		<a href={base + item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
 			<span class="icon">
 				<Icon name={item.icon} size={22} />
 				{#if item.href === '/drill' && todo}<span class="badge num">{todo}</span>{/if}

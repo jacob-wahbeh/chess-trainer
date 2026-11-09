@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { normalizeMove, type Chess } from 'chessops/chess';
@@ -448,7 +449,7 @@
 	function onKey(e: KeyboardEvent) {
 		if (e.metaKey || e.ctrlKey || e.altKey) return;
 		const nav = NAV_KEYS[e.key];
-		if (e.key === 'Escape') goto('/');
+		if (e.key === 'Escape') goto(`${base}/`);
 		else if (nav && card && ['intro', 'ask', 'checking', 'result'].includes(phase)) step(nav);
 		else if (phase === 'intro') finishIntro();
 		else if (phase === 'result') {
@@ -572,7 +573,7 @@
 
 <div class="drill">
 	<header class="bar">
-		<a class="icon-btn" href="/" aria-label="End session" title="End session (Esc)"><Icon name="close" /></a>
+		<a class="icon-btn" href="{base}/" aria-label="End session" title="End session (Esc)"><Icon name="close" /></a>
 		<div class="track" aria-hidden="true"><span style:width="{100 * progress}%"></span></div>
 		<span class="num faint count">{Math.min(index + (phase === 'done' ? 0 : 1), queue.length)}/{queue.length}</span>
 	</header>
@@ -582,14 +583,14 @@
 			{#if !settings.username}
 				<h2>Import your games first</h2>
 				<p class="dim">Drills are built from the first mistakes in the lines you play most.</p>
-				<a class="btn btn-primary" href="/">Get started</a>
+				<a class="btn btn-primary" href="{base}/">Get started</a>
 			{:else if analysis.running}
 				<h2>Preparing your cards…</h2>
 				<p class="dim">Your games are being analysed. The drill starts here as soon as the first mistakes are found.</p>
 			{:else}
 				<h2>No cards yet</h2>
 				<p class="dim">No costly first mistakes were found in your common lines. Import more games or lower the minimum in Settings.</p>
-				<a class="btn btn-quiet" href="/leaks">See your first mistakes</a>
+				<a class="btn btn-quiet" href="{base}/leaks">See your first mistakes</a>
 			{/if}
 		</section>
 	{:else if phase === 'done'}
@@ -599,7 +600,7 @@
 			<p class="dim">{#if nextDue}Next scheduled review in {interval(nextDue)}.{:else}You're all caught up.{/if}</p>
 			<div class="actions">
 				{#if more.length}<button class="btn btn-primary" onclick={() => begin(more, [...practice])}>Keep practicing</button>{/if}
-				<a class="btn {more.length ? 'btn-quiet' : 'btn-primary'}" href="/">Done</a>
+				<a class="btn {more.length ? 'btn-quiet' : 'btn-primary'}" href="{base}/">Done</a>
 			</div>
 		</section>
 	{:else if card && line && shown}

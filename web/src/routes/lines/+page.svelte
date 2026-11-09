@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -28,7 +29,7 @@
 
 	function setColor(c: Color) {
 		open.clear();
-		goto(`/lines?c=${c}`, { replaceState: true, noScroll: true, keepFocus: true });
+		goto(`${base}/lines?c=${c}`, { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
 	const toggle = (name: string) => (open.has(name) ? open.delete(name) : open.add(name));
@@ -44,7 +45,7 @@
 </header>
 <p class="meta dim">
 	{count(app.summary?.byColor[color].n ?? 0)} games as {color} · {describeFilter(settings)} ·
-	<a class="link" href="/settings">Change</a>
+	<a class="link" href="{base}/settings">Change</a>
 </p>
 
 {#if families === null}

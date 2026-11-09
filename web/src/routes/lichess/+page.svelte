@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -10,7 +11,7 @@
 	onMount(async () => {
 		try {
 			setLichess(await finishLichessLogin(page.url));
-			await goto('/settings', { replaceState: true });
+			await goto(`${base}/settings`, { replaceState: true });
 			void analyze();
 		} catch (err) {
 			error = err instanceof Error ? err.message : String(err);
@@ -22,7 +23,7 @@
 	{#if error}
 		<h2>Couldn't connect to Lichess</h2>
 		<p class="dim">{error}</p>
-		<a class="btn btn-quiet" href="/settings">Back to settings</a>
+		<a class="btn btn-quiet" href="{base}/settings">Back to settings</a>
 	{:else}
 		<h2>Connecting to Lichess…</h2>
 	{/if}

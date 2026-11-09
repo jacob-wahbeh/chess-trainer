@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { chessgroundMove } from 'chessops/compat';
 	import { parseUci } from 'chessops/util';
 	import type { DrawShape } from 'chessground/draw';
@@ -29,7 +30,7 @@
 	};
 	const shapes = $derived([...arrow(leak.uci, 'red'), ...arrow(leak.best !== leak.uci ? leak.best : undefined, 'green')]);
 	const recent = $derived(formatPlies(line.plies.slice(-6)));
-	const drillHref = $derived(cardWorthy(leak) ? `/drill?card=${encodeURIComponent(cardId(settings.username, leak.color, leak.key, leak.uci))}` : null);
+	const drillHref = $derived(cardWorthy(leak) ? `${base}/drill?card=${encodeURIComponent(cardId(settings.username, leak.color, leak.key, leak.uci))}` : null);
 	let explained = $state(false);
 	$effect(() => {
 		const id = `${leak.key}|${leak.uci}`;

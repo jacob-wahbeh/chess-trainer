@@ -1,3 +1,4 @@
+import { base } from '$app/paths';
 import type { Color, TimeClass } from './games/types';
 import type { Settings } from './state.svelte';
 
@@ -5,7 +6,7 @@ export const pct = (x: number) => `${Math.round(100 * x)}%`;
 export const count = (n: number) => n.toLocaleString('en-US');
 
 export const exploreHref = (color: Color, ucis: string[]) =>
-	`/explore?c=${color}${ucis.length ? `&m=${ucis.join(',')}` : ''}`;
+	`${base}/explore?c=${color}${ucis.length ? `&m=${ucis.join(',')}` : ''}`;
 
 const LABELS: Record<TimeClass, string> = { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Rapid', daily: 'Daily' };
 const ORDER: TimeClass[] = ['bullet', 'blitz', 'rapid', 'daily'];

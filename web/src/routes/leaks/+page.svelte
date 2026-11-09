@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { analysis, app } from '$lib/state.svelte';
@@ -32,12 +33,12 @@
 	const habits = $derived(list?.leaks.filter((l) => l.first >= HABIT) ?? []);
 	const oneOffs = $derived(list?.leaks.filter((l) => l.first < HABIT) ?? []);
 	const points = $derived(list?.leaks.reduce((s, l) => s + l.points, 0) ?? 0);
-	const show = (c?: Color) => goto(c ? `/leaks?c=${c}` : '/leaks', { replaceState: true, noScroll: true, keepFocus: true });
+	const show = (c?: Color) => goto(`${base}/leaks${c ? `?c=${c}` : ''}`, { replaceState: true, noScroll: true, keepFocus: true });
 </script>
 
 <header class="head">
 	<h1>First mistakes</h1>
-	{#if list?.leaks.length}<a class="btn btn-primary drill-btn" href="/drill">Drill these</a>{/if}
+	{#if list?.leaks.length}<a class="btn btn-primary drill-btn" href="{base}/drill">Drill these</a>{/if}
 	<div class="segmented" role="group" aria-label="Color">
 		<button aria-pressed={!color} onclick={() => show()}>All</button>
 		<button aria-pressed={color === 'white'} onclick={() => show('white')}>White</button>

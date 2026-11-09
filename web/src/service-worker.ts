@@ -4,12 +4,13 @@
 /// <reference lib="webworker" />
 // Offline support and instant launches: the app shell, engine and opening names are cached per deploy.
 // Chess.com and Lichess requests always go to the network.
-import { build, files, version } from '$service-worker';
+import { base, build, files, version } from '$service-worker';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 const CACHE = `openings-${version}`;
-/** '/' is the single-page shell (adapter-static's fallback), served for every route. */
-const ASSETS = [...build, ...files, '/'];
+/** The single-page shell (adapter-static's fallback) at the app's root, served for every route. */
+const SHELL = `${base}/`;
+const ASSETS = [...build, ...files, SHELL];
 const ASSET_SET = new Set(ASSETS);
 
 sw.addEventListener('install', (event) => {
@@ -41,10 +42,10 @@ sw.addEventListener('fetch', (event) => {
 			const cache = await caches.open(CACHE);
 			if (request.mode === 'navigate') {
 				// Cached shell first for an instant launch; the network refreshes it for next time.
-				const cached = await cache.match('/');
+				const cached = await cache.match(SHELL);
 				const fresh = fetch(request)
 					.then((res) => {
-						if (res.ok) void cache.put('/', res.clone());
+						if (res.ok) void cache.put(SHELL, res.clone());
 						return res;
 					})
 					.catch(() => undefined);
