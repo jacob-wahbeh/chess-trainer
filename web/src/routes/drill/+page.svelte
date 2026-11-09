@@ -857,7 +857,7 @@
 
 	.board-row {
 		display: grid;
-		grid-template-columns: 22px minmax(0, 1fr);
+		grid-template-columns: 24px minmax(0, 1fr);
 		gap: 8px;
 	}
 
@@ -865,8 +865,9 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
+		flex-wrap: wrap;
 		min-height: 40px;
-		padding-left: 30px;
+		padding-left: 32px;
 	}
 
 	.stepper {
@@ -1394,8 +1395,12 @@
 
 	@media (max-width: 899px) {
 		.line-card {
-			grid-template-columns: 92px minmax(0, 1fr);
+			grid-template-columns: 84px minmax(0, 1fr);
 			gap: 12px;
+		}
+
+		.line-head {
+			gap: 6px;
 		}
 	}
 </style>

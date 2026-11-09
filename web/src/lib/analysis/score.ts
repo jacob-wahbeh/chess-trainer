@@ -55,6 +55,16 @@ export function formatEval(e: Eval | undefined): string {
 	return `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}`;
 }
 
+/** The same, short enough for a narrow eval bar: "+0.3", "−1.2", "+12", "#3". */
+export function formatEvalShort(e: Eval | undefined): string {
+	if (!e) return '';
+	if (e.mate !== undefined || Math.abs(e.cp ?? 0) >= 100000) return formatEval(e);
+	const cp = e.cp ?? 0;
+	const v = Math.abs(cp) / 100;
+	const text = v < 9.95 ? v.toFixed(1) : String(Math.round(v));
+	return text === '0.0' ? text : `${cp > 0 ? '+' : '−'}${text}`;
+}
+
 /** Centipawns from White's point of view, mates mapped beyond the win% clamp. */
 export function whiteCp(e: Eval): number {
 	if (e.mate !== undefined) return e.mate > 0 ? 100000 : -100000;

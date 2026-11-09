@@ -63,6 +63,8 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-webkit-tap-highlight-color: transparent;
 	text-size-adjust: 100%;
+	/* Nothing scrolls the page sideways on phones (clip, unlike hidden, keeps position: sticky working). */
+	overflow-x: clip;
 }
 
 h1,
@@ -266,6 +268,17 @@ button {
 .cg-wrap coords {
 	font-size: 10px;
 	font-weight: 600;
+}
+
+/* chessground shifts the full-width file letters 24px right, past the board's edge (which scrolled phones
+   sideways); keep the strip on the board and put each letter in its square's corner instead. */
+.cg-wrap coords.files {
+	left: 0;
+}
+
+.cg-wrap coords.files coord {
+	text-align: right;
+	padding-right: 4px;
 }
 
 /* Each label takes the color of the opposite square shade so it stays readable (same rules as chessground's themes). */
