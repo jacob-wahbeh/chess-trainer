@@ -265,35 +265,47 @@ button {
 	background: radial-gradient(ellipse at center, rgba(255, 0, 0, 0.9) 0%, rgba(231, 0, 0, 0.6) 25%, transparent 89%);
 }
 
-.cg-wrap coords {
+.cg-wrap cg-container coords {
 	font-size: 10px;
 	font-weight: 600;
 }
 
-/* chessground shifts the full-width file letters 24px right, past the board's edge (which scrolled phones
-   sideways); keep the strip on the board and put each letter in its square's corner instead. */
-.cg-wrap coords.files {
+/* Coordinates in the corners of their own squares: files bottom-right, ranks top-left. chessground shifts the
+   full-width file strip 24px right (past the board's edge) and the ranks up; cg-container makes these rules more
+   specific than chessground's stylesheet, which loads after this one. */
+.cg-wrap cg-container coords.files {
 	left: 0;
 }
 
-.cg-wrap coords.files coord {
+.cg-wrap cg-container coords.files coord {
 	text-align: right;
 	padding-right: 4px;
 }
 
-/* Each label takes the color of the opposite square shade so it stays readable (same rules as chessground's themes). */
+.cg-wrap cg-container coords.ranks {
+	top: 0;
+	left: 0;
+}
+
+.cg-wrap cg-container coords.ranks coord {
+	transform: none;
+	padding: 2px 0 0 3px;
+}
+
+/* Each label in the opposite shade of its square. a1 is dark, so from White's side the odd files and ranks
+   (a, c, e, g; 1, 3, 5, 7) sit on dark squares, and from Black's side on light ones. */
 .orientation-white .ranks :nth-child(odd),
-.orientation-white .files :nth-child(even),
+.orientation-white .files :nth-child(odd),
 .orientation-black .ranks :nth-child(even),
-.orientation-black .files :nth-child(odd) {
-	color: var(--sq-dark);
+.orientation-black .files :nth-child(even) {
+	color: var(--sq-light);
 }
 
 .orientation-white .ranks :nth-child(even),
-.orientation-white .files :nth-child(odd),
+.orientation-white .files :nth-child(even),
 .orientation-black .ranks :nth-child(odd),
-.orientation-black .files :nth-child(even) {
-	color: var(--sq-light);
+.orientation-black .files :nth-child(odd) {
+	color: var(--sq-dark);
 }
 
 @media (prefers-reduced-motion: reduce) {
