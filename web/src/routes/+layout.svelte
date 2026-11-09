@@ -43,7 +43,7 @@
 	<div class="sync-bar" style:transform="scaleX({progress})" aria-hidden="true"></div>
 {/if}
 
-<header class="top">
+<header class="top" class:focus>
 	<a href="/" class="brand"><img src="/favicon.svg" alt="" width="24" height="24" />Openings</a>
 	<nav>
 		{#each NAV as item (item.href)}
@@ -197,6 +197,12 @@
 
 	main.focus {
 		padding-bottom: calc(var(--safe-b) + 24px);
+	}
+
+	/* Drills use the whole width for a big board next to the explanation. */
+	.top.focus,
+	main.focus {
+		max-width: 1600px;
 	}
 
 	@media (min-width: 900px) {

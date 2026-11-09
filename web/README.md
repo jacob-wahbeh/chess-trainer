@@ -59,4 +59,7 @@ why, principle), written ahead of time in a Claude Code session and shipped in `
 3. `explain:merge` only accepts an explanation if every move it mentions occurs at that move number in the
    card's lines and every "piece on square" exists; anything else is reported back to be rewritten.
 
+For many cards at once, `npm run explain:split -- <user> 4` deals the unexplained cards into four files for
+parallel sessions; each validates its answers with `npm run explain:check -- <user> <file>` before the merge.
+
 Redeploy afterwards so the app picks up the new file. Note that the file is public on the hosted site.

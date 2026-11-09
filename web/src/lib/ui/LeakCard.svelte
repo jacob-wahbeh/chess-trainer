@@ -4,7 +4,10 @@
 	import type { DrawShape } from 'chessground/draw';
 	import type { Key } from 'chessground/types';
 	import { formatPlies, sanOf, walk } from '$lib/chess/line';
+	import { cardId, cardWorthy } from '$lib/drill/cards';
+	import { writtenExplanations } from '$lib/explain/written';
 	import { exploreHref, pct } from '$lib/format';
+	import { settings } from '$lib/state.svelte';
 	import type { LeakView } from '$lib/worker/data.worker';
 	import Board from './Board.svelte';
 	import LabelChip from './LabelChip.svelte';
@@ -26,9 +29,16 @@
 	};
 	const shapes = $derived([...arrow(leak.uci, 'red'), ...arrow(leak.best !== leak.uci ? leak.best : undefined, 'green')]);
 	const recent = $derived(formatPlies(line.plies.slice(-6)));
+	const drillHref = $derived(cardWorthy(leak) ? `/drill?card=${encodeURIComponent(cardId(settings.username, leak.color, leak.key, leak.uci))}` : null);
+	let explained = $state(false);
+	$effect(() => {
+		const id = `${leak.key}|${leak.uci}`;
+		writtenExplanations().then((all) => (explained = !!all[id]));
+	});
 </script>
 
-<a class="leak card" href={exploreHref(leak.color, leak.path)}>
+<div class="leak card">
+<a class="main" href={exploreHref(leak.color, leak.path)} title="See this line in the explorer">
 	<div class="thumb">
 		<Board fen={line.fen} orientation={leak.color} lastMove={line.lastMove} {shapes} coordinates={false} viewOnly />
 	</div>
@@ -48,12 +58,19 @@
 		</div>
 	</div>
 </a>
+{#if drillHref}
+	<div class="actions">
+		{#if explained}<span class="tag">Explained</span>{/if}
+		<a class="btn btn-quiet drill" href={drillHref}>Drill</a>
+	</div>
+{/if}
+</div>
 
 <style>
 	.leak {
-		display: grid;
-		grid-template-columns: 96px minmax(0, 1fr);
-		gap: 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 		padding: 12px;
 		transition:
 			background 120ms var(--ease),
@@ -62,6 +79,31 @@
 
 	.leak:hover {
 		background: var(--bg-elev-2);
+	}
+
+	.main {
+		display: grid;
+		grid-template-columns: 96px minmax(0, 1fr);
+		gap: 14px;
+		color: inherit;
+	}
+
+	.actions {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 10px;
+	}
+
+	.tag {
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--book);
+	}
+
+	.drill {
+		padding: 6px 16px;
+		font-size: 14px;
 	}
 
 	.thumb {

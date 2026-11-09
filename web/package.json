@@ -16,7 +16,9 @@
 		"engine": "node scripts/fetch-engine.mjs",
 		"cards:export": "vite-node scripts/export-cards.ts",
 		"explain:todo": "vite-node scripts/explanations.ts todo",
-		"explain:merge": "vite-node scripts/explanations.ts merge"
+		"explain:merge": "vite-node scripts/explanations.ts merge",
+		"explain:check": "vite-node scripts/explanations.ts check",
+		"explain:split": "vite-node scripts/explanations.ts split"
 	},
 	"dependencies": {
 		"chessground": "^9.2.1",

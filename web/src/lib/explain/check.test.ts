@@ -49,6 +49,15 @@ describe('checkExplanation', () => {
 		expect(checkExplanation(card, explanation('Theory recommends 5.d4.'))).toEqual(["5.d4 is not a move in the card's lines"]);
 	});
 
+	it('rejects evaluation numbers but not masters percentages', () => {
+		expect(checkExplanation(card, explanation('3.Nxe5 is played in 68.1% of master games.'))).toEqual([]);
+		expect(checkExplanation(card, explanation('After 3.Nxe5 the eval is +1.94, against −0.48 or 0.00.'))).toEqual([
+			'leave out evaluation numbers like +1.94; the app shows its own evals above the text',
+			'leave out evaluation numbers like −0.48; the app shows its own evals above the text',
+			'leave out evaluation numbers like 0.00; the app shows its own evals above the text'
+		]);
+	});
+
 	it('rejects malformed answers and unknown principles', () => {
 		expect(checkExplanation(card, { headline: 'x' })).toEqual(['needs string fields headline, why and principle']);
 		expect(checkExplanation(card, { ...explanation('Fine.'), principleId: 'vibes' })[0]).toMatch(/^principleId must be one of: centre, /);

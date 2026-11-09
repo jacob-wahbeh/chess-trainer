@@ -57,6 +57,8 @@ export function sourceLink(source: string): { label: string; url?: string } {
 
 const MAX_HEADLINE_WORDS = 14;
 const MOVE = /(\d+\.(?:\.\.|…)?\s?|\.\.\.|…)?\b(O-O(?:-O)?|[KQRBN][a-h]?[1-8]?x?[a-h][1-8]|[a-h]x[a-h][1-8](?:=[QRBN])?|[a-h][1-8](?:=[QRBN])?)(?![\w-])[+#]?/g;
+/** Evaluations ("+1.94", "−0.48", "0.00"): the app shows live ones, so written text must not quote its own. */
+const EVAL = /[+−-]\d{1,2}\.\d{2}(?!\d)|(?<![\d.])0\.00(?!\d)/g;
 const PIECE_ON = /\b(king|queen|rook|bishop|knight|pawn)s?\s+on\s+([a-h][1-8])\b/gi;
 const SQUARE_PIECE = /\b([a-h][1-8])[-\s](king|queen|rook|bishop|knight|pawn)\b/gi;
 
@@ -140,6 +142,7 @@ export function checkExplanation(card: ExportCard, e: unknown): string[] {
 		const known = at ? numbered.has(`${at[1]}${at[2] ? '...' : '.'}${san}`) : moves.has(san);
 		if (!known) problems.push(`${m[0].trim()} is not a move in the card's lines`);
 	}
+	for (const [figure] of text.matchAll(EVAL)) problems.push(`leave out evaluation numbers like ${figure}; the app shows its own evals above the text`);
 	for (const [, role, square] of text.matchAll(PIECE_ON)) {
 		if (!pieces.has(`${role.toLowerCase()}@${square}`)) problems.push(`no ${role.toLowerCase()} stands on ${square} in the position or its lines`);
 	}

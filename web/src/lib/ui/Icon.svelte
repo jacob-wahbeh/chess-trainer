@@ -8,13 +8,16 @@
 		'chevron-right': '<path d="m9 18 6-6-6-6"/>',
 		'chevron-down': '<path d="m6 9 6 6 6-6"/>',
 		first: '<path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/>',
+		last: '<path d="m13 17 5-5-5-5"/><path d="m6 17 5-5-5-5"/>',
 		flip: '<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>',
 		refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
 		arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
 		target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
 		close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 		drill: '<path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><path d="M6.5 12h11"/>',
-		play: '<path d="M7 4.5v15l12-7.5z"/>'
+		play: '<path d="M7 4.5v15l12-7.5z"/>',
+		pause: '<path d="M8 5v14"/><path d="M16 5v14"/>',
+		check: '<path d="M20 6 9 17l-5-5"/>'
 	} as const;
 	export type IconName = keyof typeof PATHS;
 </script>

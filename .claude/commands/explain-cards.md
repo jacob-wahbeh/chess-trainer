@@ -33,9 +33,10 @@ Rules for each explanation (the reader is a club player who keeps playing `habit
   `taught.line`, `threat.line`, `accepted`, `masters` or the `theory` notes, with move numbers (`3...Nf6`).
   Never calculate new variations. Name a piece's square only where it stands in the position (`fen`) or along
   those lines.
-- `facts` are verified: lean on them for concrete claims and never contradict them. When you give an
-  evaluation, use the card's eval strings (`eval`, `habit.evalAfter`, `taught.evalAfter`), which read like an
-  eval bar from White's side (+0.45, −1.21); never win percentages.
+- `facts` are verified: lean on them for concrete claims and never contradict them. Don't quote evaluation
+  numbers (the app shows its own live evals right above the text, and they differ slightly from the card's):
+  describe the consequence in words instead ("gives back the pawn", "lets Black equalise"). Masters
+  percentages are fine; win percentages never.
 - `headline`: at most 12 words, the one idea to remember.
 - `why`: 2–4 sentences. First why the habit fails, concretely (material, threat, tactic, or what it allows),
   then why the taught move is right:
