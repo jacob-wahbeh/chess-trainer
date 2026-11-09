@@ -213,7 +213,16 @@ export async function runAnalysis(ctx: AnalysisContext, opts: AnalysisOptions, h
 			}
 			const pos = ctx.position(key);
 			if (!pos || settleTerminal(key, pos)) continue;
-			const r = await host.evaluate(makeFen(pos.toSetup()), opts.depth);
+			let r: EvalResult;
+			try {
+				r = await host.evaluate(makeFen(pos.toSetup()), opts.depth);
+			} catch (err) {
+				// Without a local engine the cloud lane still covers what Lichess has cached.
+				misses.push(key);
+				progress.error = err instanceof Error ? err.message : String(err);
+				report(true);
+				return;
+			}
 			const sign = pos.turn === 'white' ? 1 : -1;
 			store(
 				[

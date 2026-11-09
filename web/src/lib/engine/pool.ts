@@ -6,10 +6,15 @@ import { parseInfo, type EvalResult } from './uci';
 export type { EvalResult };
 
 const BUILD = 'stockfish-19-lite-single';
+/** Loading the engine (download + compile) should take a second or two; give slow phones plenty of room. */
+const LOAD_TIMEOUT_MS = 30_000;
 
 export class Engine {
 	private worker: Worker;
 	private listener: ((line: string) => void) | null = null;
+	/** Set once the worker crashes; every later command fails fast instead of hanging. */
+	private failure: Error | null = null;
+	private rejectPending: ((err: Error) => void) | null = null;
 
 	private constructor() {
 		const wasm = `${base}/engine/${BUILD}.wasm`;
@@ -17,22 +22,43 @@ export class Engine {
 		this.worker.onmessage = (e) => {
 			for (const line of String(e.data).split('\n')) this.listener?.(line.trim());
 		};
+		this.worker.onerror = (e) => {
+			e.preventDefault();
+			this.fail(new Error(`Stockfish stopped: ${e.message || 'the engine worker crashed'}`));
+		};
+	}
+
+	private fail(err: Error) {
+		this.failure ??= err;
+		this.rejectPending?.(this.failure);
+		this.rejectPending = null;
 	}
 
 	static async create(hashMb = 16): Promise<Engine> {
 		const engine = new Engine();
-		await engine.command('uci', (l) => l === 'uciok');
-		engine.worker.postMessage(`setoption name Hash value ${hashMb}`);
-		await engine.command('isready', (l) => l === 'readyok');
-		return engine;
+		const timer = setTimeout(() => engine.fail(new Error('Stockfish took too long to load')), LOAD_TIMEOUT_MS);
+		try {
+			await engine.command('uci', (l) => l === 'uciok');
+			engine.worker.postMessage(`setoption name Hash value ${hashMb}`);
+			await engine.command('isready', (l) => l === 'readyok');
+			return engine;
+		} catch (err) {
+			engine.terminate();
+			throw err;
+		} finally {
+			clearTimeout(timer);
+		}
 	}
 
 	private command(cmd: string, done: (line: string) => boolean, onLine?: (line: string) => void): Promise<string> {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
+			if (this.failure) return reject(this.failure);
+			this.rejectPending = reject;
 			this.listener = (line) => {
 				onLine?.(line);
 				if (done(line)) {
 					this.listener = null;
+					this.rejectPending = null;
 					resolve(line);
 				}
 			};

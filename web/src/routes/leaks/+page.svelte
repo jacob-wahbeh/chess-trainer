@@ -37,6 +37,7 @@
 
 <header class="head">
 	<h1>First mistakes</h1>
+	{#if list?.leaks.length}<a class="btn btn-primary drill-btn" href="/drill">Drill these</a>{/if}
 	<div class="segmented" role="group" aria-label="Color">
 		<button aria-pressed={!color} onclick={() => show()}>All</button>
 		<button aria-pressed={color === 'white'} onclick={() => show('white')}>White</button>
@@ -79,6 +80,11 @@
 		justify-content: space-between;
 		gap: 12px;
 		flex-wrap: wrap;
+	}
+
+	.drill-btn {
+		height: 36px;
+		margin-left: auto;
 	}
 
 	.meta {

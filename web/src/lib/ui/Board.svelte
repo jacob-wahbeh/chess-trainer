@@ -20,6 +20,8 @@
 		coordinates?: boolean;
 		/** A static thumbnail: no interaction or animation. */
 		viewOnly?: boolean;
+		/** Piece animation duration. */
+		animationMs?: number;
 		onMove?: (orig: Key, dest: Key) => void;
 	}
 
@@ -33,6 +35,7 @@
 		shapes = [],
 		coordinates = true,
 		viewOnly = false,
+		animationMs = 180,
 		onMove
 	}: Props = $props();
 
@@ -58,7 +61,7 @@
 			premovable: { enabled: false },
 			draggable: { enabled: !!dests },
 			selectable: { enabled: !!dests },
-			animation: { enabled: !viewOnly, duration: 180 },
+			animation: { enabled: !viewOnly, duration: animationMs },
 			highlight: { lastMove: true, check: true },
 			drawable: { enabled: true, visible: true, autoShapes: shapes }
 		};

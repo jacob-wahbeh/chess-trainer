@@ -1,144 +1,17 @@
-// Dev check: runs the app's analysis job in Node over the Python CLI's cached archives, with native Stockfish
-// standing in for the browser engines and live Lichess cloud evals. Masters data can be seeded from the
-// research cache (JSON files with { epd, data | pruned }) and, with LICHESS_TOKEN set, the rest is fetched.
+// Dev check: runs the app's analysis job in Node (see harness.ts) and prints the costliest first mistakes and
+// what the drills would teach and accept for them. Masters data can be seeded from the research cache
+// (JSON files with { epd, data | pruned }); with LICHESS_TOKEN set (env or .env), the rest is fetched.
 // Usage: npx vite-node scripts/analyze-node.ts [user] [since YYYY-MM] [masters cache dir]
-import { spawn } from 'node:child_process';
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { Chess } from 'chessops/chess';
-import { parseFen } from 'chessops/fen';
-import { positionKey } from '../src/lib/chess/zobrist';
 import { findLeaks } from '../src/lib/analysis/classify';
-import { chessopsUci, runAnalysis } from '../src/lib/analysis/runner';
-import type { Eval, Masters } from '../src/lib/analysis/score';
-import type { EvalResult } from '../src/lib/engine/pool';
-import { parseInfo } from '../src/lib/engine/uci';
-import { normalizeGame, type RawGame } from '../src/lib/games/chesscom';
-import type { Game } from '../src/lib/games/types';
-import { buildTree } from '../src/lib/tree/tree';
+import { INACCURACY } from '../src/lib/analysis/score';
+import { formatPlies, sanOf, walk } from '../src/lib/chess/line';
 import { replayUcis } from '../src/lib/chess/pgn';
-import { sanOf } from '../src/lib/chess/line';
+import { acceptedMoves, dropOf, mainMove } from '../src/lib/drill/cards';
+import { analyse } from './harness';
 
 const [user = 'draco_jaco', since = '2025-11', mastersDir] = process.argv.slice(2);
-const root = new URL('../../', import.meta.url);
-const archives = new URL(`data/${user}/archives/`, root);
-const sinceTs = Date.UTC(Number(since.slice(0, 4)), Number(since.slice(5, 7)) - 1, 1) / 1000;
-
-let raws: RawGame[] = [];
-for (const f of readdirSync(archives).sort()) raws = raws.concat(JSON.parse(readFileSync(new URL(f, archives), 'utf8')).games);
-const games = raws
-	.map((r) => normalizeGame(r, user))
-	.filter((g): g is Game => !!g && ['blitz', 'rapid'].includes(g.timeClass) && g.end >= sinceTs);
-const byColor = { white: games.filter((g) => g.color === 'white'), black: games.filter((g) => g.color === 'black') };
-const trees = { white: buildTree(byColor.white), black: buildTree(byColor.black) };
-console.log(`${games.length} games (${byColor.white.length} white, ${byColor.black.length} black)`);
-
-// Seed masters from the research cache.
-const masters = new Map<number, Masters>();
-if (mastersDir && existsSync(mastersDir)) {
-	for (const f of readdirSync(mastersDir)) {
-		const entry = JSON.parse(readFileSync(`${mastersDir}/${f}`, 'utf8'));
-		const pos = Chess.fromSetup(parseFen(`${entry.epd} 0 1`).unwrap()).unwrap();
-		if (entry.pruned) {
-			masters.set(positionKey(pos), { total: 0, moves: {} });
-			continue;
-		}
-		const d = entry.data;
-		const moves: Record<string, number> = {};
-		for (const m of d.moves) {
-			const uci = chessopsUci(pos, m.uci);
-			if (uci) moves[uci] = m.white + m.draws + m.black;
-		}
-		masters.set(positionKey(pos), { total: d.white + d.draws + d.black, moves });
-	}
-	console.log(`seeded ${masters.size} masters entries from ${mastersDir}`);
-}
-
-// Native Stockfish pool (one single-threaded process per lane).
-const binary = new URL('engine/stockfish', root).pathname;
-function engine() {
-	const proc = spawn(binary, [], { stdio: ['pipe', 'pipe', 'ignore'] });
-	let buf = '';
-	let onLine: ((l: string) => void) | null = null;
-	proc.stdout.on('data', (d) => {
-		buf += d;
-		let i;
-		while ((i = buf.indexOf('\n')) >= 0) {
-			const line = buf.slice(0, i).trim();
-			buf = buf.slice(i + 1);
-			onLine?.(line);
-		}
-	});
-	const until = (cmd: string, done: (l: string) => boolean, each?: (l: string) => void) =>
-		new Promise<void>((res) => {
-			onLine = (l) => {
-				each?.(l);
-				if (done(l)) {
-					onLine = null;
-					res();
-				}
-			};
-			proc.stdin.write(cmd + '\n');
-		});
-	const ready = until('uci', (l) => l === 'uciok').then(() => until('setoption name Hash value 32\nisready', (l) => l === 'readyok'));
-	return {
-		async evaluate(fen: string, depth: number): Promise<EvalResult> {
-			await ready;
-			await until(`ucinewgame\nposition fen ${fen}\nisready`, (l) => l === 'readyok');
-			const t = performance.now();
-			let last: Omit<EvalResult, 'ms'> = { depth: 0, pv: [], nodes: 0 };
-			await until(`go depth ${depth}`, (l) => l.startsWith('bestmove'), (l) => (last = parseInfo(l) ?? last));
-			return { ...last, ms: performance.now() - t };
-		},
-		quit: () => proc.kill()
-	};
-}
-const ENGINES = 8;
-const pool = Array.from({ length: ENGINES }, engine);
-const idle = [...pool];
-const waiters: ((e: (typeof pool)[number]) => void)[] = [];
-async function evaluate(fen: string, depth: number) {
-	const e = idle.pop() ?? (await new Promise<(typeof pool)[number]>((r) => waiters.push(r)));
-	try {
-		return await e.evaluate(fen, depth);
-	} finally {
-		const w = waiters.shift();
-		if (w) w(e);
-		else idle.push(e);
-	}
-}
-
-const evals = new Map<number, Eval>();
-const token = process.env.LICHESS_TOKEN;
-const t0 = performance.now();
-let lastLog = 0;
-const result = await runAnalysis(
-	{
-		trees,
-		root: positionKey(Chess.default()),
-		evals,
-		masters,
-		position: (key) => {
-			const node = trees.white.get(key) ?? trees.black.get(key);
-			return node ? replayUcis(node.ref.game.ucis.slice(0, node.ref.ply)).pos : undefined;
-		},
-		saveEvals: async () => {},
-		saveMasters: async () => {},
-		cancelled: () => false
-	},
-	{ minReach: 3, depth: 16, engines: ENGINES, token },
-	{
-		evaluate,
-		progress: (p) => {
-			if (Date.now() - lastLog > 10_000 || !p.running) {
-				lastLog = Date.now();
-				const m = p.masters ? ` | masters ${p.masters.done}/${p.masters.total} (skipped ${p.masters.skipped})` : '';
-				console.log(`  [${((performance.now() - t0) / 1000).toFixed(0)}s] evals ${p.evals.done}/${p.evals.total} (cloud ${p.evals.cloud}, local ${p.evals.local})${m}`);
-			}
-		}
-	}
-);
-for (const e of pool) e.quit();
-console.log(`done in ${((performance.now() - t0) / 1000).toFixed(0)}s; ${evals.size} evals stored; errors: ${result.error || 'none'}`);
+const { byColor, trees, evals, masters, quit } = await analyse({ user, since, mastersDir });
+quit();
 
 for (const color of ['white', 'black'] as const) {
 	const report = findLeaks(byColor[color], trees[color], color, evals, masters, 3);
@@ -151,4 +24,23 @@ for (const color of ['white', 'black'] as const) {
 			`  ${l.points.toFixed(1).padStart(5)} pts  ${sanOf(pos, l.uci).padEnd(6)} ${l.label.padEnd(10)} -${l.drop.toFixed(1)}%  first in ${l.first}x  best ${best}  share ${l.share === null ? '-' : (100 * l.share).toFixed(1) + '%'}  (${line})`
 		);
 	}
+}
+
+// What the drills would accept for the costliest cards.
+const top = (['white', 'black'] as const)
+	.flatMap((c) => findLeaks(byColor[c], trees[c], c, evals, masters, 3).leaks)
+	.sort((a, b) => b.points - a.points)
+	.slice(0, Number(process.env.TOP ?? 8));
+console.log('\ntop drill cards, the answer taught, and accepted answers:');
+for (const l of top) {
+	const { pos } = replayUcis(l.path);
+	const list = acceptedMoves(pos, l.key, l.uci, evals, masters);
+	const prev = l.path.length ? replayUcis(l.path.slice(0, -1)) : undefined;
+	const slip = prev ? dropOf(prev.pos, evals.get(prev.keys.at(-1)!), evals.get(l.key)) : null;
+	const main = mainMove(list, masters.get(l.key), slip !== null && slip >= INACCURACY);
+	const answers = list
+		.map((a) => `${sanOf(pos, a.uci)} (${a.why}${a.drop === null ? '' : ` -${a.drop.toFixed(1)}`}${a.share === null ? '' : ` ${(100 * a.share).toFixed(0)}%`})`)
+		.join(', ');
+	const taught = main ? `${sanOf(pos, main.uci)} [${main.why}${main.why === 'punish' ? ` ${slip!.toFixed(1)}%` : ''}]` : '-';
+	console.log(`  [${l.color}] ${formatPlies(walk(l.path).plies) || 'start'}  habit ${sanOf(pos, l.uci)}  ->  teach ${taught}; accept: ${answers || 'nothing!'}`);
 }

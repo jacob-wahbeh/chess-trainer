@@ -1,11 +1,28 @@
 // Owns games, IndexedDB, the position trees and the analysis so the UI thread never parses or counts anything.
 import * as Comlink from 'comlink';
 import { Chess } from 'chessops/chess';
+import { parseUci } from 'chessops/util';
 import { replayUcis } from '../chess/pgn';
 import { positionKey } from '../chess/zobrist';
 import { findLeaks, judge, type Leak, type Verdict } from '../analysis/classify';
 import { runAnalysis, type AnalysisHost, type AnalysisOptions, type AnalysisProgress } from '../analysis/runner';
-import type { Eval, Masters } from '../analysis/score';
+import { INACCURACY, type Eval, type Masters } from '../analysis/score';
+import {
+	acceptedMoves,
+	buildSession,
+	cardId,
+	cardWorthy,
+	dropOf,
+	mainMove,
+	newCard,
+	previewDue,
+	review as reviewCard,
+	type Answer,
+	type CardRecord,
+	type Grade,
+	type MainWhy,
+	type Session
+} from '../drill/cards';
 import { fetchArchiveList, fetchMonth, isFinal, normalizeGame } from '../games/chesscom';
 import { db, monthId, PARSE_VERSION } from '../games/db';
 import { addResult, emptyStats, type Color, type Filter, type Game, type Stats, type TimeClass } from '../games/types';
@@ -45,6 +62,30 @@ export interface LeakList {
 	leaks: LeakView[];
 	departures: number;
 	games: number;
+}
+
+export interface CardDetail {
+	card: CardRecord;
+	/** Moves accepted as correct, best first. */
+	answers: Answer[];
+	/** The answer taught and revealed: thematic in book positions, the engine's after an opponent's slip. */
+	main?: { uci: string; why: MainWhy };
+	/** Win% the opponent's last move gave away, and the evaluation before it (White's view). */
+	opponentDrop: number | null;
+	opponentBefore?: Eval;
+	/** Evaluation after the habitual move (White's view). */
+	wrongEval?: Eval;
+	eval?: Eval;
+	/** Win% the habitual move loses, and the opponent's best reply to it. */
+	wrongDrop: number | null;
+	wrongReply?: string;
+	masters: { uci: string; share: number }[];
+	opening?: string;
+	/** Times the user reached the position / played the habitual move there, with current filters. */
+	reached: number;
+	wrongCount: number;
+	/** When each grade would schedule the card next (ms). */
+	intervals: Record<Grade, number>;
 }
 
 const ROOT = positionKey(Chess.default());
@@ -220,6 +261,79 @@ const api = {
 			departures: reports.reduce((s, r) => s + r.departures, 0),
 			games: reports.reduce((s, r) => s + r.games, 0)
 		};
+	},
+
+	/** Creates cards for new costly first mistakes and refreshes priorities of existing ones. Returns the card count. */
+	async syncCards(): Promise<number> {
+		if (!user) return 0;
+		const { leaks } = await api.leaks();
+		const existing = new Map((await db.cards.where('user').equals(user.toLowerCase()).toArray()).map((c) => [c.id, c]));
+		const puts: CardRecord[] = [];
+		for (const leak of leaks) {
+			if (!cardWorthy(leak)) continue;
+			const old = existing.get(cardId(user, leak.color, leak.key, leak.uci));
+			if (!old) puts.push(newCard(leak, user));
+			else if (old.points !== leak.points || old.first !== leak.first) puts.push({ ...old, points: leak.points, first: leak.first });
+		}
+		if (puts.length) await db.cards.bulkPut(puts);
+		return db.cards.where('user').equals(user.toLowerCase()).count();
+	},
+
+	async session(newPerDay: number): Promise<Session> {
+		return buildSession(await db.cards.where('user').equals(user.toLowerCase()).toArray(), newPerDay);
+	},
+
+	async cardDetail(id: string): Promise<CardDetail | null> {
+		const card = await db.cards.get(id);
+		if (!card) return null;
+		await loadCaches();
+		const { pos, keys } = replayUcis(card.path);
+		const after = pos.clone();
+		after.play(parseUci(card.wrong)!);
+		const afterEval = evals.get(positionKey(after));
+		const m = masters.get(card.key);
+		const node = trees[card.color].get(card.key);
+		const answers = acceptedMoves(pos, card.key, card.wrong, evals, masters);
+		const prev = card.path.length ? replayUcis(card.path.slice(0, -1)) : undefined;
+		const opponentDrop = prev ? dropOf(prev.pos, evals.get(prev.keys.at(-1)!), evals.get(card.key)) : null;
+		return {
+			card,
+			answers,
+			main: mainMove(answers, m, opponentDrop !== null && opponentDrop >= INACCURACY),
+			opponentDrop,
+			opponentBefore: prev ? evals.get(prev.keys.at(-1)!) : undefined,
+			wrongEval: afterEval,
+			eval: evals.get(card.key),
+			wrongDrop: dropOf(pos, evals.get(card.key), afterEval),
+			wrongReply: afterEval?.best,
+			masters: m?.total
+				? Object.entries(m.moves)
+						.sort((a, b) => b[1] - a[1])
+						.slice(0, 3)
+						.map(([uci, n]) => ({ uci, share: n / m.total }))
+				: [],
+			opening: deepestOpening(keys, await loadOpenings())?.name,
+			reached: node?.n ?? 0,
+			wrongCount: node?.edges.get(card.wrong)?.n ?? 0,
+			intervals: previewDue(card)
+		};
+	},
+
+	async review(id: string, grade: Grade): Promise<CardRecord | null> {
+		const card = await db.cards.get(id);
+		if (!card) return null;
+		const next = reviewCard(card, grade);
+		await db.cards.put(next);
+		return next;
+	},
+
+	/** "I play this on purpose": stops drilling a card. */
+	async suspendCard(id: string) {
+		await db.cards.update(id, { suspended: true });
+	},
+
+	async resetCards() {
+		await db.cards.where('user').equals(user.toLowerCase()).delete();
 	},
 
 	async clear(u: string) {

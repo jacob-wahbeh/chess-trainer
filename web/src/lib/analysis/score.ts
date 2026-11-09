@@ -45,6 +45,16 @@ export interface Masters {
 	moves: Record<string, number>;
 }
 
+/** An evaluation as an eval bar shows it, from White's point of view: "+0.45", "−1.21", "#3", "−#2". */
+export function formatEval(e: Eval | undefined): string {
+	if (!e) return '?';
+	if (e.mate !== undefined) return `${e.mate < 0 ? '−' : ''}#${Math.abs(e.mate)}`;
+	const cp = e.cp ?? 0;
+	if (Math.abs(cp) >= 100000) return cp > 0 ? '#' : '−#';
+	const v = cp / 100;
+	return `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}`;
+}
+
 /** Centipawns from White's point of view, mates mapped beyond the win% clamp. */
 export function whiteCp(e: Eval): number {
 	if (e.mate !== undefined) return e.mate > 0 ? 100000 : -100000;

@@ -1,8 +1,8 @@
-import { Chess } from 'chessops/chess';
+import { Chess, normalizeMove } from 'chessops/chess';
 import { makeFen } from 'chessops/fen';
 import { makeSan } from 'chessops/san';
 import { chessgroundMove } from 'chessops/compat';
-import { parseUci } from 'chessops/util';
+import { makeUci, parseUci } from 'chessops/util';
 import type { Key } from 'chessground/types';
 import { positionKey } from './zobrist';
 
@@ -52,15 +52,30 @@ export function formatPlies(plies: Ply[]): string {
 		.join(' ');
 }
 
-/** SAN for a continuation of UCI moves starting at `pos` (which is not modified). */
+/** SAN for a continuation of UCI moves starting at `pos` (not modified). Accepts engine-style castling (e1g1). */
 export function continuation(pos: Chess, ucis: string[]): Ply[] {
 	const p = pos.clone();
 	const plies: Ply[] = [];
-	for (const uci of ucis) {
-		const move = parseUci(uci);
+	for (const raw of ucis) {
+		const parsed = parseUci(raw);
+		const move = parsed && normalizeMove(p, parsed);
 		if (!move || !p.isLegal(move)) break;
+		const uci = makeUci(move);
 		plies.push({ uci, san: makeSan(p, move), moveNumber: p.fullmoves, white: p.turn === 'white' });
 		p.play(move);
 	}
 	return plies;
+}
+
+/** Board states along a path: index 0 is the start, index i the position after i moves. */
+export function positions(ucis: string[]): { fen: string; lastMove?: Key[] }[] {
+	const pos = Chess.default();
+	const out: { fen: string; lastMove?: Key[] }[] = [{ fen: makeFen(pos.toSetup()) }];
+	for (const uci of ucis) {
+		const move = parseUci(uci);
+		if (!move || !pos.isLegal(move)) break;
+		pos.play(move);
+		out.push({ fen: makeFen(pos.toSetup()), lastMove: chessgroundMove(move) as Key[] });
+	}
+	return out;
 }

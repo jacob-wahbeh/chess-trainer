@@ -19,6 +19,9 @@ export interface Verdict {
 	count: number;
 	/** Win% the move gave away (user's view); null until both positions are evaluated. */
 	drop: number | null;
+	/** Evaluations of the position and of the position after the move, when known. */
+	before?: Eval;
+	after?: Eval;
 	/** Share of master games with this move; null without masters data or outside master theory. */
 	share: number | null;
 	label: Label | null;
@@ -52,7 +55,7 @@ export function judge(
 			else if (share >= BOOK_MIN_SHARE) label = 'book';
 			else label = edge.n / visits >= REPERTOIRE_MIN_SHARE ? 'repertoire' : 'offbook';
 		}
-		return { uci: edge.uci, count: edge.n, drop, share, label };
+		return { uci: edge.uci, count: edge.n, drop, share, label, before, after };
 	});
 }
 
@@ -64,6 +67,9 @@ export interface Leak {
 	path: string[];
 	label: Label;
 	drop: number;
+	/** Evaluations before and after the move, when known. */
+	before?: Eval;
+	after?: Eval;
 	/** Times the move was played here. */
 	count: number;
 	/** Games where this was the first departure. */
@@ -123,6 +129,8 @@ export function findLeaks(
 						path: game.ucis.slice(0, i),
 						label: v.label,
 						drop: v.drop ?? 0,
+						before: v.before,
+						after: v.after,
 						count: v.count,
 						first: 0,
 						points: 0,

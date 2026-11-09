@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { analysis, analyze, app, applyFilter, currentFilter, lichess, saveSettings, setLichess, settings, sync } from '$lib/state.svelte';
+	import { analysis, analyze, app, applyFilter, currentFilter, drill, lichess, refreshDrill, saveSettings, setLichess, settings, sync } from '$lib/state.svelte';
 	import { canUseOAuth, lichessUsername, startLichessLogin } from '$lib/lichess/oauth';
 	import { data } from '$lib/worker/client';
 	import AnalysisStatus from '$lib/ui/AnalysisStatus.svelte';
@@ -43,6 +43,25 @@
 	function disconnect() {
 		setLichess(null);
 		void analyze();
+	}
+
+	let confirmReset = $state(false);
+
+	function setNewPerDay(n: number) {
+		settings.newPerDay = n;
+		saveSettings();
+		void refreshDrill();
+	}
+
+	async function resetDrills() {
+		if (!confirmReset) {
+			confirmReset = true;
+			return;
+		}
+		await data().resetCards();
+		await data().syncCards();
+		await refreshDrill();
+		confirmReset = false;
 	}
 
 	function setMinReach(n: number) {
@@ -165,6 +184,26 @@
 			Up to date · {analysis.progress.evals.total ? `${analysis.progress.evals.done} new positions evaluated in the last run` : 'all positions already evaluated'}
 		</div>
 	{/if}
+</section>
+
+<section class="group">
+	<div class="label">Drills</div>
+	<div class="dim small">New cards per day</div>
+	<div class="segmented" role="group" aria-label="New cards per day">
+		{#each [5, 10, 15, 25] as n (n)}
+			<button aria-pressed={settings.newPerDay === n} onclick={() => setNewPerDay(n)}>{n}</button>
+		{/each}
+	</div>
+	<div class="dim small">Position setup speed</div>
+	<div class="segmented" role="group" aria-label="Position setup speed">
+		{#each [['slow', 'Slow'], ['normal', 'Normal'], ['fast', 'Fast']] as const as [speed, label] (speed)}
+			<button aria-pressed={settings.introSpeed === speed} onclick={() => ((settings.introSpeed = speed), saveSettings())}>{label}</button>
+		{/each}
+	</div>
+	<div class="faint small num">{drill.total} cards · {drill.due} due now · {drill.fresh} new today</div>
+	<button class="danger" onclick={resetDrills} disabled={!drill.total}>
+		{confirmReset ? 'Tap again to reset all drill progress' : 'Reset drill progress'}
+	</button>
 </section>
 
 <section class="group">

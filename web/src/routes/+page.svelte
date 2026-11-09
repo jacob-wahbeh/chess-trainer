@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { analysis, app, saveSettings, settings, sync } from '$lib/state.svelte';
+	import { analysis, app, drill, saveSettings, settings, sync } from '$lib/state.svelte';
 	import { data } from '$lib/worker/client';
 	import type { LeakList } from '$lib/worker/data.worker';
 	import AnalysisStatus from '$lib/ui/AnalysisStatus.svelte';
@@ -97,6 +97,36 @@
 		{describeFilter(settings)} · synced {timeAgo(summary.lastSync)}
 		{#if app.error}<span class="error"> · {app.error}</span>{/if}
 	</p>
+
+	{@const todo = drill.due + drill.fresh}
+	<a class="drill-cta card" class:done={!todo} href={drill.total ? '/drill' : '/leaks'}>
+		<div>
+			<div class="label">Drill</div>
+			<div class="cta-title">
+				{#if todo}
+					{todo} {todo === 1 ? 'card' : 'cards'} · ~{Math.max(1, Math.round((todo * 25) / 60))} min
+				{:else if drill.total}
+					All caught up
+				{:else if analysis.running}
+					Preparing your cards…
+				{:else}
+					No cards yet
+				{/if}
+			</div>
+			<div class="faint small">
+				{#if todo}
+					{drill.due} due · {drill.fresh} new from your costliest first mistakes
+				{:else if drill.total}
+					Practice ahead anytime · {drill.total} cards in rotation
+				{:else if analysis.running}
+					Cards are created from your first mistakes as soon as the engine pass finishes.
+				{:else}
+					No costly first mistakes found in your common lines yet.
+				{/if}
+			</div>
+		</div>
+		{#if drill.total}<span class="play"><Icon name="play" size={22} /></span>{/if}
+	</a>
 
 	<div class="stats">
 		<div class="card stat">
@@ -257,6 +287,45 @@
 		to {
 			transform: rotate(360deg);
 		}
+	}
+
+	.drill-cta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 18px 20px;
+		margin-bottom: 12px;
+		border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+		background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--bg-elev)), var(--bg-elev));
+		transition: transform 140ms var(--ease);
+	}
+
+	.drill-cta:active {
+		transform: scale(0.99);
+	}
+
+	.drill-cta.done {
+		border-color: var(--line);
+		background: var(--bg-elev);
+	}
+
+	.cta-title {
+		font-size: 22px;
+		font-weight: 680;
+		letter-spacing: -0.015em;
+		margin: 2px 0;
+	}
+
+	.play {
+		display: grid;
+		place-items: center;
+		width: 52px;
+		height: 52px;
+		flex: none;
+		border-radius: 50%;
+		background: var(--accent);
+		color: var(--accent-ink);
 	}
 
 	.stats {

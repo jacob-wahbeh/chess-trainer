@@ -12,11 +12,15 @@ export interface Settings {
 	periodMonths: number;
 	/** Positions reached fewer times than this are not analysed. */
 	minReach: number;
+	/** New drill cards introduced per day. */
+	newPerDay: number;
+	/** How fast drills replay the moves leading to each position. */
+	introSpeed: 'slow' | 'normal' | 'fast';
 }
 
 const STORAGE_KEY = 'chess-trainer/settings';
 const LICHESS_KEY = 'chess-trainer/lichess';
-const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3 };
+const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, newPerDay: 10, introSpeed: 'normal' };
 /** Re-sync in the background when the last sync is older than this. */
 const STALE_SECONDS = 6 * 3600;
 /** Local Stockfish depth: matched deep Lichess evals as well as native Stockfish in the research. */
@@ -48,6 +52,30 @@ export const analysis = $state({
 	version: 0
 });
 
+export const drill = $state({
+	due: 0,
+	fresh: 0,
+	total: 0,
+	nextDue: undefined as number | undefined
+});
+
+/** Recounts today's drill queue (and the home-screen badge, where supported). */
+export async function refreshDrill() {
+	if (!settings.username) return;
+	const s = await data().session(settings.newPerDay);
+	drill.due = s.due;
+	drill.fresh = s.fresh;
+	drill.total = s.total;
+	drill.nextDue = s.nextDue;
+	const nav = navigator as Navigator & { setAppBadge?: (n: number) => Promise<void> };
+	nav.setAppBadge?.(s.due + s.fresh).catch(() => {});
+}
+
+async function syncCards() {
+	await data().syncCards();
+	await refreshDrill();
+}
+
 export function saveSettings() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
@@ -68,6 +96,10 @@ export function sinceMonth(periodMonths: number, now = new Date()): string {
 
 export const currentFilter = (): Filter => ({ timeClasses: [...settings.timeClasses], sinceMonth: sinceMonth(settings.periodMonths) });
 
+let markReady: () => void;
+/** Resolves once stored games are loaded (pages opened directly wait on this). */
+export const ready = new Promise<void>((resolve) => (markReady = resolve));
+
 export async function boot() {
 	if (settings.username) {
 		try {
@@ -77,6 +109,9 @@ export async function boot() {
 		}
 	}
 	app.ready = true;
+	markReady();
+	// Evaluations saved by earlier sessions are enough to create cards right away.
+	if (app.summary?.games) void syncCards();
 	const lastSync = app.summary?.lastSync ?? 0;
 	if (settings.username && Date.now() / 1000 - lastSync > STALE_SECONDS) void sync();
 	else void analyze();
@@ -122,6 +157,8 @@ export async function analyze() {
 	const engines = Math.max(1, Math.min((navigator.hardwareConcurrency || 2) - 1, phone ? 2 : 6));
 	analysis.running = true;
 	let lastBump = 0;
+	let cardsSynced = false;
+	let lastCardSync = Date.now();
 	try {
 		const result = await data().analyze(
 			{ minReach: settings.minReach, depth: ENGINE_DEPTH, engines, token: lichess.token || undefined },
@@ -130,6 +167,14 @@ export async function analyze() {
 				progress: (p: AnalysisProgress) => {
 					if (id !== analysisId) return;
 					analysis.progress = p;
+					// Cards only need engine verdicts: create them when the engine pass finishes (and every
+					// 20 s before that), without waiting for the slow masters lookups.
+					const evalsDone = p.evals.done >= p.evals.total;
+					if ((evalsDone && !cardsSynced) || Date.now() - lastCardSync > 20_000) {
+						cardsSynced ||= evalsDone;
+						lastCardSync = Date.now();
+						void syncCards();
+					}
 					if (Date.now() - lastBump > 2500) {
 						lastBump = Date.now();
 						analysis.version++;
@@ -137,7 +182,10 @@ export async function analyze() {
 				}
 			})
 		);
-		if (id === analysisId) analysis.progress = result;
+		if (id === analysisId) {
+			analysis.progress = result;
+			await syncCards();
+		}
 	} catch (err) {
 		if (id === analysisId) app.error = err instanceof Error ? err.message : String(err);
 	} finally {

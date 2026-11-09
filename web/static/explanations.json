@@ -1,0 +1,269 @@
+{
+	"1017365272404305|f1c4": {
+		"headline": "Take the free e5 pawn: the Busch-Gass gambit is unsound",
+		"why": "2...Bc5 leaves the e5 pawn with no defender, and the eval jumps to +1.94. 3.Bc4 throws that away by giving Black time for 3...Nc6 or 3...d6 (+0.13). Take it with 3.Nxe5: Black's idea is 3...Qh4, hitting f2 and the knight, but 4.Qe2 meets both threats, and theory rates the gambit unsound as long as you stay calm.",
+		"principle": "Accept a gambit pawn when you can meet the threats behind it; declining for safety gives back the advantage the gambit handed you.",
+		"principleId": "gambits",
+		"themes": [
+			"gambits",
+			"tactics: loose pawn"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Bc5",
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Bc5/3. Nxe5"
+		]
+	},
+	"1317312578379376|f3c6": {
+		"headline": "The f6 queen guards c6: keep your queen with 10.Qh5+",
+		"why": "After the Fried Liver sacrifice you are well on top (+3.37), but 10.Qxc6+ grabs a pawn the queen on f6 defends along the sixth rank: 10...Qxc6 wins your queen and the eval collapses to −9.54. 10.Qh5+ keeps the attack instead: 10...g6 loosens Black's kingside, and 11.Qe2 keeps your queen and the pressure on a king stuck in the centre.",
+		"principle": "Before any capture, and especially a capture with check, count the defenders of the square, including a queen guarding it from along a rank.",
+		"principleId": "count-defenders",
+		"themes": [
+			"tactics: loose queen",
+			"king safety"
+		]
+	},
+	"1557996217562153|c2c3": {
+		"headline": "2...Nc6 lets you gain space with 3.d5",
+		"why": "Against 2.d4 Black should take with 2...cxd4. 2...Nc6 instead attacks d4 and threatens 3...cxd4, winning a pawn, but it puts the knight where your d-pawn can hit it (+1.87). 3.c3 defends passively, and after 3...d5 4.exd5 Qxd5 Black is comfortable (+0.29). 3.d5 attacks the knight and takes space: after 3...Na5 4.Nf3 g6 5.h4 the knight on a5 is offside (+1.72).",
+		"principle": "When a knight on c6 attacks your d4 pawn, pushing d5 saves the pawn, gains space and drives the knight to a worse square.",
+		"principleId": "pawn-chase",
+		"themes": [
+			"space",
+			"tempo"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c5/2. d4"
+		]
+	},
+	"1652894211754070|g1f3": {
+		"headline": "4...Bg6 is unusual: strike with 5.e6 before Black plays ...e6",
+		"why": "Theory calls 4...Bg6 a highly unusual reply to 4.Bd3: Black avoids the bishop trade but hasn't played ...e6, so the e6 square is still open to your pawn. 5.Nf3 lets Black fix that with 5...e6 and reach a normal Advance structure (+0.45). 5.e6 strikes first: after 5...Qc8 6.exf7+ Bxf7 Black's king is loosened, and 7.Nf3 Nf6 8.Ne5 hits the bishop on f7 (+1.40).",
+		"principle": "When your opponent spends moves shuffling a bishop, open lines with a pawn break before they finish developing.",
+		"principleId": "development-lead",
+		"themes": [
+			"pawn break",
+			"king safety"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c6/2. d4/2...d5/3. e5/3...Bf5/4. Bd3/4...Bg6"
+		]
+	},
+	"2326611116094961|d4c6": {
+		"headline": "Check on f7 first: 6.Bxf7+ before trading knights",
+		"why": "3...h6 cost Black a tempo, and 5...Bc5 now attacks your knight on d4 twice, threatening 6...Bxd4. 6.Nxc6 answers the threat but lets the queen join with 6...Qf6, threatening mate on f2, and after 7.O-O dxc6 the eval is down to +0.64. 6.Bxf7+ first wins a pawn and drags the king to f8, where it can no longer castle; only then 7.Nxc6 (+3.02).",
+		"principle": "Before answering a threat, check your own forcing moves: a check that wins something can come first.",
+		"principleId": "forcing-moves",
+		"themes": [
+			"tactics: check",
+			"king safety"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...h6"
+		]
+	},
+	"2692473875865858|c8f5": {
+		"headline": "In the Slav, 3...Nf6 first: an early ...Bf5 drops a pawn",
+		"why": "Once the bishop leaves c8, b7 is undefended and a queen on b3 hits b7 and d5 together. Theory calls 3...Bf5 a grave mistake here: 4.cxd5 cxd5 5.Qb3 wins a pawn, and the engine's 4.Qb3 Qb6 5.Qxb6 axb6 6.cxd5 does the same (+1.45). 3...Nf6, Black's most common reply by far, defends d5 and keeps the balance (+0.20); the bishop can come out once ...e6 and the knight make it safe.",
+		"principle": "Before developing a piece, check what it was guarding; in the Slav the c8 bishop holds b7, and Qb3 punishes it for leaving early.",
+		"principleId": "loose-pieces",
+		"themes": [
+			"tactics: double attack",
+			"development"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...c6/3. Nc3",
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...c6/3. Nc3/3...Nf6"
+		]
+	},
+	"2781218480891122|g1f3": {
+		"headline": "Kick the e5 knight with 4.f4 and take the centre",
+		"why": "After 3.d5 Ne5 the black knight sits in the centre with no pawn to support it. 4.Nf3 offers to trade it, and after 4...Nxf3+ 5.Qxf3 Black is relieved and the eval drops from +2.91 to +1.30. 4.f4 attacks it with a pawn instead: the knight retreats with 4...Ng6, and after 5.Nf3 d6 6.Nc3 you have a broad centre and a big space advantage (+3.14).",
+		"principle": "A knight in the centre without pawn support is a target: chase it with a pawn and gain space as it retreats.",
+		"principleId": "pawn-chase",
+		"themes": [
+			"space",
+			"tempo"
+		]
+	},
+	"2790758909279175|d1e2": {
+		"headline": "...g6 plus ...e6 leaves d6 weak: jump in with 8.Nb5",
+		"why": "Theory flags 7...e6 as a mistake: combined with ...g6 it leaves the dark squares around Black's king, d6 above all, without a pawn to guard them. 8.Nb5 heads straight for d6: in the engine line 8...a6 9.Nd6+ Kf8 costs Black the right to castle (+2.36), and theory's 8...Nf6 9.Qd6 threatens Nc7+. 8.Qe2 is a normal developing move but lets Black cover the hole with 8...a6 9.a4 Qc7 (+0.39).",
+		"principle": "A square the opponent's pawns can no longer cover is an outpost; when ...e6 and ...g6 leave d6 unguarded, a knight landing there dominates.",
+		"principleId": "outpost",
+		"themes": [
+			"outpost",
+			"king safety"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c5/2. d4/2...cxd4/3. c3/3...dxc3/4. Nxc3/4...Nc6/5. Nf3/5...g6"
+		]
+	},
+	"3400735200665154|g5f7": {
+		"headline": "Take on f7 with the bishop, with check: 5.Bxf7+",
+		"why": "4...Nxe4 grabs a pawn but leaves f7 defended only by the king. 5.Nxf7 looks tempting because it forks the queen and rook, but 5...Qh4 threatens mate on f2, and after 6.Qe2 Nd4 7.g3 Nxe2 8.gxh4 Nd4 9.Nxh8 Black's knight forks on c2 and your edge is gone (−0.48). 5.Bxf7+ takes with check instead: after 5...Ke7 Black can no longer castle, and 6.d4 means Black can't yet take on g5 without losing the queen (+2.03).",
+		"principle": "f7 is defended only by the king at the start; when your opponent neglects it, take there with the piece that gives check and keep your attackers.",
+		"principleId": "f7-f2",
+		"themes": [
+			"f7 weakness",
+			"king safety"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...Nf6/4. Ng5/4...Nxe4",
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...Nf6/4. Ng5/4...Nxe4/5. Nxf7"
+		]
+	},
+	"4040334401902569|d4e5": {
+		"headline": "Break the pin with 5.h3 instead of releasing the centre",
+		"why": "In the Paris Defence White has the extra space, and 4...Bg4 pins your f3 knight to the queen, so d4 is only defended in name and Black threatens 5...Nxd4. 5.dxe5 solves that by trading your space away: after 5...dxe5 the eval drops from +1.49 to +0.32. 5.h3 questions the bishop at once, and after 5...Bh5 6.d5 you gain even more space with tempo on the knight.",
+		"principle": "When a bishop pins your knight to the queen, everything that knight guards is loose; break the pin, usually with h3, before your opponent cashes in.",
+		"principleId": "pins",
+		"themes": [
+			"tactics: pin",
+			"space"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...d6"
+		]
+	},
+	"4603395450140279|g1f3": {
+		"headline": "3...Nc6 declines the gambit: recapture with 4.cxd4",
+		"why": "The Smith-Morra offers a pawn for development, but 3...Nc6 hasn't taken it. 4.cxd4 recaptures and gives you the classical pawn centre on d4 and e4, which masters choose 96% of the time (+0.42). 4.Nf3 lets Black take after all with 4...dxc3 5.Nxc3, reaching the regular Smith-Morra a pawn down (−0.20) when you could have had the centre for free.",
+		"principle": "When your opponent declines a gambit pawn, take it back and build the centre; there is no reason to offer it again.",
+		"principleId": "gambits",
+		"themes": [
+			"gambits",
+			"centre"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c5/2. d4/2...cxd4/3. c3"
+		]
+	},
+	"5083117640380754|e7e6": {
+		"headline": "Hit e4 with 3...Nf6 before White's d4 arrives",
+		"why": "3.c3 prepares d4 for a full pawn centre and blunts the long diagonal a later ...Bg7 would use. 3...e6 lets White build it: after 4.d4 Nc6 5.d5 White gains space, your knight retreats with 6...Nce7, and the eval rises to +0.89. 3...Nf6 attacks e4 at once, so White must look after it before pushing d4; masters play it 98.6% of the time and the position stays level (+0.02).",
+		"principle": "Develop with a threat against the centre: a knight attacking e4 makes White spend time defending instead of building the d4 centre.",
+		"principleId": "tempo",
+		"themes": [
+			"centre",
+			"development"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c5/2. Nf3/2...d6/3. c3"
+		]
+	},
+	"5136765216062701|f1c4": {
+		"headline": "Put the bishop on d3, or go 5.h4, not 5.Bc4",
+		"why": "With Black's pawn on e6, ...d5 is coming, and 5.Bc4 puts your bishop where that pawn hits it: after 5...d5 6.exd5 exd5 7.Bd3 you have spent two moves to reach d3 (+0.22). 5.Bd3 goes there directly, and the engine's 5.h4 uses the idea theory credits to Fischer against the Modern: push the h-pawn to loosen the fianchetto before Black castles (+0.97).",
+		"principle": "Develop a piece straight to the square where it will end up; if a pawn push will chase it, you'll have to move it twice.",
+		"principleId": "same-piece-twice",
+		"themes": [
+			"development",
+			"tempo"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...g6/2. d4/2...Bg7"
+		]
+	},
+	"5530528877961804|f3d4": {
+		"headline": "Meet 3...e4 with 4.Qe2: pin the pawn, don't retreat",
+		"why": "3...e4 kicks your knight and threatens 4...exf3, hoping to seize the initiative. 4.Nd4 saves the knight but moves it a second time and gives back the d5 pawn to 4...Qxd5, and the eval drops from +1.13 to −0.12. 4.Qe2, the masters' choice in 75.4% of games, attacks the e4 pawn and pins it to the king on e8, so it can't take your knight, and 5.d3 then undermines Black's advanced pawn.",
+		"principle": "When a pawn attacks your piece, look for a pin on that pawn before retreating; a pinned pawn can't capture.",
+		"principleId": "pins",
+		"themes": [
+			"tactics: pin",
+			"gambits"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...d5/3. exd5/3...e4"
+		]
+	},
+	"5580466240815728|c8f5": {
+		"headline": "Same Slav rule: knight to f6 before the bishop leaves c8",
+		"why": "Theory is blunt here too: avoid 3...Bf5, because 4.cxd5 cxd5 5.Qb3 attacks b7 and d5 at once and wins a pawn; after 5...Nf6 6.Qxb7 White later takes on a7 as well (+0.86). 3...Nf6 is by far the most common reply: the knight controls e4 and adds a defender to d5, keeping the position level (+0.26).",
+		"principle": "Knights before bishops: in the Slav the knight on f6 defends d5 and covers e4, while the c8 bishop's best moment comes later.",
+		"principleId": "knights-first",
+		"themes": [
+			"development",
+			"tactics: double attack"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...c6/3. Nf3",
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...c6/3. Nf3/3...Nf6"
+		]
+	},
+	"6820108232337383|f1c4": {
+		"headline": "Against the Petrov, take e5 with 3.Nxe5; 3.Bc4 hangs e4",
+		"why": "Theory calls 3.Bc4 a beginner's move here: it copies the Italian setup but leaves e4 hanging, and after 3...Nxe4 4.Nxe5 d5 Black has the pawn back and a free game (−0.58). 3.Nxe5 is the main line. Black can't recapture at once, since 3...Nxe4 4.Qe2 runs into pins on the e-file (4...Nf6?? 5.Nc6+ wins the queen), so Black first plays 3...d6 4.Nf3 Nxe4 and White keeps a small edge (+0.40).",
+		"principle": "When both e-pawns are under attack, capture first or defend e4; developing instead lets the opponent take with tempo.",
+		"principleId": "centre",
+		"themes": [
+			"centre",
+			"tactics: pin"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nf6",
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nf6/3. Bc4",
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nf6/3. Nxe5"
+		]
+	},
+	"6849990694088956|f1c4": {
+		"headline": "3...Bc5 leaves e5 loose: take it with 4.Nxe5",
+		"why": "The usual replies to 3.Nc3 are 3...Nc6, reaching the Four Knights, or 3...Bb4; 3...Bc5 develops but leaves the e5 pawn undefended. 4.Nxe5 takes it (+1.24), and in the main line Black gives up the dark-squared bishop to win material back with 4...Bd4 5.Nf3 Bxc3 6.dxc3 Nxe4. 4.Bc4 lets Black cover e5 with 4...d6 5.d3, and the position is level (0.00).",
+		"principle": "Check every developing move by the opponent for what it stopped defending; an undefended centre pawn in front of your knight is often simply free.",
+		"principleId": "loose-pieces",
+		"themes": [
+			"tactics: loose pawn",
+			"centre"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nf6/3. Nc3"
+		]
+	},
+	"7739923539884250|b7b6": {
+		"headline": "Answer 5.d4 with 5...c4, not the slow 5...b6",
+		"why": "5.d4 attacks your c5 pawn and threatens 5.dxc5. 5...b6 spends a move holding it while your king is still on the open e-file: 6.Bb5+ Bd7 7.Qe2+ Be7 8.Nxd5 wins the d5 pawn, because the bishop on d7 cuts your queen off from d5, and the eval jumps to +4.11. 5...c4 steps out of the attack and keeps everything protected (+0.21); play continues 6.g3 h6 7.Bg2 Nf6.",
+		"principle": "With your king still in the centre and the e-file open, don't spend moves on side pawns; every check costs you time or material.",
+		"principleId": "king-safety",
+		"themes": [
+			"king safety",
+			"pawn structure"
+		]
+	},
+	"7739923539884250|g8f6": {
+		"headline": "Settle the c5 pawn with 5...c4, then develop",
+		"why": "5.d4 threatens 5.dxc5, and with the e-file open your king is short of time. 5...Nf6 is common even among masters, but it lets White develop with pins and checks: 6.Bb5+ Nc6 7.O-O Bg4 8.Bg5, then 10.Re1+, and the eval rises to +0.91. 5...c4 removes the target first and keeps the balance (+0.21); the knight still reaches f6 a move later, as in 6.g3 h6 7.Bg2 Nf6.",
+		"principle": "Before developing, look at your opponent's forcing moves; with the e-file open, every check and pin they get costs you a tempo.",
+		"principleId": "forcing-moves",
+		"themes": [
+			"pawn structure",
+			"tactics: pin"
+		]
+	},
+	"8432999302569785|f1c4": {
+		"headline": "You played 3.Nf3 to recapture: do it now with 4.Nxd4",
+		"why": "The point of 3.Nf3 is to take back on d4 with the knight and reach a normal Open Sicilian. 4.Nxd4 does exactly that (+0.38), and masters choose it 99.8% of the time. 4.Bc4 leaves Black the extra pawn and time to hit back in the centre with 4...Nf6 5.Qe2 d5, and the eval drops to −0.49.",
+		"principle": "Recapturing in the centre with a piece keeps your central presence; leaving the pawn hands the opponent both material and central play.",
+		"principleId": "centre",
+		"themes": [
+			"centre",
+			"material"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c5/2. d4/2...cxd4/3. Nf3"
+		]
+	},
+	"8877803564094104|d2d3": {
+		"headline": "Stop ...Ng4 with 6.h3: the Stafford aims at f2",
+		"why": "In the Stafford, Black gives up a pawn to open lines for the bishop on c5 and a knight jump to g4, both aimed at f2. 6.d3 develops but doesn't stop it: 6...Ng4 7.Be3 Nxe3 8.fxe3 Bxe3 wins the pawn back and plants the bishop deep in your camp (−0.95). 6.h3 takes g4 away first, and after 6...Qd4 7.Qf3 Qe5 8.d3 you keep the extra pawn in a sound position (+1.81).",
+		"principle": "Ask what your opponent's gambit is aiming at and take that square away first, as h3 does against ...Ng4, then develop.",
+		"principleId": "prophylaxis",
+		"themes": [
+			"prophylaxis",
+			"king safety"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nf6/3. Nxe5"
+		]
+	}
+}

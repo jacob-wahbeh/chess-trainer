@@ -10,7 +10,7 @@
 	import { data } from '$lib/worker/client';
 	import { score, type Color } from '$lib/games/types';
 	import type { NodeDetail } from '$lib/worker/data.worker';
-	import type { Eval } from '$lib/analysis/score';
+	import { formatEval } from '$lib/analysis/score';
 	import type { Opening } from '$lib/tree/openings';
 	import { continuation, sanOf, walk } from '$lib/chess/line';
 	import { count, pct } from '$lib/format';
@@ -76,13 +76,6 @@
 	]);
 	const verdictOf = (uci: string) => node?.verdicts?.find((v) => v.uci === uci);
 	const bestUnplayed = $derived(best && yourTurn && node && !node.moves.some((m) => m.uci === best) ? best : undefined);
-
-	/** "+0.6" / "−1.2" / "#3", White's point of view like any engine display. */
-	function formatEval(e: Eval): string {
-		if (e.mate !== undefined) return `${e.mate < 0 ? '−' : ''}#${Math.abs(e.mate)}`;
-		const v = (e.cp ?? 0) / 100;
-		return `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(1)}`;
-	}
 
 	function go(next: string[]) {
 		const m = next.length ? `&m=${next.join(',')}` : '';
@@ -183,7 +176,7 @@
 							<button class="move" onclick={() => go([...ucis, m.uci])}>
 								<span class="san">
 									{sanOf(line.pos, m.uci)}
-									{#if v?.label}<LabelChip label={v.label} drop={v.drop} />{/if}
+									{#if v?.label}<LabelChip label={v.label} drop={v.drop} before={v.before} after={v.after} />{/if}
 								</span>
 								<span class="num dim">{count(m.n)}</span>
 								<span class="num share">{pct(m.n / node.n)}</span>

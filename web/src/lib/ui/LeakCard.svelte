@@ -40,7 +40,7 @@
 		<div class="line num faint">{line.plies.length > 6 ? '… ' : ''}{recent}</div>
 		<div class="verdict">
 			<span>You play <strong>{mySan}</strong></span>
-			<LabelChip label={leak.label} drop={leak.drop} />
+			<LabelChip label={leak.label} drop={leak.drop} before={leak.before} after={leak.after} />
 		</div>
 		<div class="meta dim">
 			{#if better.length}Better: <strong>{better.join(' or ')}</strong> · {/if}first mistake in {leak.first}

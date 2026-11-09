@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import type { Eval, Masters } from '../analysis/score';
+import type { CardRecord } from '../drill/cards';
 import type { Game } from './types';
 
 /** Bump when Game's shape or MAX_PLY changes: stored months are then re-fetched. */
@@ -37,11 +38,13 @@ class Db extends Dexie {
 	meta!: Table<MetaRecord, string>;
 	evals!: Table<EvalRecord, number>;
 	masters!: Table<MastersRecord, number>;
+	cards!: Table<CardRecord, string>;
 
 	constructor() {
 		super('chess-trainer');
 		this.version(1).stores({ months: 'id, user', meta: 'key' });
 		this.version(2).stores({ months: 'id, user', meta: 'key', evals: 'key', masters: 'key' });
+		this.version(3).stores({ months: 'id, user', meta: 'key', evals: 'key', masters: 'key', cards: 'id, user' });
 	}
 }
 

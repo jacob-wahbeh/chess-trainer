@@ -1,14 +1,16 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount, type Snippet } from 'svelte';
+	import { dev } from '$app/environment';
 	import { page } from '$app/state';
 	import Icon, { type IconName } from '$lib/ui/Icon.svelte';
-	import { app, boot } from '$lib/state.svelte';
+	import { app, boot, drill } from '$lib/state.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
 	const NAV: { href: string; label: string; icon: IconName }[] = [
 		{ href: '/', label: 'Today', icon: 'home' },
+		{ href: '/drill', label: 'Drill', icon: 'drill' },
 		{ href: '/lines', label: 'Lines', icon: 'lines' },
 		{ href: '/leaks', label: 'Mistakes', icon: 'target' },
 		{ href: '/settings', label: 'Settings', icon: 'settings' }
@@ -22,9 +24,18 @@
 	}
 
 	const progress = $derived(app.progress ? app.progress.done / app.progress.total : 0.04);
+	const todo = $derived(drill.due + drill.fresh);
+	/** Drills are a focus mode: no tab bar on phones. */
+	const focus = $derived(page.url.pathname.startsWith('/drill'));
 
 	onMount(() => {
 		void boot();
+		if (!dev && 'serviceWorker' in navigator) {
+			// After a deploy the new worker takes over; reload once so the page and its cached assets match.
+			const updating = !!navigator.serviceWorker.controller;
+			navigator.serviceWorker.addEventListener('controllerchange', () => updating && location.reload(), { once: true });
+			void navigator.serviceWorker.register('/service-worker.js');
+		}
 	});
 </script>
 
@@ -36,19 +47,24 @@
 	<a href="/" class="brand"><img src="/favicon.svg" alt="" width="24" height="24" />Openings</a>
 	<nav>
 		{#each NAV as item (item.href)}
-			<a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+			<a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+				{item.label}{#if item.href === '/drill' && todo}<span class="badge num">{todo}</span>{/if}
+			</a>
 		{/each}
 	</nav>
 </header>
 
-<main>
+<main class:focus>
 	{@render children()}
 </main>
 
-<nav class="tabbar">
+<nav class="tabbar" class:hidden={focus}>
 	{#each NAV as item (item.href)}
 		<a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
-			<Icon name={item.icon} size={22} />
+			<span class="icon">
+				<Icon name={item.icon} size={22} />
+				{#if item.href === '/drill' && todo}<span class="badge num">{todo}</span>{/if}
+			</span>
 			<span>{item.label}</span>
 		</a>
 	{/each}
@@ -144,6 +160,43 @@
 
 	.tabbar a[aria-current='page'] {
 		color: var(--accent);
+	}
+
+	.icon {
+		position: relative;
+		display: grid;
+	}
+
+	.badge {
+		display: inline-grid;
+		place-items: center;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		margin-left: 6px;
+		border-radius: 999px;
+		background: var(--accent);
+		color: var(--accent-ink);
+		font-size: 11px;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.tabbar .badge {
+		position: absolute;
+		top: -6px;
+		left: 14px;
+		margin: 0;
+		border: 2px solid var(--bg);
+		height: 20px;
+	}
+
+	.tabbar.hidden {
+		display: none;
+	}
+
+	main.focus {
+		padding-bottom: calc(var(--safe-b) + 24px);
 	}
 
 	@media (min-width: 900px) {

@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { Label } from '$lib/analysis/score';
+	import { formatEval, type Eval, type Label } from '$lib/analysis/score';
 
 	export const LABELS: Record<Label, string> = {
 		book: 'Book',
@@ -13,12 +13,13 @@
 </script>
 
 <script lang="ts">
-	let { label, drop = null }: { label: Label; drop?: number | null } = $props();
-	const showDrop = $derived(drop !== null && drop >= 1 && ['inaccuracy', 'mistake', 'blunder', 'offbook'].includes(label));
+	/** `before` and `after`: evaluations around the move, shown for mistakes like an eval bar ("+0.45 → −1.21"). */
+	let { label, drop = null, before, after }: { label: Label; drop?: number | null; before?: Eval; after?: Eval } = $props();
+	const showEval = $derived(!!before && !!after && drop !== null && drop >= 1 && ['inaccuracy', 'mistake', 'blunder', 'offbook'].includes(label));
 </script>
 
 <span class="chip {label}">
-	{LABELS[label]}{#if showDrop}<span class="drop num">−{Math.round(drop!)}%</span>{/if}
+	{LABELS[label]}{#if showEval}<span class="drop num">{formatEval(before)} → {formatEval(after)}</span>{/if}
 </span>
 
 <style>
