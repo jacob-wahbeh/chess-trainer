@@ -1,0 +1,291 @@
+:root {
+	color-scheme: dark;
+	--bg: #0d0e11;
+	--bg-elev: #15171c;
+	--bg-elev-2: #1c1f26;
+	--line: #262a33;
+	--text: #e9eaee;
+	--text-2: #a3a8b3;
+	--text-3: #6b7180;
+	--accent: #8ab4f8;
+	--accent-ink: #0d0e11;
+	--win: #5fbf87;
+	--draw: #7d828c;
+	--loss: #e5707a;
+	--inaccuracy: #e6c069;
+	--mistake: #f09a5b;
+	--blunder: #e5707a;
+	--book: #7fb2f0;
+
+	--sq-light: #dee3e6;
+	--sq-dark: #8ca2ad;
+	--sq-last: rgba(155, 199, 0, 0.36);
+	--sq-selected: rgba(20, 85, 30, 0.45);
+
+	--radius: 14px;
+	--radius-sm: 10px;
+	--ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+	--mono: ui-monospace, 'SF Mono', Menlo, monospace;
+	--nav-h: 58px;
+	--safe-b: env(safe-area-inset-bottom, 0px);
+	--safe-t: env(safe-area-inset-top, 0px);
+}
+
+@media (prefers-color-scheme: light) {
+	:root {
+		color-scheme: light;
+		--bg: #f6f6f4;
+		--bg-elev: #ffffff;
+		--bg-elev-2: #efefec;
+		--line: #e2e2de;
+		--text: #17181c;
+		--text-2: #5b606b;
+		--text-3: #8b909a;
+		--accent: #2f6fdb;
+		--accent-ink: #ffffff;
+		--win: #2f9e5f;
+		--draw: #9aa0aa;
+		--loss: #d2505b;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 15px/1.45 var(--font);
+	-webkit-font-smoothing: antialiased;
+	-webkit-tap-highlight-color: transparent;
+	text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3 {
+	margin: 0;
+	letter-spacing: -0.015em;
+	font-weight: 650;
+}
+
+h1 {
+	font-size: 26px;
+}
+
+h2 {
+	font-size: 17px;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+button,
+input {
+	font: inherit;
+	color: inherit;
+}
+
+button {
+	cursor: pointer;
+	border: 0;
+	background: none;
+	padding: 0;
+}
+
+.num {
+	font-variant-numeric: tabular-nums;
+}
+
+.dim {
+	color: var(--text-2);
+}
+
+.faint {
+	color: var(--text-3);
+}
+
+.card {
+	background: var(--bg-elev);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: 44px;
+	padding: 0 18px;
+	border-radius: 12px;
+	font-weight: 600;
+	transition:
+		transform 120ms var(--ease),
+		opacity 120ms var(--ease),
+		background 120ms var(--ease);
+}
+
+.btn:active {
+	transform: scale(0.97);
+}
+
+.btn:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.btn-primary {
+	background: var(--accent);
+	color: var(--accent-ink);
+}
+
+.btn-quiet {
+	background: var(--bg-elev-2);
+	color: var(--text);
+}
+
+.icon-btn {
+	display: inline-grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+	color: var(--text-2);
+	transition: background 120ms var(--ease);
+}
+
+.icon-btn:hover {
+	background: var(--bg-elev-2);
+	color: var(--text);
+}
+
+.icon-btn:disabled {
+	opacity: 0.35;
+}
+
+.segmented {
+	display: inline-flex;
+	padding: 3px;
+	gap: 2px;
+	background: var(--bg-elev-2);
+	border-radius: 11px;
+}
+
+.segmented button {
+	height: 32px;
+	padding: 0 14px;
+	border-radius: 8px;
+	color: var(--text-2);
+	font-weight: 550;
+	font-size: 14px;
+	transition:
+		background 140ms var(--ease),
+		color 140ms var(--ease);
+}
+
+.segmented button[aria-pressed='true'] {
+	background: var(--bg-elev);
+	color: var(--text);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.chip {
+	height: 34px;
+	padding: 0 14px;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	color: var(--text-2);
+	font-weight: 550;
+	font-size: 14px;
+}
+
+.chip[aria-pressed='true'] {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-ink);
+}
+
+.input {
+	height: 46px;
+	width: 100%;
+	padding: 0 14px;
+	border-radius: 12px;
+	border: 1px solid var(--line);
+	background: var(--bg-elev);
+	outline: none;
+	transition: border-color 120ms var(--ease);
+}
+
+.input:focus {
+	border-color: var(--accent);
+}
+
+.label {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-3);
+}
+
+/* Board: a CSS checkerboard instead of the theme image, so colors follow the design tokens. */
+.cg-wrap cg-board {
+	background-color: var(--sq-light);
+	background-image: repeating-conic-gradient(var(--sq-dark) 0 25%, transparent 0 50%);
+	background-size: 25% 25%;
+	border-radius: 6px;
+}
+
+.cg-wrap cg-board square.last-move {
+	background-color: var(--sq-last);
+}
+
+.cg-wrap cg-board square.selected {
+	background-color: var(--sq-selected);
+}
+
+.cg-wrap cg-board square.move-dest {
+	background: radial-gradient(rgba(20, 85, 30, 0.5) 19%, transparent 20%);
+}
+
+.cg-wrap cg-board square.oc.move-dest {
+	background: radial-gradient(transparent 0%, transparent 79%, rgba(20, 85, 30, 0.3) 80%);
+}
+
+.cg-wrap cg-board square.check {
+	background: radial-gradient(ellipse at center, rgba(255, 0, 0, 0.9) 0%, rgba(231, 0, 0, 0.6) 25%, transparent 89%);
+}
+
+.cg-wrap coords {
+	font-size: 10px;
+	font-weight: 600;
+}
+
+/* Each label takes the color of the opposite square shade so it stays readable (same rules as chessground's themes). */
+.orientation-white .ranks :nth-child(odd),
+.orientation-white .files :nth-child(even),
+.orientation-black .ranks :nth-child(even),
+.orientation-black .files :nth-child(odd) {
+	color: var(--sq-dark);
+}
+
+.orientation-white .ranks :nth-child(even),
+.orientation-white .files :nth-child(odd),
+.orientation-black .ranks :nth-child(odd),
+.orientation-black .files :nth-child(even) {
+	color: var(--sq-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition-duration: 0ms !important;
+		animation-duration: 0ms !important;
+	}
+}

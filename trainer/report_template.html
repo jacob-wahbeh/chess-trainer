@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess review</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --wash: rgba(11,11,11,0.045);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --deemph: #c9c8c0;
+  --div-pos: #2a78d6;
+  --div-neg: #e34948;
+  --then: #86b6ef;
+  --now: #1c5cab;
+  --good: #0ca30c;
+  --good-text: #006300;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --critical-text: #d03b3b;
+  --sq-light: #e8e6df;
+  --sq-dark: #a3aab3;
+}
+@media (prefers-color-scheme: dark) {
+  .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --wash: rgba(255,255,255,0.05);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --deemph: #4f4e4a;
+    --div-pos: #3987e5;
+    --div-neg: #e66767;
+    --then: #256abf;
+    --now: #86b6ef;
+    --good-text: #0ca30c;
+    --critical-text: #e66767;
+    --sq-light: #c9c6bc;
+    --sq-dark: #7d8590;
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: 56px; }
+body { margin: 0; background: var(--page); color: var(--text-primary); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1160px; margin: 0 auto; padding: 20px 20px 56px; }
+a { color: var(--series-1); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; color: inherit; }
+
+/* Sticky nav */
+nav.top {
+  position: sticky; top: 0; z-index: 5;
+  background: color-mix(in srgb, var(--page) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+nav.top .inner { max-width: 1160px; margin: 0 auto; padding: 10px 20px; display: flex; gap: 18px; align-items: center; overflow-x: auto; white-space: nowrap; }
+nav.top b { font-weight: 650; margin-right: auto; }
+nav.top a { color: var(--text-secondary); font-size: 13px; }
+nav.top a:hover { color: var(--text-primary); text-decoration: none; }
+
+header { margin-top: 8px; }
+header h1 { font-size: 24px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+header p { margin: 2px 0 0; color: var(--text-secondary); font-size: 13px; }
+
+section { margin-top: 36px; }
+section > h2 { font-size: 18px; font-weight: 650; margin: 0 0 2px; display: flex; gap: 8px; align-items: baseline; }
+section > h2 .sym { color: var(--text-muted); font-weight: 400; }
+section > .lede { margin: 0 0 12px; color: var(--text-secondary); font-size: 13px; max-width: 80ch; }
+
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 0; min-width: 0; }
+.card h3 { font-size: 14px; font-weight: 600; margin: 0; }
+.card .sub { margin: 1px 0 10px; color: var(--text-secondary); font-size: 12px; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.mt { margin-top: 12px; }
+.muted { color: var(--text-muted); }
+.up { color: var(--good-text); }
+.down { color: var(--critical-text); }
+.flat { color: var(--text-muted); }
+
+/* KPI row */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 16px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.tile .label { color: var(--text-secondary); font-size: 12px; }
+.tile .value { font-size: 26px; font-weight: 650; line-height: 1.2; }
+.tile .delta { font-size: 12px; font-weight: 600; margin-left: 6px; }
+.tile .note { color: var(--text-muted); font-size: 12px; }
+
+/* Focus list */
+.focus { display: grid; gap: 0; padding: 4px 16px; }
+.focus-row { display: grid; grid-template-columns: 26px minmax(0, 1.3fr) 130px minmax(0, 1.6fr) 20px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--grid); color: inherit; }
+.focus-row:last-child { border-bottom: none; }
+.focus-row:hover { text-decoration: none; background: var(--wash); margin: 0 -16px; padding: 12px 16px; }
+.focus-row .rank { width: 22px; height: 22px; border-radius: 50%; background: var(--text-primary); color: var(--surface-1); font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.focus-row .title { font-weight: 600; }
+.focus-row .finding { color: var(--text-secondary); font-size: 12px; }
+.focus-row .metric { font-size: 20px; font-weight: 650; line-height: 1.1; }
+.focus-row .metric small { display: block; font-size: 11px; font-weight: 400; color: var(--text-muted); }
+.focus-row .action { font-size: 13px; }
+.focus-row .action::before { content: "→ "; color: var(--text-muted); }
+.focus-row .go { color: var(--text-muted); }
+@media (max-width: 760px) {
+  .focus-row { grid-template-columns: 26px 1fr auto; }
+  .focus-row .action { grid-column: 2 / 4; }
+  .focus-row .go { display: none; }
+}
+
+/* Charts */
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; overflow: visible; }
+svg text { font-family: inherit; }
+.tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.cat { fill: var(--text-secondary); font-size: 12px; }
+.cat-sub { fill: var(--text-muted); font-size: 11px; }
+.value { fill: var(--text-primary); font-size: 12px; font-weight: 600; }
+.band-label { fill: var(--text-secondary); font-size: 11px; font-weight: 600; }
+.grid { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+.axis { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
+.band { fill: var(--wash); }
+.mark { transition: filter .12s; }
+.mark.accent { fill: var(--series-1); }
+.mark.deemph { fill: var(--deemph); }
+.mark.pos { fill: var(--div-pos); }
+.mark.neg { fill: var(--div-neg); }
+.mark.lift { filter: brightness(1.15) saturate(1.1); }
+.hit { fill: transparent; outline: none; }
+.hit:focus-visible { stroke: var(--text-secondary); stroke-width: 1; }
+.line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.area { stroke: none; opacity: 0.1; }
+.crosshair { stroke: var(--axis); stroke-width: 1; }
+.dot { stroke: var(--surface-1); stroke-width: 2; }
+.db-link { stroke: var(--axis); stroke-width: 2; stroke-linecap: round; }
+.db-then { fill: var(--surface-1); stroke: var(--then); stroke-width: 2; }
+.db-now { fill: var(--now); stroke: var(--surface-1); stroke-width: 2; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 0 0 6px; font-size: 12px; color: var(--text-secondary); }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.key-line { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+.key-arrow { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+
+details { margin-top: 10px; }
+summary { cursor: pointer; color: var(--text-muted); font-size: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+details table { margin-top: 6px; }
+th { text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--axis); padding: 5px 8px; font-size: 12px; }
+td { border-bottom: 1px solid var(--grid); padding: 5px 8px; font-variant-numeric: tabular-nums; }
+td.num, th.num { text-align: right; }
+tr:last-child td { border-bottom: none; }
+tr.group td { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding-top: 12px; border-bottom: none; }
+.linkbtn { background: none; border: none; padding: 0; color: var(--series-1); cursor: pointer; }
+.linkbtn:hover { text-decoration: underline; }
+
+/* Tooltip */
+.tip { position: fixed; z-index: 20; display: none; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 7px 10px; font-size: 12px; min-width: 110px; }
+.tip-title { color: var(--text-muted); margin-bottom: 3px; }
+.tip-row { display: flex; align-items: center; gap: 8px; }
+.tip-row strong { font-size: 13px; color: var(--text-primary); }
+.tip-row span.tip-label { color: var(--text-secondary); }
+.tip-key { width: 10px; height: 2px; border-radius: 1px; }
+
+/* Boards */
+svg.board { display: block; width: 100%; height: auto; border-radius: 4px; user-select: none; }
+.sq-l { fill: var(--sq-light); }
+.sq-d { fill: var(--sq-dark); }
+.sq-last { fill: rgba(250, 178, 25, 0.38); }
+.sq-sel { fill: rgba(42, 120, 214, 0.45); }
+.coord { font-size: 7px; font-weight: 600; }
+.coord.on-l { fill: var(--sq-dark); }
+.coord.on-d { fill: var(--sq-light); }
+.arrow-played { fill: var(--critical); stroke: var(--critical); opacity: .85; }
+.arrow-best { fill: var(--good); stroke: var(--good); opacity: .85; }
+
+.puzzles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.puzzle { padding: 10px; cursor: pointer; text-align: left; border: 1px solid var(--border); background: var(--surface-1); border-radius: 10px; }
+.puzzle:hover, .puzzle:focus-visible { border-color: var(--series-1); outline: none; }
+.puzzle .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; font-size: 12px; }
+.puzzle .who { font-weight: 600; font-size: 13px; }
+.puzzle .meta { color: var(--text-muted); font-size: 11px; }
+
+/* Problem lines */
+.line-card header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; margin: 0 0 8px; }
+.line-card h3 { font-size: 15px; }
+.line-card .score { font-size: 20px; font-weight: 650; }
+.line-card .facts { color: var(--text-secondary); font-size: 12px; }
+.line-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { .line-body { grid-template-columns: 1fr; } }
+.pos-row { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--grid); cursor: pointer; background: none; border-left: none; border-right: none; border-top: none; text-align: left; width: 100%; }
+.pos-row:last-child { border-bottom: none; }
+.pos-row:hover .pos-title, .pos-row:focus-visible .pos-title { color: var(--series-1); }
+.pos-title { font-weight: 600; font-size: 13px; }
+.pos-detail { font-size: 12px; color: var(--text-secondary); }
+.note-line { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+.note-line b { color: var(--text-primary); font-weight: 600; }
+
+/* Annotation pills: status color + the chess symbol, never color alone */
+.nag { display: inline-block; min-width: 18px; padding: 0 4px; margin-left: 2px; border-radius: 4px; font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; vertical-align: 1px; }
+.nag.blunder { background: var(--critical); color: #fff; }
+.nag.mistake { background: var(--serious); color: #fff; }
+.nag.inaccuracy { background: var(--warning); color: #0b0b0b; }
+
+/* Viewer dialog */
+dialog.viewer { width: min(960px, 96vw); max-height: 94vh; padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-1); color: var(--text-primary); box-shadow: 0 16px 48px rgba(0,0,0,.25); }
+dialog.viewer::backdrop { background: rgba(0,0,0,.45); }
+.v-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; padding: 18px; }
+@media (max-width: 760px) { .v-wrap { grid-template-columns: 1fr; } }
+.v-board { display: grid; grid-template-columns: 12px 1fr; gap: 8px; align-items: stretch; }
+.v-board svg.board { max-height: 74vh; cursor: pointer; }
+.evalbar { border-radius: 3px; overflow: hidden; background: var(--grid); position: relative; }
+.evalbar span { position: absolute; left: 0; right: 0; bottom: 0; background: var(--series-1); transition: height .15s; }
+.v-side { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.v-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.v-head h3 { font-size: 15px; margin: 0; }
+.v-head .sub { margin: 0; font-size: 12px; color: var(--text-secondary); }
+.v-close { background: none; border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 1; }
+.v-info { border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; min-height: 64px; }
+.v-info .big { font-size: 15px; font-weight: 650; }
+.v-info .ok { color: var(--good-text); font-weight: 600; }
+.v-info .bad { color: var(--critical-text); font-weight: 600; }
+.v-info .actions { margin-top: 6px; display: flex; gap: 12px; }
+.v-controls { display: flex; gap: 6px; }
+.v-controls button { flex: 1; background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: 5px 0; cursor: pointer; font-size: 15px; }
+.v-controls button:hover { background: var(--wash); }
+.v-moves { overflow-y: auto; max-height: 40vh; font-size: 13px; display: grid; grid-template-columns: 34px 1fr 1fr; align-content: start; border-top: 1px solid var(--grid); padding-top: 6px; }
+.v-moves .num { color: var(--text-muted); font-variant-numeric: tabular-nums; padding: 2px 0; }
+.v-moves button { background: none; border: none; text-align: left; padding: 2px 4px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+.v-moves button:hover { background: var(--wash); }
+.v-moves button.cur { background: var(--series-1); color: #fff; }
+.v-moves button.mine { font-weight: 600; }
+.v-hint { font-size: 11px; color: var(--text-muted); }
+
+.empty { color: var(--text-secondary); }
+footer { margin-top: 44px; color: var(--text-muted); font-size: 12px; max-width: 90ch; }
+</style>
+</head>
+<body class="viz-root">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><!--PIECES--></defs></svg>
+<nav class="top"><div class="inner" id="nav"></div></nav>
+<main id="app"></main>
+<dialog class="viewer" id="viewer" aria-label="Game viewer"></dialog>
+<div class="tip" id="tip" role="tooltip"></div>
+<script>
+const D = /*REPORT_DATA*/null;
+const SVG_NS = "http://www.w3.org/2000/svg";
+// Color follows the time class, never its rank in the current filter.
+const CLASS_COLOR = { blitz: "var(--series-1)", bullet: "var(--series-2)", rapid: "var(--series-3)", daily: "var(--series-4)" };
+const COLOR_SYM = { white: "♔", black: "♚" };
+const NAG = { blunder: "??", mistake: "?", inaccuracy: "?!" };
+const renderers = [];
+
+// ---------- DOM helpers (all data text goes through textContent) ----------
+function h(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    e.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return e;
+}
+function sv(tag, attrs, parent) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  if (parent) parent.append(e);
+  return e;
+}
+function svText(parent, x, y, text, attrs) {
+  const t = sv("text", { x, y, ...attrs }, parent);
+  t.textContent = text;
+  return t;
+}
+// Shorten a label with an ellipsis until it fits; the full text stays in a <title>.
+function fitText(t, maxW) {
+  if (!t.getComputedTextLength || !t.isConnected || t.getComputedTextLength() <= maxW) return;
+  const full = t.textContent;
+  sv("title", {}, t).textContent = full;
+  let n = full.length;
+  while (n > 1 && t.getComputedTextLength() > maxW) t.firstChild.textContent = `${full.slice(0, --n).trimEnd()}…`;
+}
+const fmt = {
+  int: v => Math.round(v).toLocaleString(),
+  pct: v => `${Math.round(v)}%`,
+  pct1: v => `${(Math.round(v * 10) / 10).toFixed(1)}%`,
+  one: v => (Math.round(v * 10) / 10).toFixed(1),
+};
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const plural = (n, word) => `${n.toLocaleString()} ${word}${n === 1 ? "" : "s"}`;
+const ENDING_LABEL = {
+  resigned: "Resigned", timeout: "Lost on time", checkmated: "Checkmated", abandoned: "Abandoned",
+  agreed: "Draw agreed", repetition: "Repetition", stalemate: "Stalemate", insufficient: "Insufficient material",
+  "50move": "50-move rule", timevsinsufficient: "Time vs insufficient material",
+};
+const endingLabel = r => ENDING_LABEL[r] || cap(r);
+const dayTs = d => Date.parse(`${d}T00:00:00Z`);
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthLabel = ts => { const d = new Date(ts); return `${MONTHS[d.getUTCMonth()]} ’${String(d.getUTCFullYear()).slice(2)}`; };
+const dayLabel = ts => { const d = new Date(ts); return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`; };
+const shortDay = d => { const t = new Date(dayTs(d)); return `${MONTHS[t.getUTCMonth()]} ${t.getUTCDate()}`; };
+function monthTicks(fromTs, toTs) {
+  const out = [], d = new Date(fromTs);
+  for (let t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); t <= toTs;) {
+    out.push([t, monthLabel(t)]);
+    const n = new Date(t); t = Date.UTC(n.getUTCFullYear(), n.getUTCMonth() + 1, 1);
+  }
+  return out;
+}
+
+// ---------- Tooltip ----------
+const tip = document.getElementById("tip");
+function showTip(evt, title, rows) {
+  tip.replaceChildren();
+  if (title) tip.append(h("div", { class: "tip-title" }, title));
+  for (const r of rows) {
+    tip.append(h("div", { class: "tip-row" },
+      r.color ? h("span", { class: "tip-key", style: `background:${r.color}` }) : null,
+      h("strong", {}, r.value),
+      r.label ? h("span", { class: "tip-label" }, r.label) : null));
+  }
+  tip.style.display = "block";
+  let x, y;
+  if (evt.type === "focus" || evt.clientX === undefined) {
+    const b = evt.target.getBoundingClientRect();
+    x = b.left + b.width / 2; y = b.top;
+  } else { x = evt.clientX; y = evt.clientY; }
+  const w = tip.offsetWidth, ht = tip.offsetHeight;
+  let left = x + 14, top = y - ht - 12;
+  if (left + w > innerWidth - 8) left = x - w - 14;
+  if (top < 8) top = y + 18;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+}
+function hideTip() { tip.style.display = "none"; }
+function hover(target, mark, content) {
+  target.setAttribute("tabindex", "0");
+  const show = e => { mark && mark.classList.add("lift"); showTip(e, ...content()); };
+  const hide = () => { mark && mark.classList.remove("lift"); hideTip(); };
+  target.addEventListener("pointermove", show);
+  target.addEventListener("focus", show);
+  target.addEventListener("pointerleave", hide);
+  target.addEventListener("blur", hide);
+}
+
+// ---------- Scales & bar shapes ----------
+function niceStep(range, count) {
+  const raw = range / count, p = 10 ** Math.floor(Math.log10(raw)), n = raw / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+}
+function ticks(min, max, count = 4) {
+  const step = niceStep(max - min || 1, count), out = [];
+  for (let v = Math.floor(min / step) * step; v <= max + step * 0.999; v += step) out.push(+v.toFixed(6));
+  return out;
+}
+// Bars: 4px rounded data end, square at the baseline.
+function barUp(x, y, w, hgt, r = 4) {
+  if (hgt <= 0) return "";
+  r = Math.min(r, hgt, w / 2);
+  return `M${x},${y + hgt}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hgt}Z`;
+}
+function barRight(x, y, w, hgt, r = 4) {
+  if (w <= 0) return "";
+  r = Math.min(r, w, hgt / 2);
+  return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hgt - r}Q${x + w},${y + hgt} ${x + w - r},${y + hgt}H${x}Z`;
+}
+function barLeft(x, y, w, hgt, r = 4) {
+  if (w <= 0) return "";
+  r = Math.min(r, w, hgt / 2);
+  return `M${x + w},${y}H${x + r}Q${x},${y} ${x},${y + r}V${y + hgt - r}Q${x},${y + hgt} ${x + r},${y + hgt}H${x + w}Z`;
+}
+
+// ---------- Charts ----------
+// Vertical columns; the worst (largest) bar carries the accent, the rest recede.
+function columnChart(box, rows, { format = fmt.one, tooltip, height = 190 }) {
+  const W = box.clientWidth, H = height, m = { t: 20, r: 8, b: 30, l: 32 };
+  const svg = sv("svg", { width: W, height: H });
+  const max = Math.max(...rows.map(r => r.value || 0), 0.0001);
+  const yt = ticks(0, max, 4), top = yt[yt.length - 1];
+  const y = v => m.t + (H - m.t - m.b) * (1 - v / top);
+  for (const t of yt) {
+    sv("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: t === 0 ? "axis" : "grid" }, svg);
+    svText(svg, m.l - 8, y(t) + 4, format(t), { class: "tick", "text-anchor": "end" });
+  }
+  const band = (W - m.l - m.r) / rows.length, bw = Math.min(24, band * 0.5);
+  const iMax = rows.reduce((bi, r, i) => ((r.value || 0) > (rows[bi].value || 0) ? i : bi), 0);
+  rows.forEach((r, i) => {
+    const cx = m.l + band * (i + 0.5), y0 = y(r.value || 0), yb = y(0);
+    const mark = sv("path", { d: barUp(cx - bw / 2, y0, bw, yb - y0), class: `mark ${i === iMax ? "accent" : "deemph"}` }, svg);
+    svText(svg, cx, y0 - 6, r.value == null ? "–" : format(r.value), { class: "value", "text-anchor": "middle" });
+    svText(svg, cx, H - m.b + 17, r.label, { class: "cat", "text-anchor": "middle" });
+    hover(sv("rect", { x: m.l + band * i, y: m.t - 16, width: band, height: yb - m.t + 16 + m.b, class: "hit" }, svg),
+      mark, () => tooltip(r));
+  });
+  box.replaceChildren(svg);
+}
+
+// Horizontal bars, one series.
+function hbarChart(box, rows, { format = fmt.pct, tooltip }) {
+  const W = box.clientWidth, rowH = 26, labelW = Math.min(180, W * 0.42), m = { r: 44 };
+  const H = rowH * rows.length;
+  const svg = sv("svg", { width: W, height: H });
+  const max = Math.max(...rows.map(r => r.value), 0.0001);
+  const x = v => labelW + (W - labelW - m.r) * (v / max);
+  const labels = [];
+  rows.forEach((r, i) => {
+    const cy = rowH * (i + 0.5), bh = 12;
+    labels.push(svText(svg, labelW - 10, cy + 4, r.label, { class: "cat", "text-anchor": "end" }));
+    const mark = sv("path", { d: barRight(labelW, cy - bh / 2, x(r.value) - labelW, bh), class: "mark accent" }, svg);
+    svText(svg, x(r.value) + 6, cy + 4, format(r.value), { class: "value" });
+    hover(sv("rect", { x: 0, y: rowH * i, width: W, height: rowH, class: "hit" }, svg), mark, () => tooltip(r));
+  });
+  sv("line", { x1: labelW, x2: labelW, y1: 0, y2: H, class: "axis" }, svg);
+  box.replaceChildren(svg);
+  labels.forEach(t => fitText(t, labelW - 14));
+}
+
+// Score vs. the 50% break-even line: blue above, red below.
+function divergingChart(box, rows, { tooltip }) {
+  const W = box.clientWidth, rowH = 34, labelW = Math.min(190, W * 0.42), m = { t: 20, b: 2 };
+  const H = m.t + m.b + rowH * rows.length;
+  const svg = sv("svg", { width: W, height: H });
+  const span = Math.ceil(Math.max(15, ...rows.map(r => Math.abs(r.score - 50))) / 5) * 5;
+  const plotL = labelW + 38, plotR = W - 38, cx = (plotL + plotR) / 2, half = (plotR - plotL) / 2;
+  const x = s => cx + ((s - 50) / span) * half;
+  svText(svg, cx - 8, 11, "← below 50%", { class: "tick", "text-anchor": "end" });
+  svText(svg, cx + 8, 11, "above 50% →", { class: "tick" });
+  const labels = [];
+  rows.forEach((r, i) => {
+    const cy = m.t + rowH * (i + 0.5), bh = 12, xs = x(r.score);
+    labels.push(svText(svg, 0, cy - 1, r.name, { class: "cat" }));
+    svText(svg, 0, cy + 12, plural(r.games, "game"), { class: "cat-sub" });
+    const pos = r.score >= 50;
+    const d = pos ? barRight(cx, cy - bh / 2, xs - cx, bh) : barLeft(xs, cy - bh / 2, cx - xs, bh);
+    const mark = sv("path", { d, class: `mark ${pos ? "pos" : "neg"}` }, svg);
+    svText(svg, pos ? xs + 6 : xs - 6, cy + 4, fmt.pct(r.score), { class: "value", "text-anchor": pos ? "start" : "end" });
+    hover(sv("rect", { x: 0, y: m.t + rowH * i, width: W, height: rowH, class: "hit" }, svg), mark, () => tooltip(r));
+  });
+  sv("line", { x1: cx, x2: cx, y1: m.t - 4, y2: H, class: "axis" }, svg);
+  box.replaceChildren(svg);
+  labels.forEach(t => fitText(t, labelW - 4));
+}
+
+// Before -> after per item. Hollow = then, filled = now, so it never relies on shade alone.
+function dumbbellChart(box, rows, { format = fmt.one, thenLabel, nowLabel }) {
+  const W = box.clientWidth, rowH = 28, labelW = 120, m = { t: 4, r: 44, b: 22 };
+  const H = m.t + m.b + rowH * rows.length;
+  const svg = sv("svg", { width: W, height: H });
+  const max = Math.max(...rows.flatMap(r => [r.a || 0, r.b || 0]), 0.0001);
+  const xt = ticks(0, max, 4), top = xt[xt.length - 1];
+  const x = v => labelW + (W - labelW - m.r) * (v / top);
+  for (const t of xt) {
+    sv("line", { x1: x(t), x2: x(t), y1: m.t, y2: H - m.b, class: t === 0 ? "axis" : "grid" }, svg);
+    svText(svg, x(t), H - 6, format(t), { class: "tick", "text-anchor": "middle" });
+  }
+  rows.forEach((r, i) => {
+    const cy = m.t + rowH * (i + 0.5);
+    svText(svg, labelW - 10, cy + 4, r.label, { class: "cat", "text-anchor": "end" });
+    if (r.a == null || r.b == null) return;
+    sv("line", { x1: x(r.a), x2: x(r.b), y1: cy, y2: cy, class: "db-link" }, svg);
+    sv("circle", { cx: x(r.a), cy, r: 5, class: "db-then" }, svg);
+    sv("circle", { cx: x(r.b), cy, r: 5, class: "db-now" }, svg);
+    svText(svg, x(Math.max(r.a, r.b)) + 10, cy + 4, format(r.b), { class: "value" });
+    hover(sv("rect", { x: 0, y: m.t + rowH * i, width: W, height: rowH, class: "hit" }, svg), null,
+      () => [r.label, [{ value: format(r.a), label: thenLabel }, { value: format(r.b), label: nowLabel }]]);
+  });
+  box.replaceChildren(svg);
+}
+
+// Lines with a snapping crosshair. series: [{name, color, points: [[x, y], ...]}]
+function lineChart(box, series, { height = 240, yFormat = fmt.int, xTicks = [], xTitle, extraRows, area = false, bands = [], refY = null, yMin = null, yMax = null }) {
+  const W = box.clientWidth, H = height, m = { t: bands.length ? 22 : 10, r: 48, b: 26, l: 42 };
+  const svg = sv("svg", { width: W, height: H });
+  const all = series.flatMap(s => s.points);
+  const xMin = Math.min(...all.map(p => p[0])), xMax = Math.max(...all.map(p => p[0]));
+  let yLo = Math.min(...all.map(p => p[1])), yHi = Math.max(...all.map(p => p[1]));
+  if (refY != null) { yLo = Math.min(yLo, refY); yHi = Math.max(yHi, refY); }
+  if (yMin != null) yLo = Math.min(yLo, yMin);
+  if (yMax != null) yHi = Math.max(yHi, yMax);
+  const pad = (yHi - yLo) * 0.08 || 1;
+  const yt = ticks(yLo - pad, yHi + pad, 4), y0 = yt[0], y1 = yt[yt.length - 1];
+  const x = v => m.l + (W - m.l - m.r) * ((v - xMin) / (xMax - xMin || 1));
+  const y = v => m.t + (H - m.t - m.b) * (1 - (v - y0) / (y1 - y0));
+  for (const b of bands) {
+    const bx0 = x(Math.max(b.from, xMin)), bx1 = x(Math.min(b.to, xMax));
+    sv("rect", { x: bx0, y: m.t, width: Math.max(2, bx1 - bx0), height: H - m.t - m.b, class: "band" }, svg);
+    svText(svg, (bx0 + bx1) / 2, m.t - 7, b.label, { class: "band-label", "text-anchor": "middle" });
+  }
+  for (const t of yt) {
+    sv("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: t === y0 ? "axis" : "grid" }, svg);
+    svText(svg, m.l - 8, y(t) + 4, yFormat(t), { class: "tick", "text-anchor": "end" });
+  }
+  if (refY != null) sv("line", { x1: m.l, x2: W - m.r, y1: y(refY), y2: y(refY), class: "axis" }, svg);
+  let lastTickX = -Infinity;
+  for (const [tx, label] of xTicks) {
+    if (tx < xMin || tx > xMax || x(tx) - lastTickX < 52) continue;
+    svText(svg, x(tx), H - 7, label, { class: "tick", "text-anchor": "middle" });
+    lastTickX = x(tx);
+  }
+  for (const s of series) {
+    const d = s.points.map((p, i) => `${i ? "L" : "M"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join("");
+    if (area && series.length === 1) {
+      sv("path", { d: `${d}L${x(s.points.at(-1)[0])},${y(y0)}L${x(s.points[0][0])},${y(y0)}Z`, class: "area", style: `fill:${s.color}` }, svg);
+    }
+    sv("path", { d, class: "line", style: `stroke:${s.color}` }, svg);
+  }
+  for (const s of series) {
+    const [lx, ly] = s.points.at(-1);
+    sv("circle", { cx: x(lx), cy: y(ly), r: 4, class: "dot", style: `fill:${s.color}` }, svg);
+    svText(svg, x(lx) + 8, y(ly) + 4, yFormat(ly), { class: "value" });
+  }
+  const cross = sv("line", { y1: m.t, y2: H - m.b, class: "crosshair", visibility: "hidden" }, svg);
+  const dots = series.map(s => sv("circle", { r: 4, class: "dot", style: `fill:${s.color}`, visibility: "hidden" }, svg));
+  const nearest = (pts, xv) => {
+    let lo = 0, hi = pts.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (pts[mid][0] < xv) lo = mid; else hi = mid; }
+    return Math.abs(pts[lo][0] - xv) <= Math.abs(pts[hi][0] - xv) ? pts[lo] : pts[hi];
+  };
+  const overlay = sv("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, class: "hit" }, svg);
+  overlay.setAttribute("tabindex", "0");
+  let keyX = xMax;
+  const show = (evt, xv) => {
+    const snapX = series.map(s => nearest(s.points, xv)[0]).reduce((a, b) => (Math.abs(b - xv) < Math.abs(a - xv) ? b : a));
+    cross.setAttribute("x1", x(snapX)); cross.setAttribute("x2", x(snapX));
+    cross.setAttribute("visibility", "visible");
+    const rows = [];
+    series.forEach((s, i) => {
+      const p = nearest(s.points, snapX);
+      dots[i].setAttribute("cx", x(p[0])); dots[i].setAttribute("cy", y(p[1]));
+      dots[i].setAttribute("visibility", "visible");
+      rows.push({ color: s.color, value: yFormat(p[1]), label: s.name });
+    });
+    showTip(evt, xTitle(snapX), rows.concat(extraRows ? extraRows(snapX) : []));
+    keyX = snapX;
+  };
+  const hide = () => { cross.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); hideTip(); };
+  overlay.addEventListener("pointermove", e => {
+    const b = svg.getBoundingClientRect();
+    show(e, xMin + ((e.clientX - b.left - m.l) / (W - m.l - m.r)) * (xMax - xMin));
+  });
+  overlay.addEventListener("focus", e => show(e, keyX));
+  overlay.addEventListener("keydown", e => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    const pts = series[0].points, i = pts.findIndex(p => p[0] === nearest(pts, keyX)[0]);
+    const next = pts[Math.max(0, Math.min(pts.length - 1, i + (e.key === "ArrowRight" ? 1 : -1)))];
+    show({ type: "focus", target: overlay }, next[0]);
+    e.preventDefault();
+  });
+  overlay.addEventListener("pointerleave", hide);
+  overlay.addEventListener("blur", hide);
+  box.replaceChildren(svg);
+}
+
+// ---------- Chess board ----------
+const FILES = "abcdefgh";
+const PIECE_NAME = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+function parseBoard(fen) {
+  const squares = {};
+  fen.split(" ")[0].split("/").forEach((row, r) => {
+    let f = 0;
+    for (const c of row) {
+      if (/\d/.test(c)) f += +c;
+      else { squares[FILES[f] + (8 - r)] = c; f++; }
+    }
+  });
+  return squares;
+}
+function squareXY(sq, flip) {
+  const f = FILES.indexOf(sq[0]), r = +sq[1] - 1;
+  return flip ? [(7 - f) * 45, r * 45] : [f * 45, (7 - r) * 45];
+}
+function drawArrow(svg, uci, cls, flip) {
+  const [x0, y0] = squareXY(uci.slice(0, 2), flip), [x1, y1] = squareXY(uci.slice(2, 4), flip);
+  const ax = x0 + 22.5, ay = y0 + 22.5, bx = x1 + 22.5, by = y1 + 22.5;
+  const len = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / len, uy = (by - ay) / len;
+  const head = 14, ex = bx - ux * head, ey = by - uy * head;
+  sv("line", { x1: ax, y1: ay, x2: ex, y2: ey, "stroke-width": 7, "stroke-linecap": "round", class: cls }, svg);
+  sv("polygon", { points: `${bx},${by} ${ex - uy * 10},${ey + ux * 10} ${ex + uy * 10},${ey - ux * 10}`, class: cls }, svg);
+}
+function drawBoard(svg, fen, { flip = false, last = null, arrows = [], selected = null, coords = true } = {}) {
+  svg.replaceChildren();
+  svg.setAttribute("viewBox", "0 0 360 360");
+  svg.classList.add("board");
+  const pieces = parseBoard(fen);
+  const marked = new Set(last ? [last.slice(0, 2), last.slice(2, 4)] : []);
+  for (let r = 1; r <= 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      const sq = FILES[f] + r, [x, y] = squareXY(sq, flip), light = (f + r) % 2 === 1;
+      sv("rect", { x, y, width: 45, height: 45, class: light ? "sq-l" : "sq-d" }, svg);
+      if (marked.has(sq)) sv("rect", { x, y, width: 45, height: 45, class: "sq-last" }, svg);
+      if (sq === selected) sv("rect", { x, y, width: 45, height: 45, class: "sq-sel" }, svg);
+      if (coords && r === (flip ? 8 : 1)) svText(svg, x + 38, y + 42, FILES[f], { class: `coord ${light ? "on-l" : "on-d"}` });
+      if (coords && f === (flip ? 7 : 0)) svText(svg, x + 2, y + 9, String(r), { class: `coord ${light ? "on-l" : "on-d"}` });
+    }
+  }
+  for (const [sq, c] of Object.entries(pieces)) {
+    const [x, y] = squareXY(sq, flip);
+    sv("use", { href: `#${c === c.toUpperCase() ? "white" : "black"}-${PIECE_NAME[c.toLowerCase()]}`, x, y }, svg);
+  }
+  for (const a of arrows) if (a.uci) drawArrow(svg, a.uci, a.cls, flip);
+  return svg;
+}
+function miniBoard(fen, opts) {
+  return drawBoard(document.createElementNS(SVG_NS, "svg"), fen, { coords: false, ...opts });
+}
+
+// ---------- Game viewer ----------
+const dlg = document.getElementById("viewer");
+const V = { game: null, i: 0, puzzle: null, sel: null, feedback: null };
+const moveLabel = (g, i) => {
+  const whiteMoved = (i % 2 === 0) === g.white_first;
+  const num = Math.floor((i + (g.white_first ? 0 : 1)) / 2) + 1;
+  return `${num}${whiteMoved ? "." : "…"} ${g.plies[i].san}`;
+};
+const whiteToMove = (g, i) => (i % 2 === 0) === g.white_first;
+
+function openViewer(gameId, ply, { puzzle = false } = {}) {
+  const g = D.games[gameId];
+  if (!g) return;
+  V.game = g; V.i = ply; V.sel = null; V.feedback = null;
+  V.puzzle = puzzle && g.plies[ply] && g.plies[ply].best_uci ? { ply, solved: false, revealed: false } : null;
+  buildViewer();
+  if (!dlg.open) dlg.showModal();
+  renderViewer();
+}
+
+function buildViewer() {
+  const g = V.game;
+  const result = `${cap(g.result)} · ${endingLabel(g.ended).toLowerCase()}`;
+  const moves = h("div", { class: "v-moves", id: "v-moves" });
+  g.plies.forEach((p, i) => {
+    if ((i % 2 === 0) === g.white_first || i === 0) {
+      const num = Math.floor((i + (g.white_first ? 0 : 1)) / 2) + 1;
+      moves.append(h("span", { class: "num" }, `${num}.`));
+      if (i === 0 && !g.white_first) moves.append(h("span", {}, ""));
+    }
+    moves.append(h("button", {
+      class: "mv" + (p.wb != null ? " mine" : ""), "data-i": i + 1,
+      onclick: () => go(i + 1),
+    }, p.san, p.kind ? h("span", { class: `nag ${p.kind}`, title: p.kind }, NAG[p.kind]) : null));
+  });
+  dlg.replaceChildren(h("div", { class: "v-wrap" },
+    h("div", { class: "v-board" },
+      h("div", { class: "evalbar", title: "Your win chance" }, h("span", { id: "v-eval" })),
+      sv("svg", { id: "v-svg", class: "board" })),
+    h("div", { class: "v-side" },
+      h("div", { class: "v-head" },
+        h("div", {},
+          h("h3", {}, `${COLOR_SYM[g.color]} vs ${g.opponent} (${g.opponent_rating})`),
+          h("p", { class: "sub" }, `${shortDay(g.date)} · ${result} · `, h("a", { href: g.url, target: "_blank", rel: "noopener" }, "Chess.com ↗")),
+          h("p", { class: "sub" }, g.opening)),
+        h("button", { class: "v-close", "aria-label": "Close", onclick: () => dlg.close() }, "×")),
+      h("div", { class: "v-info", id: "v-info", "aria-live": "polite" }),
+      h("div", { class: "v-controls" },
+        h("button", { title: "Start (Home)", onclick: () => go(0) }, "⇤"),
+        h("button", { title: "Back (←)", onclick: () => go(V.i - 1) }, "←"),
+        h("button", { title: "Forward (→)", onclick: () => go(V.i + 1) }, "→"),
+        h("button", { title: "End (End)", onclick: () => go(g.positions.length - 1) }, "⇥")),
+      moves,
+      h("div", { class: "v-hint" }, "← → to step · Esc to close · ?? blunder · ? mistake · ?! inaccuracy"))));
+  document.getElementById("v-svg").addEventListener("click", boardClick);
+}
+
+function go(i) {
+  const g = V.game;
+  V.i = Math.max(0, Math.min(g.positions.length - 1, i));
+  V.sel = null; V.feedback = null;
+  if (V.puzzle && V.i !== V.puzzle.ply) V.puzzle = null;
+  renderViewer();
+}
+
+function renderViewer() {
+  const g = V.game, i = V.i, next = g.plies[i], P = V.puzzle;
+  const hideAnswer = P && !P.solved && !P.revealed;
+  const arrows = [];
+  if (next && next.best_uci && !hideAnswer) {
+    if (next.uci !== next.best_uci) arrows.push({ uci: next.uci, cls: "arrow-played" });
+    arrows.push({ uci: next.best_uci, cls: "arrow-best" });
+  }
+  drawBoard(document.getElementById("v-svg"), g.positions[i], {
+    flip: g.color === "black", last: i > 0 ? g.plies[i - 1].uci : null, arrows, selected: V.sel,
+  });
+  document.getElementById("v-eval").style.height = `${g.wins[i]}%`;
+  document.getElementById("v-eval").parentElement.title = `Your win chance: ${Math.round(g.wins[i])}%`;
+
+  const info = document.getElementById("v-info");
+  info.replaceChildren();
+  const add = (...nodes) => info.append(...nodes.filter(Boolean));
+  if (hideAnswer) {
+    add(
+      h("div", { class: "big" }, `Find the best move for ${whiteToMove(g, i) ? "♔ White" : "♚ Black"}`),
+      h("div", { class: "muted" }, `Win chance here: ${Math.round(next.wb)}%. Click a piece, then its square.`),
+      V.feedback ? h("div", { class: V.feedback.ok ? "ok" : "bad" }, V.feedback.text) : null,
+      h("div", { class: "actions" }, h("button", { class: "linkbtn", onclick: () => { P.revealed = true; renderViewer(); } }, "Show answer")));
+  } else if (next && next.wb != null) {
+    const head = h("div", { class: "big" }, moveLabel(g, i), next.kind ? h("span", { class: `nag ${next.kind}` }, NAG[next.kind]) : null);
+    add(head);
+    if (P && P.solved) add(h("div", { class: "ok" }, `✓ Correct: ${next.best}`));
+    const delta = next.wa - next.wb;
+    add(h("div", {},
+      `Win chance ${Math.round(next.wb)}% → `,
+      h("b", { class: delta <= -5 ? "down" : delta >= 5 ? "up" : "" }, `${Math.round(next.wa)}%`),
+      next.clock != null ? h("span", { class: "muted" }, ` · ${Math.round(next.clock)}s left`) : null));
+    if (next.best && next.best !== next.san) {
+      add(h("div", {}, h("span", { class: "key-arrow", style: "background:var(--good);margin-right:6px;vertical-align:2px" }), `Best was ${next.best}`,
+        h("span", { class: "muted" }, " · red arrow is your move")));
+    } else if (next.best) {
+      add(h("div", { class: "ok" }, "✓ Engine's top choice"));
+    }
+  } else if (next) {
+    add(h("div", { class: "big" }, moveLabel(g, i)), h("div", { class: "muted" }, "Opponent's move. Step forward to see it."));
+  } else {
+    add(h("div", { class: "big" }, "Final position"), h("div", { class: "muted" }, `${cap(g.result)} · ${endingLabel(g.ended).toLowerCase()}`));
+  }
+
+  for (const b of dlg.querySelectorAll(".v-moves button")) {
+    const cur = +b.dataset.i === i;
+    b.classList.toggle("cur", cur);
+    if (cur) b.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function boardClick(e) {
+  const P = V.puzzle, g = V.game;
+  if (!P || P.solved || P.revealed) return;
+  const svg = e.currentTarget, b = svg.getBoundingClientRect();
+  let col = Math.floor(((e.clientX - b.left) / b.width) * 8), row = Math.floor(((e.clientY - b.top) / b.height) * 8);
+  col = Math.max(0, Math.min(7, col)); row = Math.max(0, Math.min(7, row));
+  const flip = g.color === "black";
+  const sq = flip ? FILES[7 - col] + (row + 1) : FILES[col] + (8 - row);
+  const pieces = parseBoard(g.positions[V.i]);
+  const mine = c => c && (c === c.toUpperCase()) === whiteToMove(g, V.i);
+  if (!V.sel || mine(pieces[sq])) {
+    V.sel = mine(pieces[sq]) && V.sel !== sq ? sq : null;
+    renderViewer();
+    return;
+  }
+  const tried = V.sel + sq, next = g.plies[V.i];
+  V.sel = null;
+  if (tried === next.best_uci.slice(0, 4)) P.solved = true;
+  else V.feedback = { ok: false, text: tried === next.uci.slice(0, 4) ? "✗ That's the move you played. Try again." : "✗ Not the best move. Try again." };
+  renderViewer();
+}
+
+dlg.addEventListener("keydown", e => {
+  if (!V.game) return;
+  const keys = { ArrowLeft: V.i - 1, ArrowRight: V.i + 1, Home: 0, End: V.game.positions.length - 1 };
+  if (e.key in keys) { go(keys[e.key]); e.preventDefault(); }
+});
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+// ---------- Layout pieces ----------
+function table(headers, rows, { groups } = {}) {
+  const body = [];
+  rows.forEach((r, ri) => {
+    if (groups && groups[ri]) body.push(h("tr", { class: "group" }, h("td", { colspan: headers.length }, groups[ri])));
+    body.push(h("tr", {}, r.map((cell, i) => {
+      const td = h("td", { class: headers[i].num ? "num" : null });
+      if (cell instanceof Node) td.append(cell);
+      else if (cell && typeof cell === "object" && cell.href) td.append(h("a", { href: cell.href, target: "_blank", rel: "noopener" }, cell.text));
+      else td.append(String(cell ?? "–"));
+      return td;
+    })));
+  });
+  return h("table", {},
+    h("thead", {}, h("tr", {}, headers.map(c => h("th", { class: c.num ? "num" : null }, c.label ?? c)))),
+    h("tbody", {}, body));
+}
+function figure(title, subtitle, render, tableSpec, legend) {
+  const box = h("div", { class: "chart" });
+  renderers.push(() => render(box));
+  return h("figure", { class: "card" },
+    h("h3", {}, title),
+    subtitle ? h("p", { class: "sub" }, subtitle) : null,
+    legend || null,
+    box,
+    tableSpec ? h("details", {}, h("summary", {}, "Show table"), table(tableSpec.headers, tableSpec.rows)) : null);
+}
+const SECTIONS = [];
+function section(id, sym, title, lede, ...content) {
+  SECTIONS.push([id, title]);
+  return h("section", { id }, h("h2", {}, h("span", { class: "sym", "aria-hidden": "true" }, sym), title), lede ? h("p", { class: "lede" }, lede) : null, content);
+}
+function tile(label, value, note, delta) {
+  return h("div", { class: "tile" },
+    h("div", { class: "label" }, label),
+    h("div", { class: "value" }, value, delta ? h("span", { class: `delta ${delta.cls}` }, delta.text) : null),
+    note ? h("div", { class: "note" }, note) : null);
+}
+const replayBtn = (gameId, ply, label = "Review →", puzzle = false) =>
+  h("button", { class: "linkbtn", onclick: () => openViewer(gameId, ply, { puzzle }) }, label);
+
+// ---------- Sections ----------
+function header() {
+  return h("header", {},
+    h("h1", {}, `Chess review · ${D.user}`),
+    h("p", {}, `${D.n_games.toLocaleString()} games, ${dayLabel(dayTs(D.from))} – ${dayLabel(dayTs(D.to))}. ${D.filters}`));
+}
+
+function kpis() {
+  const main = D.results.classes[0], E = D.engine, all = D.results.classes;
+  const t = all.reduce((a, c) => ({ w: a.w + c.w, d: a.d + c.d, l: a.l + c.l }), { w: 0, d: 0, l: 0 });
+  const sc = (100 * (t.w + t.d / 2)) / (t.w + t.d + t.l);
+  const diff = main.now - main.start;
+  const tiles = [
+    tile(`${cap(main.name)} rating`, main.now.toLocaleString(), `Peak ${main.peak.toLocaleString()} · start ${main.start.toLocaleString()}`,
+      diff ? { cls: diff > 0 ? "up" : "down", text: `${diff > 0 ? "▲" : "▼"} ${Math.abs(diff)}` } : null),
+    tile("Score", fmt.pct(sc), `${t.w.toLocaleString()} W · ${t.d.toLocaleString()} D · ${t.l.toLocaleString()} L`),
+  ];
+  if (E) {
+    const abr = E.accuracy_by_result;
+    tiles.push(
+      tile("Game accuracy", `${E.accuracy}%`, abr.win && abr.loss ? `${abr.win}% wins · ${abr.loss}% losses` : null),
+      tile("Blunders / game", fmt.one(E.per_game.blunder), `${E.per_game.mistake} mistakes · ${E.per_game.inaccuracy} inacc.`),
+      tile("Wins thrown", fmt.pct((100 * E.thrown.count) / E.thrown.n), `${E.thrown.count} of ${E.thrown.n} games`));
+  }
+  return h("div", { class: "kpis" }, tiles);
+}
+
+function focus() {
+  if (!D.focus.length) return null;
+  return section("focus", "◆", "What to work on", "Most important first. Click a row to jump to the evidence.",
+    h("div", { class: "card focus" }, D.focus.map((f, i) => h("a", { class: "focus-row", href: `#${f.link}` },
+      h("span", { class: "rank" }, i + 1),
+      h("div", {}, h("div", { class: "title" }, f.title), h("div", { class: "finding" }, f.finding)),
+      h("div", { class: "metric" }, f.metric, h("small", {}, f.metric_label)),
+      h("div", { class: "action" }, f.action),
+      h("span", { class: "go", "aria-hidden": "true" }, "→")))));
+}
+
+function ratingFigure(bands) {
+  const R = D.results;
+  const series = R.classes.map(c => ({
+    name: cap(c.name), color: CLASS_COLOR[c.name] || "var(--series-1)",
+    points: R.rating_series[c.name].map(([d, r]) => [dayTs(d), r]),
+  }));
+  const allTs = series.flatMap(s => s.points.map(p => p[0]));
+  const legend = series.length > 1
+    ? h("div", { class: "legend" }, series.map(s => h("span", {}, h("span", { class: "key-line", style: `background:${s.color}` }), s.name)))
+    : null;
+  return figure("Rating over time", "End-of-day rating" + (series.length === 1 ? ` · ${series[0].name}` : "") + (bands.length ? " · shaded: the two compared stretches" : ""),
+    box => lineChart(box, series, { area: true, bands, xTicks: monthTicks(Math.min(...allTs), Math.max(...allTs)), xTitle: dayLabel }),
+    { headers: ["Time class", { label: "Games", num: true }, { label: "W", num: true }, { label: "D", num: true }, { label: "L", num: true },
+                { label: "Score", num: true }, { label: "Start", num: true }, { label: "Now", num: true }, { label: "Peak", num: true }],
+      rows: R.classes.map(c => [cap(c.name), c.games, c.w, c.d, c.l, fmt.pct(c.score), c.start, c.now, c.peak]) },
+    legend);
+}
+
+function peakVsNow() {
+  const P = D.peak;
+  if (!P) return null;
+  const [A, B] = P.windows, a = A.metrics, b = B.metrics;
+  const lines = [];
+  if (a.accuracy != null && b.accuracy != null) {
+    const dAcc = b.accuracy - a.accuracy;
+    lines.push(Math.abs(dAcc) < 2
+      ? `Your play is about the same: accuracy ${fmt.pct1(a.accuracy)} → ${fmt.pct1(b.accuracy)}, blunders ${fmt.one(a.blunders)} → ${fmt.one(b.blunders)} per game.`
+      : `Your accuracy is ${dAcc > 0 ? "up" : "down"} ${fmt.one(Math.abs(dAcc))} points (${fmt.pct1(a.accuracy)} → ${fmt.pct1(b.accuracy)}).`);
+  }
+  const dOpp = b.opponent - a.opponent;
+  if (Math.abs(dOpp) >= 50) lines.push(`At the peak your opponents averaged ${fmt.int(a.opponent)}; now ${fmt.int(b.opponent)} (${dOpp > 0 ? "+" : "−"}${fmt.int(Math.abs(dOpp))}).`);
+  if (P.streak && P.streak.gain >= 60) lines.push(`The ${P.peak_rating} peak came at the end of a +${P.streak.gain} run over ${P.streak.days} days (${P.streak.games} games).`);
+
+  const rows = [], groups = {};
+  let lastGroup = null;
+  P.metrics.forEach(m => {
+    if (m.group !== lastGroup) { groups[rows.length] = m.group; lastGroup = m.group; }
+    const f = fmt[m.format], va = a[m.key], vb = b[m.key], d = vb - va;
+    const same = f(va) === f(vb) || Math.abs(d) < Math.max(Math.abs(va), 1) * 0.03;
+    const cls = same || !m.better ? "flat" : (d > 0) === (m.better === "up") ? "up" : "down";
+    const sym = same ? "≈" : d > 0 ? "▲" : "▼";
+    const dTxt = m.format.startsWith("pct") ? `${fmt.one(Math.abs(d))} pts` : m.format === "int" ? fmt.int(Math.abs(d)) : fmt.one(Math.abs(d));
+    rows.push([m.label, f(va), f(vb), h("span", { class: cls }, same ? "≈" : `${sym} ${dTxt}`)]);
+  });
+
+  const thenL = `Peak (${shortDay(A.from)}–${shortDay(A.to)})`, nowL = `Now (${shortDay(B.from)}–${shortDay(B.to)})`;
+  const dbRows = A.phase && B.phase ? [
+    ...A.phase.map((p, i) => ({ label: cap(p.name), a: p.rate, b: B.phase[i].rate })),
+    ...A.clock.map((c, i) => ({ label: `Clock ${c.name}`, a: c.rate, b: B.clock[i].rate })),
+  ] : null;
+  const legend = h("div", { class: "legend" },
+    h("span", {}, svgDot("db-then"), thenL), h("span", {}, svgDot("db-now"), nowL));
+
+  return section("peak", "▲", "Peak vs. now",
+    `${A.n} games centered on your ${cap(P.time_class)} peak of ${P.peak_rating} (${shortDay(P.peak_date)}) against your last ${B.n}.`,
+    h("div", { class: "card" }, lines.map(l => h("div", { class: "note-line", style: "margin:0 0 4px;font-size:13px" }, "• ", l))),
+    h("div", { class: "mt" }, ratingFigure([
+      { from: dayTs(A.from), to: dayTs(A.to) + 86400000, label: "Peak" },
+      { from: dayTs(B.from), to: dayTs(B.to) + 86400000, label: "Now" },
+    ])),
+    h("div", { class: "grid-2 mt" },
+      h("div", { class: "card" },
+        h("h3", {}, "Side by side"),
+        h("p", { class: "sub" }, "▲▼ colored by whether the change helps you · ≈ no real change"),
+        table(["", { label: "Peak", num: true }, { label: "Now", num: true }, { label: "Change", num: true }], rows, { groups })),
+      dbRows ? figure("Blunders per 100 moves", "By game phase and by clock remaining", box => dumbbellChart(box, dbRows, { thenLabel: thenL, nowLabel: nowL }),
+        { headers: ["", { label: "Peak", num: true }, { label: "Now", num: true }], rows: dbRows.map(r => [r.label, r.a ?? "–", r.b ?? "–"]) }, legend) : null));
+}
+function svgDot(cls) {
+  const s = sv("svg", { width: 12, height: 12 });
+  sv("circle", { cx: 6, cy: 6, r: 4.5, class: cls }, s);
+  return s;
+}
+
+function mistakes() {
+  const E = D.engine;
+  if (!E) return section("mistakes", "×", "Mistakes", null, h("div", { class: "card empty" }, "No engine analysis yet. Run `python -m trainer analyze`."));
+  const rateTip = r => [r.label, [
+    { value: r.rate == null ? "–" : `${r.rate}`, label: "blunders / 100 moves" },
+    { value: r.blunders.toLocaleString(), label: `in ${r.moves.toLocaleString()} moves` },
+  ]];
+  const rateTable = rows => ({
+    headers: ["", { label: "Moves", num: true }, { label: "Blunders", num: true }, { label: "Per 100", num: true }],
+    rows: rows.map(r => [r.label, r.moves.toLocaleString(), r.blunders, r.rate ?? "–"]),
+  });
+  const phase = E.phase.map(p => ({ ...p, label: cap(p.name), value: p.rate }));
+  const clock = E.clock.map(c => ({ ...c, label: c.name, value: c.rate }));
+
+  const win = Math.max(5, Math.min(20, Math.floor(E.accuracy_trend.length / 5)));
+  const rolling = E.accuracy_trend.map((_, i) => {
+    const slice = E.accuracy_trend.slice(Math.max(0, i - win + 1), i + 1);
+    return [i, slice.reduce((s, p) => s + p[1], 0) / slice.length];
+  });
+  const trendTicks = [];
+  E.accuracy_trend.forEach(([d], i) => { if (i === 0 || d !== E.accuracy_trend[i - 1][0]) trendTicks.push([i, shortDay(d)]); });
+
+  const T = E.thrown;
+  const thrownRows = T.by_ending.map(([r, n]) => ({ label: endingLabel(r), value: (100 * n) / T.count, n }));
+
+  return section("mistakes", "×", "Where the mistakes happen",
+    `Stockfish on every move of your last ${E.n} ${D.main_class} games (${shortDay(E.from)} – ${shortDay(E.to)}). Blunder = your win chance drops 15+ points.`,
+    h("div", { class: "grid-3" },
+      figure("By game phase", "Blunders per 100 of your moves", box => columnChart(box, phase, { tooltip: rateTip }), rateTable(phase)),
+      figure("By clock remaining", "Share of starting time left", box => columnChart(box, clock, { tooltip: rateTip }), rateTable(clock)),
+      figure("Accuracy trend", `${win}-game rolling average`,
+        box => lineChart(box, [{ name: `${win}-game avg`, color: "var(--series-1)", points: rolling }], {
+          height: 190, yFormat: fmt.pct, area: true, xTicks: trendTicks,
+          xTitle: i => `Game ${i + 1} · ${shortDay(E.accuracy_trend[i][0])}`,
+          extraRows: i => [{ value: `${Math.round(E.accuracy_trend[i][1])}%`, label: "this game" }],
+        }),
+        { headers: ["#", "Date", { label: "Accuracy", num: true }, { label: "Rolling", num: true }],
+          rows: E.accuracy_trend.map(([d, a], i) => [i + 1, d, `${a}%`, `${rolling[i][1].toFixed(1)}%`]) })),
+    T.count ? h("div", { class: "grid-2 mt", id: "thrown" },
+      figure(`Thrown wins: ${T.count} of ${T.n} games`, "You reached ≥80% win chance and didn't win. How they ended:",
+        box => hbarChart(box, thrownRows, { tooltip: r => [r.label, [{ value: fmt.pct(r.value), label: plural(r.n, "game") }]] }),
+        { headers: ["Ended by", { label: "Games", num: true }, { label: "Share", num: true }], rows: thrownRows.map(r => [r.label, r.n, fmt.pct(r.value)]) }),
+      h("div", { class: "card" },
+        h("h3", {}, "Replay these"),
+        h("p", { class: "sub" }, "Opens at the move that let the win slip"),
+        table(["Date", "Opponent", { label: "Peak", num: true }, "Result", ""],
+          T.recent.map(t => [shortDay(t.date), t.opponent, `${t.peak}%`, endingLabel(t.ended), replayBtn(t.game_id, t.ply)])))) : null);
+}
+
+function blunders() {
+  const E = D.engine;
+  if (!E || !E.blunders.length) return null;
+  return section("blunders", "?", "Your biggest blunders",
+    "Each is a puzzle from your own games: click one, find the move you missed, then step through what happened.",
+    h("div", { class: "puzzles" }, E.blunders.map(b => {
+      const g = D.games[b.game_id];
+      return h("button", { class: "puzzle", onclick: () => openViewer(b.game_id, b.ply, { puzzle: true }), "aria-label": `Puzzle: position before ${b.move}` },
+        miniBoard(g.positions[b.ply], { flip: g.color === "black", last: b.ply > 0 ? g.plies[b.ply - 1].uci : null }),
+        h("div", { class: "row" }, h("span", { class: "who" }, `${g.color === "white" ? "♔ White" : "♚ Black"} to move`), h("span", { class: "down" }, `${b.win_before}% → ${b.win_after}%`)),
+        h("div", { class: "meta" }, [cap(b.phase), b.clock != null ? `${Math.round(b.clock)}s left` : null, shortDay(b.date)].filter(Boolean).join(" · ")));
+    })));
+}
+
+function problemLines() {
+  if (!D.lines.length) return null;
+  return h("div", { class: "stack mt", id: "lines", style: "display:grid;gap:12px" }, D.lines.map(L => {
+    const first = L.first_error.reduce((best, cur) => (cur[1] > best[1] ? cur : best));
+    const firstTotal = L.first_error.reduce((s, [, n]) => s + n, 0);
+    const posRows = L.positions.map(p => {
+      const g = D.games[p.game_id];
+      return h("button", { class: "pos-row", onclick: () => openViewer(p.game_id, p.ply) },
+        miniBoard(g.positions[p.ply], { flip: L.color === "black", arrows: [{ uci: p.usual_uci, cls: "arrow-played" }, { uci: p.best_uci, cls: "arrow-best" }] }),
+        h("div", {},
+          h("div", { class: "pos-title" }, `Move ${p.move_number}: play ${p.best}, not ${p.usual}`),
+          h("div", { class: "pos-detail" }, `Reached ${p.seen}× · you played ${p.usual} ${p.usual_n}× · costs ${fmt.one(p.avg_drop)} pts of win chance on average`),
+          h("div", { class: "pos-detail muted" }, "Open the worst game from here →")));
+    });
+    const traj = L.trajectory.map(t => [t.move, t.win]);
+    return h("div", { class: "card line-card" },
+      h("header", {},
+        h("div", {}, h("h3", {}, `${COLOR_SYM[L.color]} ${cap(L.color)} · ${L.name}`),
+          h("div", { class: "facts" }, `${L.w}–${L.d}–${L.l} over ${L.games} games · ${L.loss_timeout}% of losses on time · ${L.analyzed} analyzed`)),
+        h("div", { class: "score down" }, fmt.pct(L.score))),
+      h("div", { class: "line-body" },
+        h("div", {},
+          h("div", { class: "sub", style: "margin:0 0 4px" }, "Your average win chance by move"),
+          (() => {
+            const box = h("div", { class: "chart" });
+            renderers.push(() => lineChart(box, [{ name: "avg win chance", color: "var(--series-1)", points: traj }], {
+              height: 150, yFormat: fmt.pct, refY: 50, yMin: 30, yMax: 60,
+              xTicks: traj.filter((_, i) => i % 2 === 0).map(([mv]) => [mv, `move ${mv}`]),
+              xTitle: mv => `After move ${mv}`,
+              extraRows: mv => { const t = L.trajectory.find(t => t.move === mv); return t ? [{ value: `${t.worse} of ${t.n}`, label: "games clearly worse" }] : []; },
+            }));
+            return box;
+          })(),
+          h("div", { class: "note-line" }, "First real mistake: ", h("b", {}, `moves ${first[0]}`), ` in ${first[1]} of ${firstTotal} games.`),
+          L.siblings.length ? h("div", { class: "note-line" }, "You score better in: ",
+            L.siblings.map((s, i) => [i ? " · " : "", h("b", {}, s.name.replace(L.family, "").trim() || s.name), ` ${fmt.pct(s.score)} (${s.games})`])) : null),
+        h("div", {},
+          h("div", { class: "sub", style: "margin:0 0 4px" }, posRows.length ? "Positions you keep getting wrong" : "No single repeated mistake; the games turn later"),
+          posRows.length ? h("div", { class: "legend" },
+            h("span", {}, h("span", { class: "key-arrow", style: "background:var(--critical)" }), "Your usual move"),
+            h("span", {}, h("span", { class: "key-arrow", style: "background:var(--good)" }), "Engine's choice")) : null,
+          posRows)));
+  }));
+}
+
+function openings() {
+  const O = D.openings;
+  const tipFor = r => [r.name, [{ value: fmt.pct(r.score), label: "score" }, { value: `${r.w} W · ${r.d} D · ${r.l} L`, label: "" }]];
+  const famTable = rows => ({
+    headers: ["Opening", { label: "Games", num: true }, { label: "W", num: true }, { label: "D", num: true }, { label: "L", num: true }, { label: "Score", num: true }],
+    rows: rows.map(r => [r.name, r.games, r.w, r.d, r.l, fmt.pct(r.score)]),
+  });
+  return section("openings", "♘", "Openings",
+    "Score per opening family (win = 1, draw = ½), most-played first. Below: the lines that cost you most, and exactly where they go wrong.",
+    h("div", { class: "grid-2" },
+      ["white", "black"].map(color => figure(`${COLOR_SYM[color]} As ${color}`, null,
+        box => divergingChart(box, O.families[color], { tooltip: tipFor }), famTable(O.families[color])))),
+    problemLines(),
+    h("details", { class: "card mt" },
+      h("summary", { style: "font-size:13px;color:var(--text-secondary)" }, "All weakest lines"),
+      table(["", "Line", { label: "Games", num: true }, { label: "W–D–L", num: true }, { label: "Score", num: true }],
+        O.weakest_lines.map(r => [COLOR_SYM[r.color], r.name, r.games, `${r.w}–${r.d}–${r.l}`, fmt.pct(r.score)]))));
+}
+
+function results() {
+  const R = D.results;
+  const endingFig = (title, key) => {
+    const total = R.endings[key].reduce((s, [, n]) => s + n, 0);
+    const rows = R.endings[key].slice(0, 5).map(([r, n]) => ({ label: endingLabel(r), value: (100 * n) / total, n }));
+    return figure(title, null,
+      box => hbarChart(box, rows, { tooltip: r => [r.label, [{ value: fmt.pct(r.value), label: plural(r.n, "game") }]] }),
+      { headers: ["Ended by", { label: "Games", num: true }, { label: "Share", num: true }], rows: rows.map(r => [r.label, r.n, fmt.pct(r.value)]) });
+  };
+  return section("results", "=", "Results",
+    null,
+    D.peak ? null : ratingFigure([]),
+    h("div", { class: `grid-2${D.peak ? "" : " mt"}` }, endingFig("How you lose", "loss"), endingFig("How you win", "win")));
+}
+
+function footer() {
+  return h("footer", {}, `Generated ${D.generated} from the Chess.com Published-Data API. Moves evaluated locally with Stockfish; ` +
+    "blunder / mistake / inaccuracy = a 15 / 10 / 5 point drop in win chance, and accuracy follows Lichess's formulas, so numbers differ slightly from Chess.com's Game Review.");
+}
+
+const parts = [header(), kpis(), focus(), mistakes(), peakVsNow(), openings(), blunders(), results(), footer()].filter(Boolean);
+document.getElementById("app").append(...parts);
+document.getElementById("nav").append(h("b", {}, `♞ ${D.user}`), ...SECTIONS.map(([id, title]) => h("a", { href: `#${id}` }, title)));
+const renderAll = () => renderers.forEach(r => r());
+renderAll();
+let resizeTimer;
+addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderAll, 120); });
+</script>
+</body>
+</html>

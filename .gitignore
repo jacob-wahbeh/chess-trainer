@@ -1,0 +1,10 @@
+.venv/
+/data/
+/engine/
+/reports/
+__pycache__/
+.env
+.DS_Store
+.env.*
+!.env.example
+.claude/
