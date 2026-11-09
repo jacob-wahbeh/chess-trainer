@@ -201,9 +201,16 @@ export function dropOf(pos: Chess, before: Eval | undefined, after: Eval | undef
 	return Math.max(0, winPercent(sign * whiteCp(before)) - winPercent(sign * whiteCp(after)));
 }
 
-/** Grade from how the attempt went: any miss is a lapse; a quick, confident answer on a known card is Easy. */
+/** An answer that takes this long was a struggle to remember. */
+const SLOW_MS = 15_000;
+
+/**
+ * Grade from how the attempt went (the drill grades for you): any miss is a lapse, a long think is Hard, and a
+ * quick, confident answer on a known card is Easy.
+ */
 export function autoGrade(a: { correctFirstTry: boolean; ms: number; state: State }): Grade {
 	if (!a.correctFirstTry) return Rating.Again;
+	if (a.ms >= SLOW_MS) return Rating.Hard;
 	if (a.state === State.Review && a.ms < 2500) return Rating.Easy;
 	return Rating.Good;
 }

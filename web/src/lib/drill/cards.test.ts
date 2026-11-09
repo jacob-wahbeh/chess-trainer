@@ -76,6 +76,7 @@ describe('review and preview', () => {
 		expect(autoGrade({ correctFirstTry: true, ms: 1000, state: State.Review })).toBe(Rating.Easy);
 		expect(autoGrade({ correctFirstTry: true, ms: 1000, state: State.New })).toBe(Rating.Good);
 		expect(autoGrade({ correctFirstTry: true, ms: 9000, state: State.Review })).toBe(Rating.Good);
+		expect(autoGrade({ correctFirstTry: true, ms: 20000, state: State.Review })).toBe(Rating.Hard);
 	});
 });
 

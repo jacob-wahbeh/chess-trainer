@@ -41,12 +41,6 @@
 		lastMove?: Key[];
 	}
 
-	const GRADES: { grade: Grade; label: string; key: string }[] = [
-		{ grade: Rating.Again, label: 'Again', key: '1' },
-		{ grade: Rating.Hard, label: 'Hard', key: '2' },
-		{ grade: Rating.Good, label: 'Good', key: '3' },
-		{ grade: Rating.Easy, label: 'Easy', key: '4' }
-	];
 	/** Plies replayed before each card (the earlier ones appear instantly). */
 	const INTRO_PLIES = 8;
 	/** Time per replayed move for each setup speed; the start position is held a little longer. */
@@ -68,6 +62,7 @@
 	let result = $state<Result | null>(null);
 	let revealed = $state(false);
 	let firstTry = $state(true);
+	/** Picked from how the attempt went (autoGrade): a miss, a long think, or a quick answer. */
 	let grade = $state<Grade>(Rating.Good);
 	/** Engine continuations keyed by their first move ('' = the engine's own choice when no answer is known). */
 	let lines = $state.raw<Record<string, Ply[]>>({});
@@ -453,9 +448,7 @@
 		else if (nav && card && ['intro', 'ask', 'checking', 'result'].includes(phase)) step(nav);
 		else if (phase === 'intro') finishIntro();
 		else if (phase === 'result') {
-			const g = GRADES.find((x) => x.key === e.key);
-			if (g && !practicing) grade = g.grade;
-			else if ((e.key === ' ' || e.key === 'Enter') && (result?.kind !== 'wrong' || revealed)) next();
+			if ((e.key === ' ' || e.key === 'Enter') && (result?.kind !== 'wrong' || revealed)) next();
 			else if (e.key === 'r' && result?.kind === 'wrong') retry();
 			else return;
 		} else return;
@@ -784,14 +777,9 @@
 									Extra practice: {firstTry ? 'this card keeps its schedule' : 'the miss brings this card back sooner'}.
 								</p>
 							{:else}
-								<div class="grades" role="group" aria-label="How well did you know it?">
-									{#each GRADES as g (g.grade)}
-										<button class:selected={grade === g.grade} onclick={() => (grade = g.grade)} title="{g.label} ({g.key})">
-											<span>{g.label}</span>
-											<span class="num faint">{interval(card.intervals[g.grade])}</span>
-										</button>
-									{/each}
-								</div>
+								<p class="faint small">
+									{grade === Rating.Again ? 'Missed, so it comes back' : 'Next review'} in {interval(card.intervals[grade])}.
+								</p>
 							{/if}
 							<button class="btn btn-primary continue" onclick={next}>Continue</button>
 						</div>
@@ -1374,35 +1362,6 @@
 		padding: 12px 0 calc(12px + var(--safe-b));
 		background: linear-gradient(to bottom, transparent, var(--bg) 18px);
 		z-index: 2;
-	}
-
-	.grades {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 6px;
-	}
-
-	.grades button {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 2px;
-		padding: 7px 4px;
-		border-radius: 10px;
-		border: 1px solid var(--line);
-		background: var(--bg);
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-2);
-		transition:
-			background 120ms var(--ease),
-			border-color 120ms var(--ease);
-	}
-
-	.grades button.selected {
-		border-color: var(--accent);
-		color: var(--text);
-		background: color-mix(in srgb, var(--accent) 12%, var(--bg));
 	}
 
 	.continue {
