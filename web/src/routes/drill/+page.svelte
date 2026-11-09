@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { normalizeMove, type Chess } from 'chessops/chess';
 	import { chessgroundDests, chessgroundMove } from 'chessops/compat';
 	import { makeFen } from 'chessops/fen';
@@ -9,15 +10,15 @@
 	import type { DrawShape } from 'chessground/draw';
 	import type { Key } from 'chessground/types';
 	import { chessopsUci } from '$lib/analysis/runner';
-	import { formatEval, type Eval } from '$lib/analysis/score';
-	import { continuation, formatPlies, positions, sanOf, walk, type Ply } from '$lib/chess/line';
+	import { formatEval, formatEvalShort, type Eval } from '$lib/analysis/score';
+	import { continuation, formatPlies, positions, sanOf, walk, type Ply, type Walk } from '$lib/chess/line';
 	import { ACCEPT_DROP, autoGrade, dropOf, Rating, shuffled, State, type Grade } from '$lib/drill/cards';
 	import { EnginePool, type EvalResult } from '$lib/engine/pool';
-	import { page } from '$app/state';
 	import { sourceLink, type Explanation } from '$lib/explain/check';
-	import { writtenExplanations } from '$lib/explain/written';
-	import { principleById } from '$lib/explain/principles';
 	import { explainFacts, passTurn, type Fact, type Shape } from '$lib/explain/facts';
+	import { notesFor, splitWritten, type Note } from '$lib/explain/notes';
+	import { principleById } from '$lib/explain/principles';
+	import { writtenExplanations } from '$lib/explain/written';
 	import { pct } from '$lib/format';
 	import { analysis, drill, ready, refreshDrill, settings } from '$lib/state.svelte';
 	import { data } from '$lib/worker/client';
@@ -40,24 +41,45 @@
 		fen: string;
 		lastMove?: Key[];
 	}
+	/** good: the taught move; bad: the habit or another mistake; own: a sound move of the player's. */
+	type Kind = 'good' | 'bad' | 'own';
+	/** A line to review after answering, shown as a chip and as an arrow on the drill position. */
+	interface Chip {
+		key: string;
+		kind: Kind;
+		tag: string;
+	}
+	/** A move played on the drill position after answering, to see where it leads; sound once the engine agrees. */
+	interface Try {
+		key: string;
+		sound: boolean | null;
+	}
 
 	/** Plies replayed before each card (the earlier ones appear instantly). */
 	const INTRO_PLIES = 8;
 	/** Time per replayed move for each setup speed; the start position is held a little longer. */
 	const INTRO_MS = { slow: 1000, normal: 600, fast: 300 } as const;
-	/** Arrow keys step through the moves; up and down jump to the start and back to the latest. */
+	/** Arrow keys step through the moves; up and down jump to the start and to the end. */
 	const NAV_KEYS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -Infinity, ArrowDown: Infinity };
-	/** Time per move when a line plays itself out on the board. */
+	/** Time per move when a line plays itself out on the board; it lingers on moves with a note. */
 	const PLAY_MS = 900;
+	const NOTE_MS = 2600;
+	/** Eval labels on the arrows need a board this wide to be readable. */
+	const LABEL_MIN_PX = 440;
+	const SOLID: Record<Kind, string> = { good: 'green', bad: 'red', own: 'blue' };
+	const PALE: Record<Kind, string> = { good: 'paleGreen', bad: 'paleRed', own: 'paleBlue' };
+	/** Moves tried after answering that keep a chip of their own. */
+	const MAX_TRIES = 2;
+	/** Moves of the game shown before the line under review; the rest fold into "…". */
+	const PATH_SHOWN = 4;
 
 	let phase = $state<Phase>('loading');
 	let queue = $state<string[]>([]);
 	let index = $state(0);
 	let card = $state<CardDetail | null>(null);
-	/** Board position along the line: 0 is the start, `end` the drill position, `end + 1` the move played. */
+	/** Board position along the game: 0 is the start, `end` the drill position. */
 	let cursor = $state(0);
-	let played = $state<string | null>(null);
-	/** An explanation line being stepped through: its first `n` moves are on the board. */
+	/** A line being stepped through from the drill position: its first `n` moves are on the board. */
 	let pv = $state<{ key: string; n: number } | null>(null);
 	let result = $state<Result | null>(null);
 	let revealed = $state(false);
@@ -66,16 +88,23 @@
 	let grade = $state<Grade>(Rating.Good);
 	/** Engine continuations keyed by their first move ('' = the engine's own choice when no answer is known). */
 	let lines = $state.raw<Record<string, Ply[]>>({});
-	/** Evaluation of each engine line (White's view), for the eval bar and the line cards. */
+	/** The start of a line (the move, and the reply to a mistake) until the engine's continuation arrives. */
+	let seed = $state.raw<Record<string, Ply[]>>({});
+	/** Evaluation of each engine line (White's view), for the eval bar, the chips and the arrows. */
 	let evals = $state.raw<Record<string, Eval>>({});
 	/** The opponent's engine line with a free turn, to find what they threaten. */
 	let threat = $state.raw<Ply[] | null>(null);
-	/** The fact being shown on the board, with its arrows. */
-	let focused = $state<Fact | null>(null);
+	/** The line under review (its chip is selected). */
+	let selected = $state<string | null>(null);
 	/** The line playing itself out on the board. */
 	let playing = $state<string | null>(null);
-	/** Whether the written explanation is expanded; it stays open from card to card once opened. */
-	let fullText = $state(false);
+	/** After a sound alternative: looking for the main move, which stays hidden until found or shown. */
+	let seeking = $state(false);
+	let found = $state(false);
+	let tries = $state<Try[]>([]);
+	/** Whether the whole game shows in the move list during the review. */
+	let fullPath = $state(false);
+	let boardWidth = $state(0);
 	let explainRun = 0;
 	/** Explanations written ahead of time (scripts/explanations.ts), by `${position key}|${habit}`. */
 	let explanations = $state.raw<Record<string, Explanation>>({});
@@ -90,29 +119,72 @@
 	const requeued = new Map<string, number>();
 	let askedAt = 0;
 	let introTimer: ReturnType<typeof setTimeout> | undefined;
-	let playTimer: ReturnType<typeof setInterval> | undefined;
+	let playTimer: ReturnType<typeof setTimeout> | undefined;
 	let engine: Promise<EnginePool> | undefined;
 
 	const line = $derived(card ? walk(card.card.path) : null);
 	const end = $derived(line?.plies.length ?? 0);
-	/** The moves to the position, plus the one played once there is an answer. */
-	const trail = $derived(line ? (played ? [...line.plies, ...continuation(line.pos, [played])] : line.plies) : []);
-	const frames = $derived(card ? positions(played ? [...card.card.path, played] : card.card.path) : []);
+	const frames = $derived(card ? positions(card.card.path) : []);
 	const color = $derived(card?.card.color ?? 'white');
 	const main = $derived(card?.main?.uci);
 	const why = $derived(card?.main?.why);
 	/** The opponent's last move ("5...h6") when the answer punishes it. */
 	const slip = $derived(line && why === 'punish' ? formatPlies(line.plies.slice(-1)) : '');
+	const theMain = $derived(why === 'thematic' ? 'the thematic move' : why === 'punish' ? `the move that punishes ${slip}` : 'the engine’s move');
 	const written = $derived(card ? explanations[`${card.card.key}|${card.card.wrong}`] : undefined);
 	/** The move explained as failing: the one just played if it was wrong, otherwise the usual habit. */
 	const wrongMove = $derived(result?.kind === 'wrong' ? result.played : card?.card.wrong);
+	/** Not while retrying a miss, or while looking for the main move after a sound alternative. */
+	const answerShown = $derived(!!result && (result.kind !== 'wrong' || revealed) && !seeking);
 	/** Checked facts about the failing move and the taught one, from the engine lines as they arrive. */
 	const facts: Fact[] = $derived.by(() => {
 		if (!card || !line || !result || !wrongMove) return [];
 		return explainFacts({ pos: line.pos, path: card.card.path, wrong: wrongMove, wrongLine: lines[wrongMove], main, mainLine: main ? lines[main] : undefined, threat });
 	});
-	const about = (a: Fact['about']) => facts.filter((f) => f.about === a);
 	const progress = $derived(queue.length ? Math.min(1, index / queue.length) : 0);
+
+	const lineOf = (key: string): Ply[] => lines[key] ?? seed[key] ?? [];
+	/** "5...Qc7": a line's first move, numbered as in the notation. */
+	const numbered = (key: string) => {
+		const ply = lineOf(key)[0] ?? (line && key ? continuation(line.pos, [key])[0] : undefined);
+		return ply ? formatPlies([ply]) : '…';
+	};
+
+	/** The lines to review: the taught move (once it may be seen), the move played, the habit, and moves tried. */
+	const chips: Chip[] = $derived.by(() => {
+		if (!card || !result || wrongMove === undefined) return [];
+		const share = card.answers.find((a) => a.uci === main)?.share;
+		const list: Chip[] = [];
+		if (answerShown) {
+			const tag = why === 'thematic' ? `Thematic${share ? ` · masters ${pct(share)}` : ''}` : why === 'punish' ? `Punishes ${slip}` : 'Engine’s choice';
+			list.push({ key: main ?? '', kind: 'good', tag });
+		}
+		if (result.kind !== 'wrong' && result.played !== main) list.push({ key: result.played, kind: 'own', tag: 'Your move · also good' });
+		const habit = `Your habit · ${card.wrongCount}× in your games`;
+		list.push({ key: wrongMove, kind: 'bad', tag: wrongMove === card.card.wrong ? habit : 'Your move' });
+		if (wrongMove !== card.card.wrong && answerShown) list.push({ key: card.card.wrong, kind: 'bad', tag: habit });
+		for (const t of tries) {
+			if (list.some((c) => c.key === t.key)) continue;
+			list.push({ key: t.key, kind: t.sound === false ? 'bad' : 'own', tag: t.sound === null ? 'Checking…' : t.sound ? 'Also fine' : 'A mistake' });
+		}
+		return list;
+	});
+	const chipOf = (key: string | null) => chips.find((c) => c.key === key);
+	const kindOf = (key: string): Kind => chipOf(key)?.kind ?? 'own';
+
+	/** The line on the board and how far along it: 0 at the drill position, -1 looking back through the game. */
+	const viewKey = $derived(pv?.key ?? selected);
+	const viewN = $derived(pv ? pv.n : phase === 'result' && cursor === end ? 0 : -1);
+	const visibleFacts = $derived(answerShown ? facts : facts.filter((f) => f.about !== 'main'));
+	const lineNotes = (key: string | null): Note[] => (key === null || !result ? [] : notesFor(visibleFacts, key, { main, wrong: wrongMove }));
+	const viewNotes = $derived(lineNotes(viewKey));
+	const notesHere = $derived(viewN >= 0 ? viewNotes.filter((n) => n.n === viewN) : []);
+	/** The written explanation, split between what it says about the habit and about the taught move. */
+	const story = $derived.by(() => {
+		if (!written || !line || !card || !answerShown) return null;
+		return splitWritten(written.why, sanOf(line.pos, card.card.wrong), main ? sanOf(line.pos, main) : '');
+	});
+	const storyFor = (key: string) => (!story ? [] : key === card?.card.wrong ? story.wrong : key === (main ?? '') ? story.main : []);
 
 	const evaluate = async (fen: string, depth: number) => (await (engine ??= EnginePool.create(1))).evaluate(fen, depth);
 	const toWhite = (r: EvalResult, pos: Chess): Eval => {
@@ -131,43 +203,51 @@
 		p.play(move);
 		return { pos: p, frame: { fen: makeFen(p.toSetup()), lastMove: chessgroundMove(move) as Key[] } };
 	};
-
 	const toShapes = (list: Shape[] = []): DrawShape[] => list.map((s) => ({ orig: s.orig as Key, dest: s.dest as Key | undefined, brush: s.brush }));
-	/** Whether the board shows the moment a fact is about: its line at its move, or the drill position. */
-	const onView = (f: Fact) => (f.line !== undefined && f.n ? pv?.key === f.line && pv.n === f.n : !pv && cursor === end);
-	const isFocused = (f: Fact) => focused?.text === f.text && onView(f);
-	/** "5...Qc7", the move numbered as in the notation. */
-	const numbered = (uci: string) => (line ? formatPlies(continuation(line.pos, [uci])) || uci : uci);
-	const lineName = (key: string) =>
-		key === (main ?? '') ? (why === 'thematic' ? 'Thematic line' : 'Best line') : key === wrongMove ? `Why ${numbered(key)} fails` : 'Your line';
 
-	const pvPlies = $derived(pv ? (lines[pv.key] ?? []) : []);
-	const shown: Frame | null = $derived(pv && line ? playOut(line.pos, pvPlies.slice(0, pv.n)) : (frames[cursor] ?? null));
+	const shown: Frame | null = $derived(pv && line ? (playOut(line.pos, lineOf(pv.key).slice(0, pv.n)) ?? frames[end]) : (frames[cursor] ?? null));
 	const shapes: DrawShape[] = $derived.by(() => {
 		if (phase !== 'result' || !result) return [];
-		if (focused && onView(focused)) return toShapes(focused.shapes);
-		if (pv) return [];
-		if (revealed && cursor === end) return arrow(main, 'green');
-		if (result.kind === 'wrong' && cursor === end + 1) return arrow(result.reply, 'red');
-		return [];
+		const drawn = notesHere.flatMap((n) => toShapes(n.shapes));
+		if (pv) {
+			if (drawn.length) return drawn;
+			// Where the line goes next; the reply to a mistake in full red.
+			const next = lineOf(pv.key)[pv.n];
+			const reply = pv.n === 1 && result.kind === 'wrong' && pv.key === result.played;
+			return arrow(next?.uci, reply ? 'red' : PALE[kindOf(pv.key)]);
+		}
+		if (cursor !== end || (result.kind === 'wrong' && !revealed)) return [];
+		// The drill position: every line's first move, labelled with its eval, and the notes about the position.
+		const labels = boardWidth >= LABEL_MIN_PX;
+		const overview = chips.flatMap((c) =>
+			arrow(c.key || lineOf(c.key)[0]?.uci, c.key === selected ? SOLID[c.kind] : PALE[c.kind]).map((s) =>
+				labels && evals[c.key] ? { ...s, label: { text: formatEvalShort(evals[c.key]) } } : s
+			)
+		);
+		return [...overview, ...drawn];
 	});
-	/** The eval bar, once the card is answered: the drill position, the move played, or the line on the board. */
+	/** The eval bar, once the card is answered: the drill position, or the line on the board. */
 	const shownEval: Eval | undefined = $derived.by(() => {
 		if (phase !== 'result' || !result) return undefined;
-		if (pv) return evals[pv.key];
-		if (cursor === end) return card?.eval;
-		return cursor === end + 1 ? result.eval : undefined;
+		if (pv) return evals[pv.key] ?? (pv.key === result.played ? result.eval : undefined);
+		return cursor === end ? card?.eval : undefined;
 	});
-	/** What the board shows, under it: the fact being shown, or where in a line it is. */
+	/** Under the board when there's no note for the move on it: which line and move it is, or what to do. */
 	const caption = $derived.by(() => {
-		if (focused && onView(focused)) return focused.text;
-		const last = pv && pvPlies[pv.n - 1];
-		return pv && last ? `${lineName(pv.key)} · ${formatPlies([last])}` : '';
+		if (phase !== 'result' || !result) return '';
+		if (pv) {
+			const ply = lineOf(pv.key)[pv.n - 1];
+			return ply ? `${chipOf(pv.key)?.tag ?? 'Line'} · ${formatPlies([ply])}` : '';
+		}
+		if (cursor !== end || (result.kind === 'wrong' && !revealed)) return '';
+		return seeking ? `Play ${theMain}.` : 'Pick a line to play it, or try any move on the board.';
 	});
-	/** Looking at something other than the position to answer (or the answer just played). */
+	/** Looking at something other than the drill position. */
 	const away = $derived((phase === 'ask' || phase === 'result') && (!!pv || cursor < end));
-	/** Moves can only be made on the drill position itself, not while looking back through the line. */
-	const dests = $derived(phase === 'ask' && line && cursor === end ? (chessgroundDests(line.pos) as Map<Key, Key[]>) : undefined);
+	/** Moves can be made on the drill position: to answer, to retry a miss, or to try another move afterwards. */
+	const dests = $derived(
+		line && !pv && cursor === end && (phase === 'ask' || phase === 'result') ? (chessgroundDests(line.pos) as Map<Key, Key[]>) : undefined
+	);
 	/** Pieces slide more slowly during the setup replay so each move is easy to follow. */
 	const animationMs = $derived(phase === 'intro' ? Math.min(450, (INTRO_MS[settings.introSpeed] ?? 600) * 0.6) : 200);
 
@@ -176,13 +256,17 @@
 		stopPlay();
 		result = null;
 		lines = {};
+		seed = {};
 		evals = {};
 		threat = null;
-		focused = null;
 		revealed = false;
 		firstTry = true;
-		played = null;
 		pv = null;
+		selected = null;
+		seeking = false;
+		found = false;
+		tries = [];
+		fullPath = false;
 		if (i >= queue.length) {
 			phase = 'done';
 			const s = await data().session(settings.newPerDay);
@@ -251,13 +335,17 @@
 		askedAt = performance.now();
 	}
 
-	/** Steps through the line on the board, then on into the continuation of the move played. */
+	/** Steps through the game up to the drill position, then on into the line under review. */
 	function browse(by: number) {
-		const follow = played && lines[played]?.length ? played : null;
-		if (!pv && follow && by > 0 && cursor === frames.length - 1) pv = { key: follow, n: Math.min(1 + by, lines[follow].length) };
-		else if (!pv) cursor = Math.max(0, Math.min(frames.length - 1, cursor + by));
-		else if (pv.n + by <= 0) goTo(end);
-		else pv = { ...pv, n: Math.min(pv.n + by, pvPlies.length) };
+		const follow = phase === 'result' ? selected : null;
+		const length = follow === null ? 0 : lineOf(follow).length;
+		if (pv) {
+			// Back out of the line onto the drill position (all the way back goes there first), or along it.
+			if (by === -Infinity || pv.n + by <= 0) return goTo(by === -Infinity ? end : Math.max(0, end + pv.n + by));
+			pv = { ...pv, n: Math.min(pv.n + by, lineOf(pv.key).length) };
+		} else if (follow !== null && length && cursor + by > end) {
+			pv = { key: follow, n: Math.min(cursor + by - end, length) };
+		} else cursor = Math.max(0, Math.min(end, cursor + by));
 	}
 
 	function goTo(i: number) {
@@ -274,28 +362,33 @@
 		browse(by);
 	}
 
-	/** Puts a fact on the board: the moment it's about, with its arrows. */
-	function show(f: Fact) {
-		if (f.line !== undefined && f.n) preview(f.line, f.n);
+	/** Shows the board `n` moves into a line (0: the drill position), making it the line under review. */
+	function preview(key: string, n: number) {
+		stopPlay();
+		finishIntro(cursor);
+		selected = key;
+		if (n > 0) pv = { key, n };
 		else goTo(end);
-		focused = f;
 	}
 
-	/** Plays a line out on the board from its first move, or stops it. */
+	/** Plays a line out on the board from its first move, lingering on moves with a note; again to stop. */
 	function play(key: string) {
 		if (playing === key) return stopPlay();
 		stopPlay();
-		focused = null;
-		playing = key;
+		selected = key;
 		pv = { key, n: 1 };
-		playTimer = setInterval(() => {
-			if (!pv || pv.key !== key || pv.n >= (lines[key]?.length ?? 0)) stopPlay();
-			else pv = { key, n: pv.n + 1 };
-		}, PLAY_MS);
+		playing = key;
+		const delay = () => (notesHere.length ? NOTE_MS : PLAY_MS);
+		const advance = () => {
+			if (!pv || pv.key !== key || pv.n >= lineOf(key).length) return stopPlay();
+			pv = { key, n: pv.n + 1 };
+			playTimer = setTimeout(advance, delay());
+		};
+		playTimer = setTimeout(advance, delay());
 	}
 
 	function stopPlay() {
-		clearInterval(playTimer);
+		clearTimeout(playTimer);
 		playing = null;
 	}
 
@@ -311,19 +404,30 @@
 	}
 
 	async function onMove(orig: Key, dest: Key) {
-		if (phase !== 'ask' || !card || !line) return;
+		if (!card || !line) return;
 		let move = parseUci(orig + dest);
 		if (!move || !('from' in move)) return;
 		if (line.pos.board.getRole(move.from) === 'pawn' && (dest[1] === '8' || dest[1] === '1')) move = { ...move, promotion: 'queen' };
 		const uci = makeUci(normalizeMove(line.pos, move));
+		if (phase === 'result') {
+			// After a miss, a move on the position is the next attempt; once answered, it's a move to try out.
+			if (result?.kind !== 'wrong' || revealed) return tryMove(uci);
+			retry();
+		}
+		if (phase === 'ask') await answer(uci);
+	}
+
+	async function answer(uci: string) {
+		if (!card || !line) return;
 		const ms = performance.now() - askedAt;
 		const next = after(line.pos, uci);
-		played = uci;
-		cursor = end + 1;
+		seed = { ...seed, [uci]: continuation(line.pos, [uci]) };
+		selected = uci;
+		pv = { key: uci, n: 1 };
 
 		let r: Result;
-		const answer = card.answers.find((a) => a.uci === uci);
-		if (answer) r = { kind: 'correct', played: uci, drop: answer.drop, eval: answer.eval };
+		const known = card.answers.find((a) => a.uci === uci);
+		if (known) r = { kind: 'correct', played: uci, drop: known.drop, eval: known.eval };
 		else if (uci === card.card.wrong) r = { kind: 'wrong', played: uci, drop: card.wrongDrop, reply: card.wrongReply, eval: card.wrongEval };
 		else {
 			// Not in the saved data: let the engine decide, so a good alternative isn't marked wrong.
@@ -336,32 +440,63 @@
 					? { kind: 'also', played: uci, drop, eval: ev }
 					: { kind: 'wrong', played: uci, drop, reply: chessopsUci(next.pos, res.pv[0]), eval: ev };
 		}
-		if (r.kind === 'wrong') firstTry = false;
+		if (r.kind === 'wrong') {
+			firstTry = false;
+			if (r.reply) seed = { ...seed, [uci]: continuation(line.pos, [uci, r.reply]) };
+		}
 		result = r;
+		// A sound alternative: the main move stays hidden so it can still be found.
+		seeking = r.kind !== 'wrong' && main !== undefined && uci !== main;
 		phase = 'result';
 		grade = autoGrade({ correctFirstTry: firstTry, ms, state: card.card.fsrs.state });
 		void explain(card.card.id, r);
 	}
 
+	/** A move played on the drill position after answering: the main move when looking for it, or a new line. */
+	async function tryMove(uci: string) {
+		if (!card || !line) return;
+		const id = card.card.id;
+		if (seeking && uci === main) {
+			seeking = false;
+			found = true;
+		}
+		if (uci === main || chips.some((c) => c.key === uci)) {
+			preview(uci, 1);
+			return;
+		}
+		seed = { ...seed, [uci]: continuation(line.pos, [uci]) };
+		const known = card.answers.some((a) => a.uci === uci) ? true : uci === card.card.wrong ? false : null;
+		tries = [...tries.filter((t) => t.key !== uci), { key: uci, sound: known }].slice(-MAX_TRIES);
+		preview(uci, 1);
+		if (!(await computeLine(id, uci)) || known !== null) return;
+		const drop = dropOf(line.pos, card.eval, evals[uci]);
+		tries = tries.map((t) => (t.key === uci ? { ...t, sound: drop !== null && drop <= ACCEPT_DROP } : t));
+	}
+
 	/**
-	 * Engine lines, each starting with a given move: the move played when it's a sound alternative, the main
-	 * move, and the wrong (or usual) move with its punishment. Searching after the move keeps a line on the
-	 * move it is shown for, even where the engine would start somewhere else.
+	 * The engine line starting with a move, and its evaluation. Searching after the move keeps the line on it, even
+	 * where the engine would start somewhere else. False if the card changed meanwhile.
 	 */
+	async function computeLine(id: string, key: string): Promise<boolean> {
+		if (!line) return false;
+		if (lines[key]) return true;
+		const pos = line.pos;
+		const next = key ? after(pos, key) : null;
+		const res = await evaluate(next ? next.frame.fen : line.fen, 16);
+		if (card?.card.id !== id) return false;
+		lines = { ...lines, [key]: continuation(pos, key ? [key, ...res.pv] : res.pv).slice(0, 10) };
+		evals = { ...evals, [key]: toWhite(res, next ? next.pos : pos) };
+		return true;
+	}
+
+	/** Lines for the move played, the main move, the failing move and the habit, then the opponent's threat. */
 	async function explain(id: string, r: Result) {
 		if (!line || !card) return;
 		const run = ++explainRun;
 		const pos = line.pos;
-		const best = main ?? '';
 		const wrong = r.kind === 'wrong' ? r.played : card.card.wrong;
-		const own = r.kind !== 'wrong' && r.played !== main ? r.played : null;
-		for (const key of new Set(own ? [own, wrong, best] : [best, wrong])) {
-			if (lines[key]) continue;
-			const next = key ? after(pos, key) : null;
-			const res = await evaluate(next ? next.frame.fen : line.fen, 16);
-			if (run !== explainRun || card?.card.id !== id) return;
-			lines = { ...lines, [key]: continuation(pos, key ? [key, ...res.pv] : res.pv).slice(0, 10) };
-			evals = { ...evals, [key]: toWhite(res, next ? next.pos : pos) };
+		for (const key of new Set([r.played, main ?? '', wrong, card.card.wrong])) {
+			if (!(await computeLine(id, key)) || run !== explainRun) return;
 		}
 		// What the opponent would do with a free move; the facts call it a threat only if it wins material.
 		const passed = passTurn(pos);
@@ -374,44 +509,24 @@
 
 	function retry() {
 		stopPlay();
-		focused = null;
 		result = null;
 		revealed = false;
-		played = null;
+		seeking = false;
 		pv = null;
+		selected = null;
+		tries = [];
 		cursor = end;
 		phase = 'ask';
 		askedAt = performance.now();
 	}
 
-	function reveal() {
+	/** Shows the main move on the drill position, as the solid green arrow among the lines. */
+	function showMain() {
 		stopPlay();
-		focused = null;
 		revealed = true;
-		pv = null;
-		cursor = end;
-	}
-
-	/** Shows the board after the first `n` plies of an explanation line. */
-	function preview(key: string, n: number) {
-		stopPlay();
-		finishIntro(cursor);
-		focused = null;
-		pv = { key, n };
-	}
-
-	/**
-	 * The moment a line card's thumbnail shows: the first fact on that line with arrows (a fork, a mate threat,
-	 * what a move attacks), else any fact on it, else the move and the reply.
-	 */
-	function moment(key: string, notes: Fact[]) {
-		const plies = lines[key];
-		if (!line || !plies?.length) return null;
-		const onLine = notes.filter((f) => f.line === key && f.n);
-		const fact = onLine.find((f) => f.shapes?.some((s) => s.dest)) ?? onLine[0];
-		const n = Math.min(fact?.n ?? (key === wrongMove ? 2 : 1), plies.length);
-		const frame = playOut(line.pos, plies.slice(0, n));
-		return frame && { frame, n, fact, shapes: toShapes(fact?.shapes) };
+		seeking = false;
+		selected = main ?? '';
+		goTo(end);
 	}
 
 	async function next() {
@@ -448,8 +563,11 @@
 		else if (nav && card && ['intro', 'ask', 'checking', 'result'].includes(phase)) step(nav);
 		else if (phase === 'intro') finishIntro();
 		else if (phase === 'result') {
-			if ((e.key === ' ' || e.key === 'Enter') && (result?.kind !== 'wrong' || revealed)) next();
-			else if (e.key === 'r' && result?.kind === 'wrong') retry();
+			const chip = /^[1-9]$/.test(e.key) ? chips[Number(e.key) - 1] : undefined;
+			if (chip) play(chip.key);
+			else if (e.key === 'p' && selected !== null) play(selected);
+			else if ((e.key === ' ' || e.key === 'Enter') && (result?.kind !== 'wrong' || revealed)) next();
+			else if (e.key === 'r' && result?.kind === 'wrong' && !revealed) retry();
 			else return;
 		} else return;
 		e.preventDefault();
@@ -478,14 +596,6 @@
 		if (phase === 'empty' && drill.total) void start();
 	});
 
-	// Keep the move on the board in view in its line card's row of moves.
-	$effect(() => {
-		void pv;
-		const chip = document.querySelector<HTMLElement>('.plies .ply.current');
-		const row = chip?.parentElement;
-		if (chip && row) row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
-	});
-
 	onDestroy(() => {
 		stopPlay();
 		clearTimeout(introTimer);
@@ -506,62 +616,88 @@
 	{/if}
 {/snippet}
 
-{#snippet factList(notes: Fact[])}
-	{#if notes.length}
-		<ul class="facts">
-			{#each notes as f, i (i)}
-				<li class={f.about}>
-					{#if (f.line !== undefined && f.n) || f.shapes?.length}
-						<button class="fact" class:current={isFocused(f)} onclick={() => show(f)} title="Show on the board">{f.text}</button>
-					{:else}{f.text}{/if}
-				</li>
+<!-- The game up to the drill position (folded to its last moves in the review), then the line under review. -->
+{#snippet strip(walked: Walk)}
+	{@const from = phase === 'result' && !fullPath ? Math.max(0, end - PATH_SHOWN) : 0}
+	<nav class="moves" aria-label="Moves" title="← → step through the moves">
+		{#if from > 0}<button class="mv more" onclick={() => (fullPath = true)} title="Show all the moves">…</button>{/if}
+		{#each walked.plies.slice(from) as ply, j (from + j)}
+			<button class="mv num past" class:current={!pv && cursor === from + j + 1} onclick={() => goTo(from + j + 1)}>
+				{#if ply.white}<span class="faint">{ply.moveNumber}.</span>{:else if j === 0}<span class="faint">{ply.moveNumber}…</span>{/if}{ply.san}
+			</button>
+		{/each}
+		{#if phase === 'result' && viewKey !== null}
+			{@const key = viewKey}
+			{#each lineOf(key) as ply, i (i)}
+				<button
+					class="mv num {kindOf(key)}"
+					class:first={i === 0}
+					class:current={pv?.key === key && pv.n === i + 1}
+					class:noted={viewNotes.some((n) => n.n === i + 1)}
+					onclick={() => preview(key, i + 1)}
+				>
+					{moveNo(ply, i)}{ply.san}
+				</button>
 			{/each}
-		</ul>
-	{/if}
+			{#if !lines[key]}<span class="mv faint">…</span>{/if}
+		{:else if phase !== 'result'}
+			<span class="mv num ask">{#if walked.pos.turn === 'white'}<span class="faint">{walked.pos.fullmoves}.</span>{/if}?</span>
+		{/if}
+	</nav>
 {/snippet}
 
-{#snippet lineCard(kind: 'good' | 'bad' | 'own', key: string, tag: string, notes: Fact[] = [])}
-	{@const plies = lines[key]}
-	{@const shot = moment(key, notes)}
-	<article class="line-card {kind}" aria-label={lineName(key)}>
-		<div
-			class="thumb"
-			role="button"
-			tabindex="0"
-			title="Show on the board"
-			onclick={() => shot && (shot.fact ? show(shot.fact) : preview(key, shot.n))}
-			onkeydown={(e) => e.key === 'Enter' && shot && (shot.fact ? show(shot.fact) : preview(key, shot.n))}
-		>
-			{#if shot}
-				<Board fen={shot.frame.fen} orientation={color} lastMove={shot.frame.lastMove} shapes={shot.shapes} coordinates={false} viewOnly />
-			{:else}
-				<div class="thumb-wait" aria-busy="true"></div>
-			{/if}
-		</div>
-		<div class="line-body">
-			<header class="line-head">
-				<span class="mark" aria-hidden="true">
-					{#if kind === 'good'}<Icon name="check" size={16} />{:else if kind === 'bad'}<Icon name="close" size={16} />{:else}<Icon name="arrow" size={16} />{/if}
-				</span>
-				<span class="line-title num">{plies?.[0] ? formatPlies([plies[0]]) : numbered(key)}</span>
-				<span class="tag">{tag}</span>
-				{#if evals[key]}<span class="eval-pill num" title="Evaluation after this line">{formatEval(evals[key])}</span>{/if}
-				<button class="play" class:on={playing === key} disabled={!plies?.length} onclick={() => play(key)} aria-label={playing === key ? 'Stop' : 'Play the line on the board'}>
-					<Icon name={playing === key ? 'pause' : 'play'} size={15} />
+<!-- The lines to review as chips, the moves, and what the explanation says about the selected line. -->
+{#snippet review(walked: Walk)}
+	<section class="review">
+		<div class="chips" role="group" aria-label="Lines to review">
+			{#each chips as c, i (c.key)}
+				<button
+					class="chip-line {c.kind}"
+					class:selected={selected === c.key}
+					class:playing={playing === c.key}
+					onclick={() => play(c.key)}
+					title="{c.tag}: play the line ({i + 1})"
+				>
+					<span class="mark" aria-hidden="true">
+						{#if playing === c.key}<Icon name="pause" size={13} />{:else if c.kind === 'good'}<Icon name="check" size={13} />{:else if c.kind === 'bad'}<Icon
+								name="close"
+								size={13}
+							/>{:else}<Icon name="play" size={12} />{/if}
+					</span>
+					<span class="num">{numbered(c.key)}</span>
+					{#if evals[c.key]}<span class="num ev">{formatEvalShort(evals[c.key])}</span>{/if}
 				</button>
-			</header>
-			{@render factList(notes)}
-			{#if plies}
-				<div class="plies">
-					{#each plies as ply, i (i)}
-						<button class="ply num" class:current={pv?.key === key && pv.n === i + 1} onclick={() => preview(key, i + 1)}>
-							{moveNo(ply, i)}{ply.san}
-						</button>
-					{/each}
-				</div>
-			{:else}<div class="faint small">Calculating…</div>{/if}
+			{/each}
 		</div>
-	</article>
+		{@render strip(walked)}
+		{#if selected !== null}
+			{@const key = selected}
+			{@const chip = chipOf(key)}
+			{@const said = storyFor(key)}
+			{@const listed = lineNotes(key)}
+			<div class="story">
+				{#if chip}
+					<div class="story-head {chip.kind}">
+						{chip.tag}{#if evals[key]}<span class="num"> · {formatEval(evals[key])}</span>{/if}
+					</div>
+				{/if}
+				{#each said as s, i (i)}<p class="said">{s}</p>{/each}
+				{#if listed.length}
+					<ul class="notes">
+						{#each listed as n, i (i)}
+							<li class={n.tone}>
+								<button class="note" class:current={viewKey === key && viewN === n.n} onclick={() => preview(key, n.n)} title="Show on the board">
+									{n.text}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{:else if !said.length}
+					<p class="faint small">Step through it with → or press ▶ to play it.</p>
+				{/if}
+			</div>
+		{/if}
+	</section>
 {/snippet}
 
 <div class="drill">
@@ -604,7 +740,7 @@
 						<EvalBar value={shownEval} orientation={color} />
 					</div>
 					<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
-					<div class="board" onclick={() => phase === 'intro' && finishIntro()}>
+					<div class="board" bind:clientWidth={boardWidth} onclick={() => phase === 'intro' && finishIntro()}>
 						<Board
 							fen={shown.fen}
 							orientation={color}
@@ -619,12 +755,31 @@
 				</div>
 				<div class="boardbar">
 					<div class="stepper" role="group" aria-label="Step through the moves">
-						<button class="icon-btn" onclick={() => step(-Infinity)} aria-label="First move" title="First move (↑)"><Icon name="first" size={18} /></button>
+						<button class="icon-btn" onclick={() => step(-Infinity)} aria-label="Start" title="Start (↑)"><Icon name="first" size={18} /></button>
 						<button class="icon-btn" onclick={() => step(-1)} aria-label="Previous move" title="Previous move (←)"><Icon name="chevron-left" size={18} /></button>
 						<button class="icon-btn" onclick={() => step(1)} aria-label="Next move" title="Next move (→)"><Icon name="chevron-right" size={18} /></button>
-						<button class="icon-btn" onclick={() => step(Infinity)} aria-label="Last move" title="Last move (↓)"><Icon name="last" size={18} /></button>
+						<button class="icon-btn" onclick={() => step(Infinity)} aria-label="End" title="End (↓)"><Icon name="last" size={18} /></button>
+						{#if phase === 'result' && selected !== null}
+							{@const key = selected}
+							<button
+								class="icon-btn play"
+								class:on={playing === key}
+								disabled={!lines[key]}
+								onclick={() => play(key)}
+								aria-label={playing === key ? 'Stop' : 'Play the line'}
+								title={playing === key ? 'Stop (P)' : 'Play the line (P)'}
+							>
+								<Icon name={playing === key ? 'pause' : 'play'} size={16} />
+							</button>
+						{/if}
 					</div>
-					<p class="caption {focused && onView(focused) ? focused.about : ''}" aria-live="polite">{caption}</p>
+					<div class="caption" aria-live="polite">
+						{#if notesHere.length}
+							<ul class="notes">
+								{#each notesHere as n, i (i)}<li class={n.tone}>{n.text}</li>{/each}
+							</ul>
+						{:else if caption}<p>{caption}</p>{/if}
+					</div>
 					{#if away}<button class="text-btn back" onclick={() => goTo(end)}>Back to the position</button>{/if}
 				</div>
 			</div>
@@ -634,34 +789,21 @@
 					<span class="opening">{card.opening ?? 'Opening'}</span>
 					<span class="faint">as {color}</span>
 				</div>
-				<nav class="moves" aria-label="Moves to this position" title="← → step through the moves">
-					{#each trail as ply, i (i)}
-						<button
-							class="mv num"
-							class:current={!pv && cursor === i + 1}
-							class:good={i === end && !!result && result.kind !== 'wrong'}
-							class:bad={i === end && result?.kind === 'wrong'}
-							onclick={() => goTo(i + 1)}
-						>
-							{#if ply.white}<span class="faint">{ply.moveNumber}.</span>{:else if i === 0}<span class="faint">{ply.moveNumber}…</span>{/if}{ply.san}
-						</button>
-					{/each}
-					{#if !played}
-						<span class="mv num ask">{#if line.pos.turn === 'white'}<span class="faint">{line.pos.fullmoves}.</span>{/if}?</span>
-					{/if}
-				</nav>
 
-				{#if phase === 'intro' || phase === 'ask' || phase === 'loading'}
+				{#if phase === 'intro' || phase === 'ask' || phase === 'loading' || phase === 'checking'}
+					{@render strip(line)}
 					<div class="prompt">
-						<h2>{phase === 'intro' ? 'Here’s the position…' : 'Your move'}</h2>
-						<p class="dim">
-							You reached this position {card.reached} {card.reached === 1 ? 'time' : 'times'}{#if card.card.fsrs.state === State.New} · new card{:else if practicing} · extra practice{/if}
-						</p>
-						{#if phase === 'intro'}<p class="faint small">Tap the board to skip</p>{/if}
-						{#if phase === 'ask'}<p class="faint small keys">← → to step through the moves</p>{/if}
+						{#if phase === 'checking'}
+							<h2>Checking…</h2>
+						{:else}
+							<h2>{phase === 'intro' ? 'Here’s the position…' : 'Your move'}</h2>
+							<p class="dim">
+								You reached this position {card.reached} {card.reached === 1 ? 'time' : 'times'}{#if card.card.fsrs.state === State.New} · new card{:else if practicing} · extra practice{/if}
+							</p>
+							{#if phase === 'intro'}<p class="faint small">Tap the board to skip</p>{/if}
+							{#if phase === 'ask'}<p class="faint small keys">← → to step through the moves</p>{/if}
+						{/if}
 					</div>
-				{:else if phase === 'checking'}
-					<div class="prompt"><h2>Checking…</h2></div>
 				{:else if result}
 					<div class="verdict {result.kind}">
 						<div class="headline">
@@ -676,7 +818,6 @@
 								{#if result.played !== main}
 									{a?.why === 'engine' ? 'The engine’s choice.' : a?.why === 'book' ? 'A book move.' : 'Holds the balance.'}
 									{#if a?.share}Masters play it {pct(a.share)} of the time.{/if}
-									{@render mainNote(line.pos, card)}
 								{:else if why === 'thematic'}
 									{@const engine = card.answers.find((x) => x.why === 'engine' && x.uci !== main)}
 									The thematic move: masters play it {pct(a?.share ?? 0)} of the time.
@@ -693,17 +834,34 @@
 								{/if}
 							{:else if result.kind === 'also'}
 								{#if card.eval}The best move keeps {formatEval(card.eval)}.{/if}
-								{@render mainNote(line.pos, card)}
 							{:else}
 								{#if result.played === card.card.wrong}Your habit: {card.wrongCount}× in your games.{/if}
 								{#if result.eval && card.eval}It takes the eval from {formatEval(card.eval)} to {formatEval(result.eval)}.{/if}
 								{#if result.reply}The red arrow shows {line.pos.turn === 'white' ? 'Black' : 'White'}’s answer.{/if}
 							{/if}
 						</p>
-						{#if result.kind === 'wrong' && why === 'punish' && !revealed}
+						{#if result.kind !== 'wrong' && main !== undefined && result.played !== main}
+							{#if seeking}
+								<div class="seek">
+									<span>Now find {theMain}.</span>
+									{#if away}<button class="text-btn" onclick={() => goTo(end)}>Try it on the board</button>{/if}
+									<button class="text-btn" onclick={showMain}>Show it</button>
+								</div>
+							{:else if found}
+								<p class="found"><Icon name="check" size={15} /> You found it: <strong>{numbered(main)}</strong> is {theMain}.</p>
+							{:else}
+								<p class="dim">{@render mainNote(line.pos, card)}</p>
+							{/if}
+						{:else if result.kind === 'wrong' && why === 'punish' && !revealed}
 							<p class="faint small">
 								Hint: {slip}{#if card.opponentBefore && card.eval} took the eval from {formatEval(card.opponentBefore)} to {formatEval(card.eval)}{:else} was a slip{/if}.
 								Look for the move that punishes it.
+							</p>
+						{/if}
+						{#if revealed}
+							<p class="answer">
+								{why === 'thematic' ? 'The thematic move here is' : why === 'punish' ? 'The punishing move here is' : 'The move here is'}
+								<strong>{numbered(main ?? '')}</strong>, the green arrow.
 							</p>
 						{/if}
 					</div>
@@ -711,79 +869,50 @@
 					{#if result.kind === 'wrong' && !revealed}
 						<div class="actions">
 							<button class="btn btn-primary" onclick={retry}>Try again</button>
-							<button class="btn btn-quiet" onclick={reveal}>Show answer</button>
+							<button class="btn btn-quiet" onclick={showMain}>Show answer</button>
 						</div>
+						{@render review(line)}
 					{:else}
-						{#if revealed}
-							<p class="answer">
-								{why === 'thematic' ? 'The thematic move here is' : why === 'punish' ? 'The punishing move here is' : 'The move here is'}
-								<strong>{sanOf(line.pos, main ?? '')}</strong>, the green arrow.
-							</p>
-						{/if}
+						{@render review(line)}
 
-						{#if written || about('position').length}
+						{#if written}
+							{@const basis = principleById.get(written.principleId)}
 							<section class="idea">
-								{#if written}
-									{@const basis = principleById.get(written.principleId)}
-									<p class="idea-head">{written.headline}</p>
-									<div class="principle">
-										<div class="principle-name">
-											{basis?.title ?? 'Principle'}{#if basis}<span class="faint"> · {basis.source}</span>{/if}
-										</div>
-										<p>{written.principle}</p>
-									</div>
-								{/if}
-								{@render factList(about('position'))}
-								{#if written}
-									<details class="more" bind:open={fullText}>
-										<summary>{fullText ? 'Hide the explanation' : 'Read the full explanation'}</summary>
-										<p>{written.why}</p>
-										{#if written.sources?.length}
-											<p class="sources faint">
-												{#each written.sources as src, i (i)}
-													{@const link = sourceLink(src)}
-													<span>{#if link.url}<a href={link.url} target="_blank" rel="noopener">{link.label}</a>{:else}{link.label}{/if}</span>
-												{/each}
-											</p>
-										{/if}
-									</details>
+								<p class="idea-head">{written.headline}</p>
+								<div class="principle">
+									<span class="principle-name">{basis?.title ?? 'Principle'}</span>
+									{written.principle}
+								</div>
+								{#if basis || written.sources?.length}
+									<p class="sources faint">
+										{#if basis}<span>{basis.source}</span>{/if}
+										{#each written.sources ?? [] as src, i (i)}
+											{@const link = sourceLink(src)}
+											<span>{#if link.url}<a href={link.url} target="_blank" rel="noopener">{link.label}</a>{:else}{link.label}{/if}</span>
+										{/each}
+									</p>
 								{/if}
 							</section>
 						{/if}
 
-						{@const own = result.kind !== 'wrong' && result.played !== main}
-						{@const share = card.answers.find((x) => x.uci === main)?.share}
-						<div class="lines">
-							{#if own}
-								{@render lineCard('own', result.played, result.kind === 'correct' ? 'Your move · also book' : 'Your move · also fine')}
-							{/if}
-							{@render lineCard(
-								'good',
-								main ?? '',
-								why === 'thematic' ? `Thematic${share ? ` · masters ${pct(share)}` : ''}` : why === 'punish' ? `Punishes ${slip}` : 'Engine’s choice',
-								about('main')
-							)}
-							{@render lineCard(
-								'bad',
-								wrongMove ?? '',
-								wrongMove === card.card.wrong ? `Your habit · ${card.wrongCount}×` : 'Your move',
-								about('wrong')
-							)}
-						</div>
-
 						<div class="foot">
-							{#if practicing}
+							<div class="foot-row">
 								<p class="faint small">
-									Extra practice: {firstTry ? 'this card keeps its schedule' : 'the miss brings this card back sooner'}.
+									{#if practicing}
+										Extra practice: {firstTry ? 'this card keeps its schedule' : 'the miss brings this card back sooner'}.
+									{:else}
+										{grade === Rating.Again ? 'Missed, so it comes back' : 'Next review'} in {interval(card.intervals[grade])}.
+									{/if}
 								</p>
-							{:else}
-								<p class="faint small">
-									{grade === Rating.Again ? 'Missed, so it comes back' : 'Next review'} in {interval(card.intervals[grade])}.
-								</p>
-							{/if}
+								<details class="menu">
+									<summary aria-label="More options" title="More options">⋯</summary>
+									<div class="menu-body card">
+										<button class="text-btn quiet" onclick={skipForGood}>I play {sanOf(line.pos, card.card.wrong)} on purpose · stop drilling this</button>
+									</div>
+								</details>
+							</div>
 							<button class="btn btn-primary continue" onclick={next}>Continue</button>
 						</div>
-						<button class="text-btn quiet" onclick={skipForGood}>I play {sanOf(line.pos, card.card.wrong)} on purpose · stop drilling this</button>
 					{/if}
 				{/if}
 			</aside>
@@ -844,10 +973,10 @@
 	.stage {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		gap: 18px;
+		gap: 16px;
 	}
 
-	/* Board column: eval bar, board, and the controls under it. */
+	/* Board column: eval bar, board, and the controls and notes under it. */
 	.board-col {
 		display: flex;
 		flex-direction: column;
@@ -863,9 +992,9 @@
 
 	.boardbar {
 		display: flex;
-		align-items: center;
-		gap: 10px;
+		align-items: flex-start;
 		flex-wrap: wrap;
+		gap: 4px 10px;
 		min-height: 40px;
 		padding-left: 32px;
 	}
@@ -880,29 +1009,32 @@
 		height: 36px;
 	}
 
+	.stepper .play {
+		margin-left: 4px;
+		color: var(--accent);
+	}
+
+	.stepper .play.on {
+		background: var(--accent);
+		color: var(--accent-ink);
+	}
+
 	.caption {
 		flex: 1;
-		margin: 0;
-		font-size: 14px;
-		line-height: 1.35;
-		color: var(--text-2);
 		min-width: 0;
+		padding-top: 8px;
+		font-size: 14px;
+		line-height: 1.4;
+		color: var(--text-2);
 	}
 
-	.caption.wrong {
-		color: color-mix(in srgb, var(--loss) 70%, var(--text));
-	}
-
-	.caption.main {
-		color: color-mix(in srgb, var(--win) 70%, var(--text));
-	}
-
-	.caption.position {
-		color: color-mix(in srgb, var(--inaccuracy) 70%, var(--text));
+	.caption p {
+		margin: 0;
 	}
 
 	.back {
 		flex-shrink: 0;
+		padding-top: 8px;
 	}
 
 	.title {
@@ -923,25 +1055,31 @@
 	.panel {
 		display: flex;
 		flex-direction: column;
-		gap: 14px;
+		gap: 12px;
 		min-width: 0;
 	}
 
+	/* The move list: the game (dim), then the line under review in its colour; dots mark moves with a note. */
 	.moves {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 2px;
-		margin: -6px -7px 0;
+		margin: 0 -6px;
 	}
 
 	.mv {
-		padding: 4px 7px;
+		position: relative;
+		padding: 3px 6px;
 		border-radius: 7px;
 		color: var(--text-2);
 		font-weight: 550;
 		transition:
 			background 120ms var(--ease),
 			color 120ms var(--ease);
+	}
+
+	.mv.past {
+		color: var(--text-3);
 	}
 
 	button.mv:hover,
@@ -951,11 +1089,35 @@
 	}
 
 	.mv.good {
-		color: var(--win);
+		--c: var(--win);
 	}
 
 	.mv.bad {
-		color: var(--loss);
+		--c: var(--loss);
+	}
+
+	.mv.own {
+		--c: var(--book);
+	}
+
+	.mv.first {
+		color: var(--c);
+		font-weight: 680;
+	}
+
+	.mv.current {
+		box-shadow: inset 0 -2px 0 var(--c, var(--accent));
+	}
+
+	.mv.noted::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		right: 1px;
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: var(--c);
 	}
 
 	.mv.ask {
@@ -975,8 +1137,7 @@
 	}
 
 	.prompt p,
-	.verdict p,
-	.answer {
+	.verdict p {
 		margin: 4px 0 0;
 	}
 
@@ -1046,6 +1207,24 @@
 		font-weight: 650;
 	}
 
+	.seek {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 4px 14px;
+		margin-top: 8px;
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.found {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--win);
+	}
+
 	strong {
 		color: var(--text);
 		font-weight: 650;
@@ -1060,106 +1239,122 @@
 		flex: 1;
 	}
 
-	/* The idea: headline, the principle behind it, and the full text on request. */
-	.idea {
+	/* Review: chips for the lines, the moves, and what the explanation says about the selected line. */
+	.review {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 10px;
+		min-height: 0;
 	}
 
-	.idea p {
-		margin: 0;
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
 	}
 
-	.idea-head {
-		font-size: 19px;
-		font-weight: 680;
-		line-height: 1.3;
-		letter-spacing: -0.01em;
+	.chip-line {
+		--c: var(--book);
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 34px;
+		padding: 0 12px 0 6px;
+		border-radius: 999px;
+		border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line));
+		color: var(--text);
+		font-weight: 620;
+		font-size: 14px;
+		transition:
+			background 120ms var(--ease),
+			border-color 120ms var(--ease);
 	}
 
-	.principle {
-		padding: 10px 14px;
-		border-left: 3px solid var(--accent);
-		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-		background: color-mix(in srgb, var(--accent) 8%, var(--bg-elev));
-		font-size: 15px;
-		line-height: 1.45;
+	.chip-line.good {
+		--c: var(--win);
 	}
 
-	.principle-name {
-		margin-bottom: 3px;
+	.chip-line.bad {
+		--c: var(--loss);
+	}
+
+	.chip-line:hover {
+		background: color-mix(in srgb, var(--c) 10%, transparent);
+	}
+
+	.chip-line.selected {
+		border-color: var(--c);
+		background: color-mix(in srgb, var(--c) 18%, transparent);
+	}
+
+	.chip-line .mark {
+		display: inline-grid;
+		place-items: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		color: var(--c);
+		background: color-mix(in srgb, var(--c) 20%, transparent);
+	}
+
+	.chip-line .ev {
+		color: var(--text-2);
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	.story {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		min-height: 0;
+	}
+
+	.story-head {
+		--c: var(--book);
 		font-size: 13px;
 		font-weight: 650;
-		color: var(--accent);
+		color: var(--c);
 	}
 
-	.principle-name .faint {
-		font-weight: 500;
+	.story-head.good {
+		--c: var(--win);
 	}
 
-	.more summary {
-		cursor: pointer;
-		color: var(--accent);
-		font-size: 14px;
-		font-weight: 560;
-		list-style: none;
+	.story-head.bad {
+		--c: var(--loss);
 	}
 
-	.more summary::-webkit-details-marker {
-		display: none;
+	.story-head .num {
+		color: var(--text-3);
+		font-weight: 550;
 	}
 
-	.more summary::before {
-		content: '▸ ';
-	}
-
-	.more[open] summary::before {
-		content: '▾ ';
-	}
-
-	.more p {
-		margin-top: 8px;
+	.said {
+		margin: 0;
 		font-size: 15px;
-		line-height: 1.55;
-		color: var(--text-2);
+		line-height: 1.5;
 	}
 
-	.sources {
-		font-size: 12px;
-	}
-
-	/* "Wikibooks, 2...Bc5 · …" */
-	.sources > span + span::before {
-		content: '·';
-		margin: 0 6px;
-	}
-
-	.sources a {
-		color: inherit;
-		text-decoration: underline dotted;
-		text-underline-offset: 3px;
-	}
-
-	/* Facts: a coloured dot for whose idea it is; the clickable ones show on the board. */
-	.facts {
+	/* Notes: a coloured dot for whose idea it is. */
+	.notes {
 		margin: 0;
 		padding: 0;
 		list-style: none;
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: 4px;
 		font-size: 14px;
 		line-height: 1.4;
 		color: var(--text-2);
 	}
 
-	.facts li {
+	.notes li {
 		position: relative;
 		padding-left: 16px;
 	}
 
-	.facts li::before {
+	.notes li::before {
 		content: '';
 		position: absolute;
 		left: 2px;
@@ -1170,174 +1365,89 @@
 		background: var(--dot, var(--text-3));
 	}
 
-	.facts li.wrong {
+	.notes li.wrong {
 		--dot: var(--loss);
 	}
 
-	.facts li.main {
+	.notes li.main {
 		--dot: var(--win);
 	}
 
-	.facts li.position {
+	.notes li.position {
 		--dot: var(--inaccuracy);
 	}
 
-	.fact {
+	.caption .notes {
+		color: var(--text);
+	}
+
+	.note {
 		text-align: left;
 		color: inherit;
 		font: inherit;
-		text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent);
-		text-underline-offset: 3px;
+		border-radius: 4px;
 	}
 
-	.fact:hover,
-	.fact.current {
+	.note:hover,
+	.note.current {
 		color: var(--text);
-		text-decoration-color: currentColor;
 	}
 
-	/* Line cards: a thumbnail of the key moment, what happens, and the moves. */
-	.lines {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
-
-	.line-card {
-		--c: var(--book);
-		display: grid;
-		grid-template-columns: 112px minmax(0, 1fr);
-		gap: 14px;
-		padding: 12px;
-		border-radius: var(--radius);
-		background: var(--bg-elev);
-		border: 1px solid var(--line);
-		border-left: 3px solid var(--c);
-	}
-
-	.line-card.good {
-		--c: var(--win);
-	}
-
-	.line-card.bad {
-		--c: var(--loss);
-	}
-
-	.thumb {
-		align-self: start;
-		border-radius: 6px;
-		overflow: hidden;
-		cursor: pointer;
-		outline-offset: 2px;
-	}
-
-	.thumb-wait {
-		aspect-ratio: 1;
+	.note.current {
 		background: var(--bg-elev-2);
+		box-shadow: 0 0 0 3px var(--bg-elev-2);
 	}
 
-	.line-body {
+	/* The idea: the headline to remember and the principle behind it. */
+	.idea {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-		min-width: 0;
 	}
 
-	.line-head {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		min-width: 0;
+	.idea p {
+		margin: 0;
 	}
 
-	.mark {
-		display: inline-grid;
-		place-items: center;
-		width: 22px;
-		height: 22px;
-		flex-shrink: 0;
-		border-radius: 50%;
-		color: var(--c);
-		background: color-mix(in srgb, var(--c) 18%, transparent);
-	}
-
-	.line-title {
-		font-size: 16px;
+	.idea-head {
+		font-size: 17px;
 		font-weight: 680;
-		white-space: nowrap;
+		line-height: 1.3;
 	}
 
-	.tag {
-		flex: 1;
-		min-width: 0;
+	.principle {
+		padding: 8px 12px;
+		border-left: 3px solid var(--accent);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		background: color-mix(in srgb, var(--accent) 8%, var(--bg-elev));
+		font-size: 14px;
+		line-height: 1.45;
+		color: var(--text-2);
+	}
+
+	.principle-name {
+		margin-right: 4px;
+		font-weight: 650;
+		color: var(--accent);
+	}
+
+	.sources {
+		font-size: 12px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		font-size: 13px;
-		color: var(--text-3);
 	}
 
-	.line-head .eval-pill {
-		margin-left: 0;
-		background: color-mix(in srgb, var(--c) 14%, var(--bg-elev-2));
+	/* "My System · Wikibooks, 2...Bc5 · …" */
+	.sources > span + span::before {
+		content: '·';
+		margin: 0 6px;
 	}
 
-	.play {
-		display: inline-grid;
-		place-items: center;
-		flex-shrink: 0;
-		width: 30px;
-		height: 30px;
-		border-radius: 50%;
-		color: var(--text-2);
-		background: var(--bg-elev-2);
-		transition:
-			background 120ms var(--ease),
-			color 120ms var(--ease);
-	}
-
-	.play:hover,
-	.play.on {
-		color: var(--accent-ink);
-		background: var(--accent);
-	}
-
-	.play:disabled {
-		opacity: 0.4;
-	}
-
-	.plies {
-		position: relative;
-		display: flex;
-		gap: 2px;
-		overflow-x: auto;
-		scrollbar-width: none;
-		margin: 0 -4px;
-	}
-
-	.plies::-webkit-scrollbar {
-		display: none;
-	}
-
-	.ply {
-		flex-shrink: 0;
-		padding: 4px 7px;
-		border-radius: 7px;
-		color: var(--text-2);
-		font-size: 14px;
-		font-weight: 550;
-		transition: background 120ms var(--ease);
-	}
-
-	.ply:first-child {
-		color: var(--c);
-		font-weight: 650;
-	}
-
-	.ply:hover,
-	.ply.current {
-		background: var(--bg-elev-2);
-		color: var(--text);
+	.sources a {
+		color: inherit;
+		text-decoration: underline dotted;
+		text-underline-offset: 3px;
 	}
 
 	.text-btn {
@@ -1351,18 +1461,63 @@
 		color: var(--text-3);
 		font-weight: 500;
 		font-size: 13px;
+		text-align: left;
 	}
 
-	/* Grades and Continue stay in view at the bottom while the explanation scrolls. */
+	/* Continue stays in view at the bottom. */
 	.foot {
 		position: sticky;
 		bottom: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
-		padding: 12px 0 calc(12px + var(--safe-b));
-		background: linear-gradient(to bottom, transparent, var(--bg) 18px);
+		gap: 8px;
+		padding: 10px 0 calc(12px + var(--safe-b));
+		background: linear-gradient(to bottom, transparent, var(--bg) 16px);
 		z-index: 2;
+	}
+
+	.foot-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+	}
+
+	.foot-row p {
+		margin: 0;
+	}
+
+	.menu {
+		position: relative;
+	}
+
+	.menu summary {
+		list-style: none;
+		cursor: pointer;
+		padding: 0 8px;
+		border-radius: 8px;
+		color: var(--text-3);
+		font-size: 18px;
+		line-height: 28px;
+	}
+
+	.menu summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.menu summary:hover {
+		background: var(--bg-elev-2);
+		color: var(--text);
+	}
+
+	.menu-body {
+		position: absolute;
+		right: 0;
+		bottom: calc(100% + 6px);
+		width: max-content;
+		max-width: 280px;
+		padding: 10px 12px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 	}
 
 	.continue {
@@ -1370,37 +1525,42 @@
 	}
 
 	@media (min-width: 900px) {
-		/* The board takes the height of the window, the panel the rest of the width. */
+		/* Board and panel fill the window without scrolling: the board takes the height, the panel the rest. */
 		.stage {
-			--board: clamp(360px, min(calc(100vh - 236px), calc(100vw - 640px)), 860px);
-			grid-template-columns: calc(var(--board) + 38px) minmax(380px, 660px);
+			--board: clamp(360px, min(calc(100vh - 262px), calc(100vw - 640px)), 860px);
+			grid-template-columns: calc(var(--board) + 40px) minmax(380px, 640px);
 			justify-content: center;
 			gap: 32px;
 			align-items: start;
 		}
 
-		.board-col {
-			position: sticky;
-			top: 16px;
-		}
-
 		.board-row {
-			grid-template-columns: 30px minmax(0, 1fr);
+			grid-template-columns: 32px minmax(0, 1fr);
 		}
 
 		.boardbar {
-			padding-left: 38px;
-		}
-	}
-
-	@media (max-width: 899px) {
-		.line-card {
-			grid-template-columns: 84px minmax(0, 1fr);
-			gap: 12px;
+			height: 64px;
+			overflow-y: auto;
+			flex-wrap: nowrap;
+			padding-left: 40px;
 		}
 
-		.line-head {
-			gap: 6px;
+		.panel {
+			height: calc(var(--board) + 72px);
+		}
+
+		.review {
+			flex: 1 1 auto;
+		}
+
+		.story {
+			flex: 1 1 auto;
+			overflow-y: auto;
+		}
+
+		.foot {
+			margin-top: auto;
+			padding-bottom: 0;
 		}
 	}
 </style>
