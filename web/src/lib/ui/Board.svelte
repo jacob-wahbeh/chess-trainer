@@ -42,6 +42,30 @@
 	let el: HTMLDivElement;
 	let cg: Api | undefined;
 
+	// Chessground reports a move a moment later (setTimeout), outside the touch that made it, and iPhone only
+	// plays haptics during a touch. So a move finished during a touch is handed over right away, and the
+	// delayed report of the same move is skipped.
+	let before = '';
+	let handled = '';
+	const snapshot = () => {
+		before = cg?.getFen() ?? '';
+		handled = '';
+	};
+	const settle = () => {
+		const last = cg?.state.lastMove;
+		if (!cg || !onMove || !dests || !last || last.length < 2 || cg.getFen() === before) return;
+		before = cg.getFen();
+		handled = last[0] + last[1];
+		onMove(last[0], last[1]);
+	};
+	const delayed = (orig: Key, dest: Key) => {
+		if (handled === orig + dest) {
+			handled = '';
+			return;
+		}
+		onMove?.(orig, dest);
+	};
+
 	function config(): Config {
 		return {
 			fen,
@@ -56,7 +80,7 @@
 				color: dests ? turnColor : undefined,
 				dests: dests ?? new Map(),
 				showDests: true,
-				events: { after: (orig, dest) => onMove?.(orig, dest) }
+				events: { after: delayed }
 			},
 			premovable: { enabled: false },
 			draggable: { enabled: !!dests },
@@ -69,7 +93,16 @@
 
 	onMount(() => {
 		cg = Chessground(el, config());
-		return () => cg?.destroy();
+		// Registered after chessground's own listeners, so these run once it has handled the touch.
+		window.addEventListener('touchstart', snapshot, { capture: true, passive: true });
+		document.addEventListener('touchstart', settle, { passive: true });
+		document.addEventListener('touchend', settle, { passive: true });
+		return () => {
+			window.removeEventListener('touchstart', snapshot, { capture: true });
+			document.removeEventListener('touchstart', settle);
+			document.removeEventListener('touchend', settle);
+			cg?.destroy();
+		};
 	});
 
 	$effect(() => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { haptic } from '$lib/haptics';
 	import { base } from '$app/paths';
 	import { analysis, analyze, app, applyFilter, currentFilter, drill, lichess, refreshDrill, saveSettings, setLichess, settings, sync } from '$lib/state.svelte';
 	import { canUseOAuth, lichessUsername, startLichessLogin } from '$lib/lichess/oauth';
@@ -201,11 +202,15 @@
 			: 'Mistakes you played again and misses first, then new mistakes from recent games, then the rest.'}
 	</div>
 	<div class="dim small">Haptic feedback</div>
-	<div class="segmented" role="group" aria-label="Haptic feedback">
-		{#each [[true, 'On'], [false, 'Off']] as const as [on, label] (label)}
-			<button aria-pressed={settings.haptics === on} onclick={() => ((settings.haptics = on), saveSettings())}>{label}</button>
-		{/each}
+	<div class="row">
+		<div class="segmented" role="group" aria-label="Haptic feedback">
+			{#each [[true, 'On'], [false, 'Off']] as const as [on, label] (label)}
+				<button aria-pressed={settings.haptics === on} onclick={() => ((settings.haptics = on), saveSettings())}>{label}</button>
+			{/each}
+		</div>
+		<button class="btn btn-quiet" onclick={() => haptic('error')} title="Two ticks, like a miss">Test</button>
 	</div>
+	<div class="faint small">iPhone needs iOS 18 or later and System Haptics on (Settings → Sounds &amp; Haptics).</div>
 	<div class="faint small num">{drill.total} cards · {drill.known} known · {drill.learning} learning · {drill.fresh} new</div>
 	<button class="danger" onclick={resetDrills} disabled={!drill.total}>
 		{confirmReset ? 'Tap again to reset all drill progress' : 'Reset drill progress'}
