@@ -106,6 +106,8 @@
 	/** Whether the whole game shows in the move list during the review. */
 	let fullPath = $state(false);
 	let boardWidth = $state(0);
+	/** Phones: the eval bar goes above the board so the board can take the full width. */
+	let narrow = $state(false);
 	/** The move row under the board, kept scrolled to the move on the board. */
 	let movesEl = $state<HTMLElement | undefined>();
 	/** The chip row, kept scrolled to the selected line. */
@@ -649,6 +651,9 @@
 	const moveNo = (p: Ply, i: number) => (p.white ? `${p.moveNumber}.` : i === 0 ? `${p.moveNumber}…` : '');
 
 	onMount(async () => {
+		const phone = matchMedia('(max-width: 899px)');
+		narrow = phone.matches;
+		phone.addEventListener('change', (e) => (narrow = e.matches));
 		writtenExplanations().then((e) => (explanations = e));
 		await ready;
 		if (!settings.username) phase = 'empty';
@@ -748,7 +753,7 @@
 			<div class="board-col">
 				<div class="board-row">
 					<div class="evalbar" title={shownEval ? 'Evaluation, White’s view' : phase === 'result' ? 'No evaluation for this move' : 'Shown once you answer'}>
-						<EvalBar value={shownEval} orientation={color} />
+						<EvalBar value={shownEval} orientation={color} horizontal={narrow} />
 					</div>
 					<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
 					<div class="board" bind:clientWidth={boardWidth} onclick={() => phase === 'intro' && finishIntro()}>
@@ -845,11 +850,13 @@
 				<div class="note" aria-live="polite">
 					{#if phase === 'intro'}
 						<p class="phone">Here’s the position… <span class="faint">tap the board to skip</span></p>
+						<p class="phone opening-note">{card.opening ?? 'Opening'} · as {color}</p>
 					{:else if phase === 'ask'}
 						<p class="phone">
 							<strong>Your move</strong>
 							<span class="faint">· {standing(card.card)} · reached {card.reached}×</span>
 						</p>
+						<p class="phone opening-note">{card.opening ?? 'Opening'} · as {color}</p>
 					{:else if phase === 'checking'}
 						<p class="faint">Checking…</p>
 					{:else if seeking}
@@ -875,7 +882,7 @@
 			</div>
 
 			<aside class="panel">
-				<div class="title">
+				<div class="title" class:asking={phase !== 'result'}>
 					<span class="opening">{card.opening ?? 'Opening'}</span>
 					<span class="faint as">as {color}</span>
 				</div>
@@ -1109,16 +1116,15 @@
 		min-width: 0;
 	}
 
+	/* Phones: a thin eval bar above a full-width board. */
 	.board-row {
 		display: grid;
-		grid-template-columns: 24px minmax(0, 1fr);
-		gap: 8px;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 4px;
 	}
 
-	.chips,
-	.navrow,
-	.note {
-		margin-left: 32px;
+	.evalbar {
+		height: 14px;
 	}
 
 	/* One row of chips; more scroll sideways. */
@@ -1331,6 +1337,12 @@
 	.headline-note {
 		font-weight: 650;
 		color: var(--text);
+	}
+
+	.opening-note {
+		flex: 1 1 100%;
+		font-size: 13px;
+		color: var(--text-3);
 	}
 
 	.summary {
@@ -1715,6 +1727,33 @@
 			display: none;
 		}
 
+		.drill {
+			gap: 6px;
+		}
+
+		.bar .icon-btn {
+			width: 36px;
+			height: 36px;
+		}
+
+		/* The opening's name: in full at the end of the panel instead of cut off at the top. */
+		.title {
+			order: 5;
+			display: block;
+			font-size: 13px;
+			font-weight: 500;
+			color: var(--text-3);
+		}
+
+		.title .opening {
+			white-space: normal;
+		}
+
+		/* While answering it's under the board already. */
+		.title.asking {
+			display: none;
+		}
+
 		.story {
 			order: 1;
 		}
@@ -1765,6 +1804,11 @@
 
 		.board-row {
 			grid-template-columns: 32px minmax(0, 1fr);
+			gap: 8px;
+		}
+
+		.evalbar {
+			height: auto;
 		}
 
 		.chips,

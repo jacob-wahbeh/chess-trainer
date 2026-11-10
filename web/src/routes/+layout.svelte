@@ -202,6 +202,15 @@
 		padding-bottom: calc(var(--safe-b) + 24px);
 	}
 
+	/* Drills on phones: the board goes nearly edge to edge. */
+	@media (max-width: 899px) {
+		main.focus {
+			padding-top: calc(var(--safe-t) + 4px);
+			padding-left: 6px;
+			padding-right: 6px;
+		}
+	}
+
 	/* Drills use the whole width for a big board next to the explanation. */
 	.top.focus,
 	main.focus {

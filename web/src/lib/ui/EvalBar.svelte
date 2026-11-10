@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { formatEval, formatEvalShort, whiteCp, winPercent, type Eval } from '$lib/analysis/score';
 
-	/** No value: an empty bar (the eval isn't known, or not shown yet). */
-	let { value, orientation = 'white' }: { value?: Eval; orientation?: 'white' | 'black' } = $props();
+	/**
+	 * No value: an empty bar (the eval isn't known, or not shown yet). Vertical beside the board with the player's side
+	 * at the bottom, or horizontal above it with the player's side on the left.
+	 */
+	let { value, orientation = 'white', horizontal = false }: { value?: Eval; orientation?: 'white' | 'black'; horizontal?: boolean } = $props();
 
 	/** White's share of the bar, by win chance like the Lichess bar. */
 	const white = $derived(value ? winPercent(whiteCp(value)) : 50);
@@ -10,10 +13,11 @@
 	const leader = $derived(white >= 50 ? 'white' : 'black');
 </script>
 
-<div class="eval" class:flip={orientation === 'black'} class:empty={!value} aria-label={value ? `Evaluation ${formatEval(value)}` : 'Evaluation'}>
-	<span class="fill" style:height="{white}%"></span>
+<div class="eval" class:flip={orientation === 'black'} class:horizontal class:empty={!value} aria-label={value ? `Evaluation ${formatEval(value)}` : 'Evaluation'}>
+	<span class="fill" style:height={horizontal ? null : `${white}%`} style:width={horizontal ? `${white}%` : null}></span>
 	{#if value}
-		<span class="value num {leader}" class:bottom={leader === orientation} title={formatEval(value)}>{formatEvalShort(value)}</span>
+		<!-- "near": on the player's side (bottom, or left when horizontal). -->
+		<span class="value num {leader}" class:near={leader === orientation} title={formatEval(value)}>{formatEvalShort(value)}</span>
 	{/if}
 </div>
 
@@ -63,9 +67,38 @@
 		}
 	}
 
-	.value.bottom {
+	.value.near {
 		top: auto;
 		bottom: 6px;
+	}
+
+	.eval.horizontal {
+		flex-direction: row;
+	}
+
+	.eval.horizontal.flip {
+		flex-direction: row-reverse;
+	}
+
+	.horizontal .fill {
+		height: 100%;
+		transition: width 450ms var(--ease);
+	}
+
+	.horizontal .value,
+	.horizontal .value.near {
+		top: 0;
+		bottom: 0;
+		left: auto;
+		right: 6px;
+		display: flex;
+		align-items: center;
+		font-size: 10px;
+	}
+
+	.horizontal .value.near {
+		left: 6px;
+		right: auto;
 	}
 
 	.value.white {
