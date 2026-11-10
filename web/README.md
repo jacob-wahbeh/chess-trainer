@@ -77,3 +77,7 @@ For many cards at once, `npm run explain:split -- <user> 4` deals the unexplaine
 parallel sessions; each validates its answers with `npm run explain:check -- <user> <file>` before the merge.
 
 Redeploy afterwards so the app picks up the new file. Note that the file is public on the hosted site.
+
+`npm run masters` gathers the masters data the exports looked up (every `../data/<user>/web-cache.json`) into
+`static/masters.json`, so the app knows book moves and teaches the masters' move without a Lichess login, matching
+the explanations. Lookups the app makes itself (with a login) take precedence. Rerun it after exporting cards.

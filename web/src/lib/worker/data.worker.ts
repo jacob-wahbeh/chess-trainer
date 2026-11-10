@@ -112,9 +112,29 @@ const loadOpenings = () =>
 
 const loadCaches = () =>
 	(caches ??= (async () => {
+		const shipped = loadShippedMasters();
 		for (const { key, ...value } of await db.evals.toArray()) evals.set(key, value);
 		for (const { key, total, moves } of await db.masters.toArray()) masters.set(key, { total, moves });
+		for (const [key, value] of await shipped) {
+			const known = masters.get(key);
+			if (!known || (known.total === 0 && value.total > 0)) masters.set(key, value);
+		}
 	})());
+
+/**
+ * Masters data shipped with the app (static/masters.json, from the card exports), so book moves and the
+ * masters' answers work without a Lichess login. Lookups saved on this device take precedence.
+ */
+async function loadShippedMasters(): Promise<[number, Masters][]> {
+	try {
+		const res = await fetch(`${base}/masters.json`);
+		if (!res.ok) return [];
+		const data = (await res.json()) as Record<string, [number, Record<string, number>]>;
+		return Object.entries(data).map(([key, [total, moves]]) => [Number(key), { total, moves }]);
+	} catch {
+		return [];
+	}
+}
 
 const monthStart = (month: string) => Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1) / 1000;
 const lastSyncKey = () => `lastSync/${user.toLowerCase()}`;

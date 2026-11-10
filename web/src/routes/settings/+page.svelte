@@ -144,8 +144,8 @@
 		</div>
 	{:else}
 		<p class="dim small explain">
-			A free Lichess account lets the app check your moves against master games (book = played in at least 1% of
-			master games). Only your username is read.
+			The app comes with master games for the openings it has already seen. A free Lichess account lets it check
+			new positions from your games too (book = played in at least 1% of master games). Only your username is read.
 		</p>
 		{#if canUseOAuth()}
 			<button class="btn btn-primary connect" onclick={startLichessLogin}>Log in with Lichess</button>

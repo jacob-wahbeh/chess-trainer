@@ -15,7 +15,8 @@ someone else already has an explanation for is skipped.
      `../data/draco_jaco/web-cache.json` and `../data/draco_jaco/wikibooks-cache.json` into `../data/<user>/`
      (evaluations, master games and theory pages are facts about positions, shared by everyone).
    - Otherwise update their games with the same `fetch` command.
-   - Then run `npm run cards:export -- <user>` (minutes; it reuses the cached evaluations and theory pages).
+   - Then run `npm run cards:export -- <user>` (minutes; it reuses the cached evaluations and theory pages),
+     and `npm run masters` to ship the master games it looked up with the app (`static/masters.json`).
 2. Run `npm run explain:todo -- <user> $2` and read `../data/<user>/explain-todo.json`: the `principles`
    library and the `cards` to explain. With more than about 40 cards, `npm run explain:split -- <user> 4` deals
    them into four files for subagents to write in parallel (each writes its own answers file and checks it with
@@ -37,7 +38,8 @@ someone else already has an explanation for is skipped.
    adds the explanations that pass to `static/explanations.json`. For each rejected card, fix only what it
    reports and merge again, until nothing is rejected.
 6. Report how many cards were explained, quote two of the explanations so the user can judge the style, and
-   offer to commit `web/static/explanations.json` (the site updates once the user pushes).
+   offer to commit `web/static/explanations.json` and `web/static/masters.json` (the site updates once the user
+   pushes).
 
 Rules for each explanation (the reader is a club player who keeps playing `habit.move` here in blitz and rapid):
 

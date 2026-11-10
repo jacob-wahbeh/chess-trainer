@@ -18,7 +18,8 @@
 		"explain:todo": "vite-node scripts/explanations.ts todo",
 		"explain:merge": "vite-node scripts/explanations.ts merge",
 		"explain:check": "vite-node scripts/explanations.ts check",
-		"explain:split": "vite-node scripts/explanations.ts split"
+		"explain:split": "vite-node scripts/explanations.ts split",
+		"masters": "node scripts/build-masters.mjs"
 	},
 	"dependencies": {
 		"chessground": "^9.2.1",
