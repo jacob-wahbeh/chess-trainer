@@ -31,6 +31,12 @@ Every push to `main` publishes the app to GitHub Pages at https://jacob-wahbeh.g
 setup: repo Settings → Pages → Source: GitHub Actions. Links and fetches go through `base` from `$app/paths` so the
 app works from that sub-path; the data worker gets it from the client (`setBase`).
 
+Setup links fill in a friend's settings on first open (and strip themselves from the address):
+`https://jacob-wahbeh.github.io/chess-trainer/?user=<chess.com name>&period=all&reach=2`. `period` is `3`, `6`, `12`,
+`24` (months) or `all`; `reach` is `2`, `3`, `5` or `10`; each is optional (`src/lib/link.ts`). Match them to how the
+friend's cards were exported (`npm run cards:export -- <user> <since> [--reach=N]`), so the app makes the same cards
+the explanations were written for.
+
 `npx vite-node scripts/compare-python.ts` runs the import + tree code over the Python CLI's cached
 archives (`../data/<user>/archives`) and prints counts comparable to the Python research.
 
@@ -61,8 +67,9 @@ opponent's threat, what the taught move does). The costliest cards also get a wr
 why, principle), written ahead of time in a Claude Code session and shipped in `static/explanations.json`:
 
 1. `npm run cards:export` writes every card with its engine lines and facts to `../data/<user>/cards.json`.
-2. `/explain-cards [count]` in Claude Code (`../.claude/commands/explain-cards.md`) writes explanations for the
-   costliest unexplained cards, using `npm run explain:todo` and `npm run explain:merge`.
+2. `/explain-cards [chess.com user] [count]` in Claude Code (`../.claude/commands/explain-cards.md`) updates that
+   player's games and cards, then writes explanations for their unexplained cards, using `npm run explain:todo`
+   and `npm run explain:merge`. Explanations are keyed by position and move, so they're shared by every player.
 3. `explain:merge` only accepts an explanation if every move it mentions occurs at that move number in the
    card's lines and every "piece on square" exists; anything else is reported back to be rewritten.
 

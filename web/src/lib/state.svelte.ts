@@ -1,6 +1,7 @@
 import type { AnalysisProgress } from './analysis/runner';
 import { EnginePool } from './engine/pool';
 import type { Filter, TimeClass } from './games/types';
+import { linkSettings } from './link';
 import { revokeToken, type LichessAuth } from './lichess/oauth';
 import type { Summary, SyncProgress } from './worker/data.worker';
 import { data, proxy } from './worker/client';
@@ -32,7 +33,9 @@ function load<T>(key: string, fallback: T): T {
 	}
 }
 
-export const settings: Settings = $state(load(STORAGE_KEY, DEFAULTS));
+/** Settings from a setup link (see link.ts), applied over the saved ones. */
+const linked = linkSettings(location.search);
+export const settings: Settings = $state({ ...load(STORAGE_KEY, DEFAULTS), ...linked });
 export const lichess: LichessAuth = $state(load(LICHESS_KEY, { token: '', username: '' }));
 
 export const app = $state({
@@ -101,6 +104,8 @@ let markReady: () => void;
 export const ready = new Promise<void>((resolve) => (markReady = resolve));
 
 export async function boot() {
+	const fromLink = Object.keys(linked).length > 0;
+	if (fromLink) saveSettings();
 	if (settings.username) {
 		try {
 			app.summary = await data().load(settings.username, currentFilter());
@@ -113,7 +118,8 @@ export async function boot() {
 	// Evaluations saved by earlier sessions are enough to create cards right away.
 	if (app.summary?.games) void syncCards();
 	const lastSync = app.summary?.lastSync ?? 0;
-	if (settings.username && Date.now() / 1000 - lastSync > STALE_SECONDS) void sync();
+	// A setup link may have widened the period or changed the player: download what's missing.
+	if (settings.username && (fromLink || Date.now() / 1000 - lastSync > STALE_SECONDS)) void sync();
 	else void analyze();
 }
 

@@ -1,15 +1,25 @@
 ---
 description: Research and write plain-English explanations for the costliest drill cards, and add them to the app
-argument-hint: "[how many cards, default 20]"
+argument-hint: "[chess.com username, default draco_jaco] [how many cards, default all]"
 ---
 
 Write explanations for the opening trainer's drill cards. They are shown in the drill after the user answers,
-above the engine lines. Run everything from `web/` in this repo; the user is `draco_jaco`.
+above the engine lines. Run everything from `web/` in this repo. The player is the Chess.com username `$1`, in
+lower case (`draco_jaco` if none was given), called `<user>` below; `$2` is how many cards to write (all of
+them if none was given). Explanations are keyed by position and move, not by player, so they're shared: a card
+someone else already has an explanation for is skipped.
 
-1. If `../data/draco_jaco/cards.json` is missing or more than a week old, run `npm run cards:export` (a few
-   minutes; it reuses cached evaluations and theory pages).
-2. Run `npm run explain:todo -- draco_jaco $ARGUMENTS` and read `../data/draco_jaco/explain-todo.json`: the
-   `principles` library and the `cards` to explain.
+1. Bring the player's cards up to date, so new games and new mistakes are included:
+   - For a new player (no `../data/<user>/archives/`), download their games from the repo root with
+     `.venv/bin/python -m trainer --user <user> fetch`, and seed their caches by copying
+     `../data/draco_jaco/web-cache.json` and `../data/draco_jaco/wikibooks-cache.json` into `../data/<user>/`
+     (evaluations, master games and theory pages are facts about positions, shared by everyone).
+   - Otherwise update their games with the same `fetch` command.
+   - Then run `npm run cards:export -- <user>` (minutes; it reuses the cached evaluations and theory pages).
+2. Run `npm run explain:todo -- <user> $2` and read `../data/<user>/explain-todo.json`: the `principles`
+   library and the `cards` to explain. With more than about 40 cards, `npm run explain:split -- <user> 4` deals
+   them into four files for subagents to write in parallel (each writes its own answers file and checks it with
+   `npm run explain:check -- <user> <file>`).
 3. Research each card before writing:
    - Read its `theory` notes: commentary from the Wikibooks *Chess Opening Theory* pages for the position, the
      habit and the taught move. They say what the line is about and often why a move is good or bad.
@@ -20,12 +30,14 @@ above the engine lines. Run everything from `web/` in this repo; the user is `dr
      chess.com or lichess.org articles, ChessBase, well-known opening books' descriptions). Use what they
      explain, never their moves unless the card's lines contain them.
 4. Write one explanation per card, following the rules below, and save them all as a single JSON object to
-   `../data/draco_jaco/explain-answers.json`:
+   `../data/<user>/explain-answers.json`:
    `{ "<card id>": { "headline": "...", "why": "...", "principle": "...", "principleId": "...", "themes": ["..."], "sources": ["..."] } }`
-5. Run `npm run explain:merge`. It checks every move and piece you mention against the card's lines and theory
-   notes, and that `principleId` exists, then adds the explanations that pass to `static/explanations.json`.
-   For each rejected card, fix only what it reports and merge again, until nothing is rejected.
-6. Report how many cards were explained, and quote two of the explanations so the user can judge the style.
+5. Run `npm run explain:merge -- <user>` (or `-- <user> <file>` for each subagent's answers). It checks every
+   move and piece you mention against the card's lines and theory notes, and that `principleId` exists, then
+   adds the explanations that pass to `static/explanations.json`. For each rejected card, fix only what it
+   reports and merge again, until nothing is rejected.
+6. Report how many cards were explained, quote two of the explanations so the user can judge the style, and
+   offer to commit `web/static/explanations.json` (the site updates once the user pushes).
 
 Rules for each explanation (the reader is a club player who keeps playing `habit.move` here in blitz and rapid):
 

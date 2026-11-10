@@ -4,6 +4,8 @@
 	import { onMount, type Snippet } from 'svelte';
 	import { dev } from '$app/environment';
 	import { page } from '$app/state';
+	import { replaceState } from '$app/navigation';
+	import { LINK_PARAMS } from '$lib/link';
 	import Icon, { type IconName } from '$lib/ui/Icon.svelte';
 	import { app, boot, drill } from '$lib/state.svelte';
 
@@ -33,6 +35,13 @@
 
 	onMount(() => {
 		void boot();
+		// A setup link's settings are saved now; drop them from the address so a reload doesn't re-apply them.
+		// (On the next task: mount effects run before SvelteKit counts the router as started.)
+		const url = new URL(location.href);
+		if (LINK_PARAMS.some((p) => url.searchParams.has(p))) {
+			for (const p of LINK_PARAMS) url.searchParams.delete(p);
+			setTimeout(() => replaceState(url, page.state));
+		}
 		if (!dev && 'serviceWorker' in navigator) {
 			// After a deploy the new worker takes over; reload once so the page and its cached assets match.
 			const updating = !!navigator.serviceWorker.controller;

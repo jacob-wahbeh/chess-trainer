@@ -1,7 +1,8 @@
 // Exports every drill card with engine lines, checked facts and opening theory (Wikibooks), for writing
 // explanations in a Claude Code session (the /explain-cards command; bookkeeping in scripts/explanations.ts).
 // Reuses cached evaluations and theory pages.
-// Usage: npx vite-node scripts/export-cards.ts [user] [since YYYY-MM] [masters cache dir]
+// Usage: npx vite-node scripts/export-cards.ts [user] [since YYYY-MM] [masters cache dir] [--reach=N]
+//        (--reach: analyse positions reached at least N times, default 3, like the app's Settings → Analysis)
 //        -> data/<user>/cards.json
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { Chess } from 'chessops/chess';
@@ -23,13 +24,15 @@ const DEPTH = 20;
 /** Plies of each line the writer sees (and the checker allows). */
 const LINE_PLIES = 10;
 
-const [user = 'draco_jaco', since = defaultSince(), mastersDir] = process.argv.slice(2);
-const { byColor, trees, evals, masters, evaluate, quit } = await analyse({ user, since, mastersDir });
+const args = process.argv.slice(2);
+const minReach = Number(args.find((a) => a.startsWith('--reach='))?.slice(8) ?? 3);
+const [user = 'draco_jaco', since = defaultSince(), mastersDir] = args.filter((a) => !a.startsWith('--'));
+const { byColor, trees, evals, masters, evaluate, quit } = await analyse({ user, since, mastersDir, minReach });
 const openings = buildOpeningIndex(JSON.parse(readFileSync(new URL('../static/openings.json', import.meta.url), 'utf8')));
 const pct = (x: number | null) => (x === null ? null : Math.round(x * 1000) / 10);
 
 const leaks = (['white', 'black'] as const)
-	.flatMap((c) => findLeaks(byColor[c], trees[c], c, evals, masters, 3).leaks)
+	.flatMap((c) => findLeaks(byColor[c], trees[c], c, evals, masters, minReach).leaks)
 	.filter(cardWorthy)
 	.sort((a, b) => b.points - a.points);
 console.log(`exporting ${leaks.length} cards…`);
