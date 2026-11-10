@@ -1301,6 +1301,16 @@
 			"Chess Opening Theory/1. e4/1...c5/2. Nc3/2...e6"
 		]
 	},
+	"2471617853961957|e8e7": {
+		"headline": "Take the bishop on f7 with your king; nothing defends it",
+		"why": "7...Ke7 leaves White's bishop alive: after 8.Bxg8 Qxg8 White has traded it for a knight, kept the pawn it took on f7, and Black's king has lost the right to castle. The bishop on f7 is attacked by the king and defended by nothing, so 7...Kxf7 wins it. White's trick 8.Nxe5+ is a check that opens the queen's path to g4, but after 8...dxe5 9.Qxg4 Black has still won a knight for a pawn.",
+		"principle": "When a piece lands on f7 with check, count its defenders before stepping aside: with none, take it and then meet the follow-up.",
+		"principleId": "count-defenders",
+		"themes": [
+			"tactics: unsound sacrifice",
+			"king safety"
+		]
+	},
 	"2480011064030415|f3g5": {
 		"headline": "Ng5 hits nothing once Black castles; build with 5.c3",
 		"why": "5.Ng5 moves the knight a second time while two minor pieces are still at home, and its target disappears after 5...O-O, because the rook now guards f7. In the engine line the knight has to go back with 7.Nf3, so Black has simply gained time. 5.c3, the masters' top choice at 42%, is the Giuoco Pianissimo plan: a slow buildup that prepares d4, while 7.O-O, 8.Re1 and 9.Nbd2 finish development.",
@@ -1901,6 +1911,32 @@
 		"principleId": "development",
 		"themes": [
 			"development"
+		]
+	},
+	"3297019676720294|d8e7": {
+		"headline": "5...Qg5 hits the knight on e5 and the g2 pawn at once",
+		"why": "5...Qe7 does attack the knight, but it lets White play 6.d4 with gain of time against the bishop on c5, which the theory warns can be kicked by d4. Black only wins the pawn back after 8.O-O Bxe5 9.dxe5 Qxe5, having traded the bishop for the knight while White has castled and kept developing. 5...Qg5 attacks the knight on e5 and the pawn on g2 together, and after 6.Ng4 d5 7.d4 Qxg4 8.Qxg4 Bxg4 9.dxc5 dxe4 Black has the pawn back with the queens off.",
+		"principle": "When you need to win back a pawn, do it with a move that makes two threats, so the opponent spends the move answering instead of developing with gain of time.",
+		"principleId": "tempo",
+		"themes": [
+			"tempo",
+			"tactics: double attack"
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bb5/3...Bc5"
+		]
+	},
+	"3303598185152393|d1d5": {
+		"headline": "Develop with 4.Nc3; the early 4.Qd5 just gets chased",
+		"why": "4.Qd5 brings the queen out with three minor pieces still at home, and Black develops by attacking it: 4...Nc6, then 5...Be6 hits the queen again, and after 6.Qd2 dxe5 Black has won back the pawn. 4.Nc3 develops and, as the theory notes, adds a defender to the queen on d1, which takes the sting out of the Derek Wu trap that 3...d6 sets up. In the line White keeps the extra pawn: 6.exd6 cxd6 only swaps the e-pawn for Black's d-pawn.",
+		"principle": "Keep the queen at home while the minor pieces are undeveloped; in the centre it only gives Black's knights and bishops targets to develop against.",
+		"principleId": "early-queen",
+		"themes": [
+			"development",
+			"early queen"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...e5/2. dxe5/2...Bc5"
 		]
 	},
 	"3324621583464853|c6e5": {
@@ -3453,6 +3489,20 @@
 			"Chess Opening Theory/1. e4/1...c5/2. Nf3/2...d6/3. d4/3...cxd4/4. Nxd4/4...Nf6/5. Nc3/5...a6/6. Bg5/6...e6"
 		]
 	},
+	"4472366471003602|a2a3": {
+		"headline": "Hit the b5 pawn with 4.a4; 4.a3 is too slow",
+		"why": "4.a3 prepares b3 to break up Black's pawns, but it is a move too slow: after 4...a6 5.Nf3 e6 6.b3 cxb3 Black keeps the extra pawn, and by the end of the line is two pawns ahead. 4.a4 attacks the pawn on b5 straight away, and the theory calls it the move that punishes 3...b5: 4...a6 fails because 5.axb5 pins the a-pawn to the rook, so Black has to defend with 4...c6. Masters play 4.a4 in 98% of 492 games.",
+		"principle": "The b5 pawn is the base that holds up the c4 pawn; strike it with the a-pawn at once, before Black can support it.",
+		"principleId": "pawn-chain",
+		"themes": [
+			"pawn structure",
+			"gambits"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...dxc4/3. e4/3...b5",
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...dxc4/3. e4/3...b5/4. a4"
+		]
+	},
 	"4491386101925356|c5c4": {
 		"headline": "Capture toward the centre: 3...cxd4 is the point of the Sicilian",
 		"why": "3...c4 leaves the pawn with no support, and 4.Bxc4 simply takes it while developing, so you are a pawn down for nothing and White is clearly better. 3...cxd4, played in 99.8% of master games, captures toward the centre with a flank pawn and breaks up White's two-pawn centre. After 4.Nxd4 you have two central pawns to White's one and the half-open c-file, and 4...Nc6 5.Nc3 Qc7 leads into a normal Taimanov.",
@@ -3852,6 +3902,16 @@
 		"themes": [
 			"centre",
 			"tactics: loose pawn"
+		]
+	},
+	"4876809165764258|c8g4": {
+		"headline": "Answer 5.d4 with 5...exd4; that pawn attacks your bishop on c5",
+		"why": "5.d4 attacks the bishop on c5, and 5...Bg4 ignores the threat: 6.dxc5 wins the bishop, and the counterattack 6...Qf6 on the pinned knight runs into 7.Bg5. 5...exd4 removes the attacking pawn before it can take, and it is the only move masters play here, in all 30 games.",
+		"principle": "Before starting your own plan, check what the opponent's last move threatens: a pawn that attacks a piece has to be answered first.",
+		"principleId": "forcing-moves",
+		"themes": [
+			"tactics: threat",
+			"centre"
 		]
 	},
 	"4879166842565878|c1g5": {
@@ -4712,6 +4772,32 @@
 			"centre"
 		]
 	},
+	"5850892143506287|b1c3": {
+		"headline": "Block with 5.Bd2; 5.Nc3 still leaves the bishop on f4 hanging",
+		"why": "4...Qb4+ attacks the bishop on f4 as well as the king, and 5.Nc3 blocks the check without defending it. After 5...Qxf4 White can grab the rook with 6.Nd5 Qe4 7.Nxc7+ Kd8 8.Nxa8, but the knight is stuck in the corner, 8...Nxe5 wins back the pawn, and White's advantage is gone. 5.Bd2 blocks with the attacked bishop itself and hits the queen on b4, so Black has to move the queen again, as in 5...Qe7.",
+		"principle": "Against a queen check, ask what else the queen attacks before blocking; the right block moves or guards that piece.",
+		"principleId": "loose-pieces",
+		"themes": [
+			"tactics: double attack",
+			"loose pieces"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...e5/2. dxe5"
+		]
+	},
+	"5850892143506287|b1d2": {
+		"headline": "Block the check with 5.Bd2; 5.Nbd2 drops the bishop on f4",
+		"why": "4...Qb4+ checks the king and also attacks the bishop on f4 along the fourth rank. 5.Nbd2 blocks the check but leaves that bishop undefended, and 5...Qxf4 wins a whole piece. 5.Bd2 blocks with the attacked bishop itself and hits the queen on b4, so Black has to move the queen again, as in 5...Qe7.",
+		"principle": "A queen check often hits a second target; before blocking, see which of your pieces it also attacks and block with that piece or guard it.",
+		"principleId": "loose-pieces",
+		"themes": [
+			"tactics: double attack",
+			"loose pieces"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...e5/2. dxe5"
+		]
+	},
 	"5859332280044982|b8c6": {
 		"headline": "Meet 1.d4 with 1...Nf6, the most flexible reply",
 		"why": "1...Nc6 is the rare Mikenas defence: the knight blocks Black's c-pawn and stands in front of White's d-pawn, so 2.d5 kicks it at once and after 2...Ne5 3.Nc3 White gains space and time. 1...Nf6 is the Indian defence: it develops, controls e4 and keeps every pawn setup open, so Black can fight for the centre later on their own terms. Masters choose it in 60.9% of games.",
@@ -5443,6 +5529,16 @@
 			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...h6"
 		]
 	},
+	"6511980734057505|h2h3": {
+		"headline": "Release the tension with 5.cxd5; 5.h3 lets Black win a pawn",
+		"why": "5.h3 spends a move on the edge while the pawns in the centre attack each other, and Black takes first: after 5...cxd4 6.a3 Qa5+ 7.Qd2 Nc6 8.Qxa5 Nxa5 9.Nxd4 Nxc4 the pawn on c4 falls. 5.cxd5 resolves the tension on White's terms: after 5...Nxd5 6.Bg5 Be7 7.Bxe7 Qxe7 8.dxc5 Qxc5 pieces are traded and the material stays level.",
+		"principle": "With pawns tense in the centre, spend your moves on the centre or on development; a rook-pawn move gives the opponent time to capture first.",
+		"principleId": "few-pawn-moves",
+		"themes": [
+			"centre",
+			"pawn tension"
+		]
+	},
 	"6545901527067225|d4e5": {
 		"headline": "Develop against the early queen with 4.Nc3; don't trade on e5",
 		"why": "4.dxe5 dxe5 releases the central tension for nothing: Black's position frees up, the bishop gets d6 (5...Bd6), and more than half of your advantage is gone. 3...Qf6 brought the queen out early and took the f6 square from Black's knight, so keep developing with 4.Nc3. The queen then becomes a target: 5.Bg5 hits it, and after 5...Qg6 the h-pawn chases it again with 6.h4 and 7.h5.",
@@ -5482,6 +5578,19 @@
 		"sources": [
 			"Chess Opening Theory/1. e4/1...d6/2. d4",
 			"Chess Opening Theory/1. e4/1...d6/2. d4/2...Nf6"
+		]
+	},
+	"6593387168284860|b1c3": {
+		"headline": "Kick the knight with 4.e5, then take back c4 with 5.Bxc4",
+		"why": "4.Nc3 defends e4 but gives Black time to strike with 4...e5; after 5.Nf3 exd4 6.Qxd4 Qxd4 7.Nxd4 Bc5 the queens are off and Black still has the extra pawn on c4. 4.e5 attacks the knight on f6 and gains space, the Alekhine-like play the theory describes for 3...Nf6, and after 4...Nd5 5.Bxc4 White has won the gambit pawn back with a broad centre. Masters choose 4.e5 in about 93% of 1679 games.",
+		"principle": "A knight that attacks your centre pawn can often be chased by pushing it: the pawn gains space and the time you win pays for recovering material.",
+		"principleId": "pawn-chase",
+		"themes": [
+			"centre",
+			"tempo"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...dxc4/3. e4"
 		]
 	},
 	"6601544122617741|c2c4": {
@@ -5674,6 +5783,32 @@
 		"sources": [
 			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...Bc5",
 			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...Bc5/4. c3"
+		]
+	},
+	"6739498744433180|c1g5": {
+		"headline": "Push 4.e5 at once; the knight on f6 is driven back",
+		"why": "4.Bg5 lets Black strike first with 4...d5: after 5.Bxf6 exf6 6.exd5 O-O 7.g3 Re8+ White has a pawn more, but has given up the bishop and faces a rook check on the open e-file with the king still in the centre. Black played 3...Bg7 instead of 3...d6, the Pirc move the theory gives here, so nothing stops 4.e5, which attacks the knight on f6 and sends it back to g8 after 4...Ng8. White then develops with 5.Bf4 and 6.Qd2 while Black's knight starts over.",
+		"principle": "When nothing stops your e-pawn from advancing, a knight on f6 is a target: push the pawn with tempo before Black can play ...d5.",
+		"principleId": "pawn-chase",
+		"themes": [
+			"centre",
+			"tempo"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...Nf6/2. Nc3"
+		]
+	},
+	"6739498744433180|g1f3": {
+		"headline": "Push 4.e5 now, before 4...d5 gives the knight a good square",
+		"why": "4.Nf3 is natural but gives Black time for 4...d5. Then 5.e5 no longer chases the knight home: it jumps to e4 with 5...Ne4, supported by the pawn on d5, and after 7.Bd3 Nxc3 8.bxc3 c5 Black has doubled White's pawns and hits the centre. Played right away, 4.e5 attacks the knight on f6 before Black's centre is ready, and after 4...Ng8 the knight is back on its starting square while White gains space and develops with 5.Bf4.",
+		"principle": "When nothing stops your e-pawn from advancing, a knight on f6 is a target: push the pawn with tempo before Black can play ...d5.",
+		"principleId": "pawn-chase",
+		"themes": [
+			"centre",
+			"tempo"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...Nf6/2. Nc3"
 		]
 	},
 	"6748390364152037|d2d3": {
@@ -6843,6 +6978,19 @@
 			"development"
 		]
 	},
+	"7827708463373629|c2c3": {
+		"headline": "Block with 5.Nc3; 5.c3 hands the b2 pawn to the queen",
+		"why": "4...Qb4+ checks the king and eyes the pawn on b2. 5.c3 blocks the check but lets 5...Qxb2 take that pawn, and after 6.Nbd2 Qxc3 the queen grabs a second one, so White ends up a pawn down instead of a pawn up. 5.Nc3 blocks with a developing move and keeps the extra pawn: after 5...Qa5 6.Qd5 White offers the queen trade, and after 7.Qxa5 Bxa5 Black's queen can no longer go pawn hunting.",
+		"principle": "Block a check with a piece you want to develop anyway, not with a pawn move that leaves new targets for the queen.",
+		"principleId": "development",
+		"themes": [
+			"development",
+			"gambits"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...e5/2. dxe5"
+		]
+	},
 	"7832135918552384|d2d3": {
 		"headline": "Black gives you the centre: take it with 2.d4",
 		"why": "1...g6 is a hypermodern opening: Black allows White a big centre and hopes to undermine it later. 2.d3 declines the offer, and after 2...c5 3.g3 Nc6 4.Bg2 Bg7 Black has an easy, equal game. 2.d4 (95.1% of masters games) puts a second pawn in the centre while Black has not contested it, gains space and opens the way for your pieces; you keep a small edge.",
@@ -7117,6 +7265,19 @@
 		"themes": [
 			"development",
 			"king safety"
+		]
+	},
+	"8211444126196396|c1f4": {
+		"headline": "5.e3 props up d4 and opens the f1 bishop toward c4",
+		"why": "5.Bf4 does nothing for the pawn on d4 or against the pawn on c4. After 5...a6, White's try to win back c4 with 6.Nd2 takes a defender away from d4 and blocks the queen's guard of it, so 6...Qxd4 picks up a second pawn. 5.e3, the most common master move (36% of 124 games), supports d4 and opens the way for the bishop on f1 to recapture on c4. After 5...b5 6.a4 White attacks Black's queenside at once, the theory's plan for disrupting Black's hold on the c-pawn.",
+		"principle": "Pick the pawn move that does two jobs: e3 supports the centre pawn and frees the bishop that targets the gambit pawn.",
+		"principleId": "few-pawn-moves",
+		"themes": [
+			"centre",
+			"gambits"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...dxc4/3. Nc3"
 		]
 	},
 	"8224292196866816|b8c6": {
@@ -7684,6 +7845,19 @@
 			"Chess Opening Theory/1. d4/1...d5/2. c4/2...c6"
 		]
 	},
+	"8700918547269120|e2e3": {
+		"headline": "Kick the early bishop with 4.Ne5 instead of the quiet 4.e3",
+		"why": "4.e3 lets Black finish the setup in peace: after 4...e6 5.h3 Bh5 6.Qb3 Qb6 the pawn on b7 is covered and the bishop sits comfortably outside Black's pawn chain. 3...Bg4 put the bishop where the knight on f3 can hit it from e5, a square the theory says 3.Nf3 was aimed at. 4.Ne5 attacks it at once, and in the line it goes all the way back with 4...Bc8, so Black has spent two moves on the bishop for nothing. White uses the time to open the centre with 5.cxd5 cxd5 6.e4, even giving a pawn to get ahead in development.",
+		"principle": "When the opponent develops a piece where you can attack it, hit it at once: every retreat is a move you get to spend on the centre.",
+		"principleId": "tempo",
+		"themes": [
+			"tempo",
+			"development"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...c6/3. Nf3"
+		]
+	},
 	"8706009982340637|b2b3": {
 		"headline": "Black's queen eyes e5: never open the long diagonal to a1",
 		"why": "5.b3 opens the long diagonal to the rook on a1, and 5...Qe5+ checks the king and attacks the rook at once; after 6.Be2 Qxa1 White is a rook down. In this Modern Scandinavian Black's queen reached d5 without losing time, so White should claim the centre with 5.d4 and open the bishop on c1 instead of handing her targets. It is the most popular master move here (38.2%).",
@@ -7754,6 +7928,19 @@
 			"tempo",
 			"gambits",
 			"centre"
+		]
+	},
+	"877042167833906|c1f4": {
+		"headline": "Grab the centre with 5.e4 while Black spends time on 4...a6",
+		"why": "5.Bf4 doesn't touch the c4 pawn, and Black uses the time for 5...b5; after 6.a4 b4 the knight is driven to the rim with 7.Na2 and Black keeps the extra pawn. 5.e4, the masters' main move (67% of 1038 games), builds the pawn centre that 3...Nf6 was meant to prevent, and after 5...b5 6.e5 Nd5 7.a4 e6 8.axb5 White wins the pawn back.",
+		"principle": "When the opponent spends moves holding on to a gambit pawn on the wing, take the centre: the space and time let you win the pawn back later.",
+		"principleId": "centre",
+		"themes": [
+			"centre",
+			"gambits"
+		],
+		"sources": [
+			"Chess Opening Theory/1. d4/1...d5/2. c4/2...dxc4/3. Nf3/3...Nf6"
 		]
 	},
 	"8832130732345993|f1d3": {

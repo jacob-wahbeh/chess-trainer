@@ -41,7 +41,8 @@
 			<p class="warn">Your Lichess login expired. <a href="{base}/settings">Reconnect</a> to keep checking theory.</p>
 		{:else if !lichess.token}
 			<p class="dim small">
-				Moves are judged by the engine only. <a href="{base}/settings">Connect Lichess</a> to also check them against master games.
+				Master games are included for openings the app already knows. <a href="{base}/settings">Connect Lichess</a> (optional) to
+				check new positions from your games too.
 			</p>
 		{/if}
 		{#if p.error}<p class="warn small">{p.error}</p>{/if}
