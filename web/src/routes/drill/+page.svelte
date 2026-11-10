@@ -113,8 +113,9 @@
 	let engineLine = $state(false);
 	/** Phones: the written explanation, notes and principle open in a sheet under the board. */
 	let sheet = $state(false);
-	/** Where the sheet starts: just under the board, so the board stays in view. */
+	/** Where the sheet starts: just under the board, so the board stays in view; or near the top, expanded. */
 	let sheetTop = $state(0);
+	let sheetFull = $state(false);
 	let boardEl = $state<HTMLElement | undefined>();
 	let boardWidth = $state(0);
 	/** Phones: the eval bar goes above the board so the board can take the full width. */
@@ -631,6 +632,9 @@
 
 	/** Phones: opens the explanation under the board, starting just below it so the board stays in view. */
 	function openSheet() {
+		// The page may be scrolled a little on short screens: bring the board fully into view first.
+		window.scrollTo(0, 0);
+		sheetFull = false;
 		const bottom = boardEl?.getBoundingClientRect().bottom ?? 0;
 		sheetTop = bottom > 0 && bottom < innerHeight * 0.72 ? bottom + 6 : Math.round(innerHeight * 0.45);
 		sheet = true;
@@ -732,6 +736,13 @@
 	// The first cards are created while the analysis runs: start as soon as they exist.
 	$effect(() => {
 		if (phase === 'empty' && drill.total) void start();
+	});
+
+	// While the sheet is open the page behind it stays put.
+	$effect(() => {
+		if (!(sheet && narrow)) return;
+		document.documentElement.classList.add('sheet-open');
+		return () => document.documentElement.classList.remove('sheet-open');
 	});
 
 	onDestroy(() => {
@@ -1102,8 +1113,11 @@
 			{@const said = storyFor(key)}
 			{@const length = lineOf(key).length}
 			{@const ply = viewKey === key && viewN > 0 ? lineOf(key)[viewN - 1] : undefined}
-			<!-- Phones: the explanation under the board, so the board stays in view while reading. -->
-			<div class="sheet" style:top="{sheetTop}px" role="dialog" aria-label="Why">
+			<!-- Phones: the explanation under the board, so the board stays in view while reading. Swipes on the
+			     board do nothing while it's open; a tap there closes it. -->
+			<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
+			<div class="sheet-backdrop" onclick={() => (sheet = false)}></div>
+			<div class="sheet" class:full={sheetFull} style:top={sheetFull ? undefined : `${sheetTop}px`} role="dialog" aria-label="Why">
 				<div class="sheet-head">
 					<div class="sheet-lines" role="group" aria-label="Lines">
 						{#each chips as c (c.key)}
@@ -1117,6 +1131,15 @@
 							</button>
 						{/each}
 					</div>
+					<button
+						class="icon-btn expand"
+						class:up={!sheetFull}
+						onclick={() => (sheetFull = !sheetFull)}
+						aria-label={sheetFull ? 'Show the board' : 'Expand'}
+						title={sheetFull ? 'Show the board' : 'Expand'}
+					>
+						<Icon name="chevron-down" size={20} />
+					</button>
 					<button class="icon-btn" onclick={() => (sheet = false)} aria-label="Close"><Icon name="close" size={18} /></button>
 				</div>
 
@@ -1125,7 +1148,19 @@
 					<button class="icon-btn" onclick={() => step(-1)} aria-label="Previous move"><Icon name="chevron-left" size={20} /></button>
 					<div class="step-text">
 						<div class="step-move num {kindOf(key)}">
-							{#if ply}{formatPlies([ply])}<span class="faint">{` · ${viewN}/${length}`}</span>{:else if viewN === 0}The position{:else}Earlier in the game{/if}
+							<span>
+								{#if ply}{formatPlies([ply])}<span class="faint">{` · ${viewN}/${length}`}</span>{:else if viewN === 0}The position{:else}Earlier in the game{/if}
+							</span>
+							{#if key === (main ?? '') && bookLine.length}
+								<button
+									class="engine-toggle"
+									aria-pressed={engineLine}
+									onclick={() => ((engineLine = !engineLine), preview(key, 1))}
+									title={engineLine ? 'Showing the engine’s line: tap for the line from the explanation' : 'Showing the line from the explanation: tap for the engine’s line'}
+								>
+									Engine line
+								</button>
+							{/if}
 						</div>
 						{#if notesHere.length}
 							{#each notesHere as n, i (i)}<p class="step-note {n.tone}">{n.text}</p>{/each}
@@ -1151,15 +1186,6 @@
 						<p class="said">{said.join(' ')}</p>
 					{:else if summary(key)}
 						<p class="said">{summary(key)}</p>
-					{/if}
-					{#if key === (main ?? '') && bookLine.length}
-						<div class="line-switch" role="group" aria-label="Moves shown">
-							<span class="faint">Moves</span>
-							<div class="segmented">
-								<button aria-pressed={!engineLine} onclick={() => ((engineLine = false), preview(key, 1))}>As explained</button>
-								<button aria-pressed={engineLine} onclick={() => ((engineLine = true), preview(key, 1))}>Engine</button>
-							</div>
-						</div>
 					{/if}
 					{#if written && answerShown}
 						{@const basis = principleById.get(written.principleId)}
@@ -2022,11 +2048,55 @@
 		line-height: 1.45;
 	}
 
-	.line-switch {
+	.step-move {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		font-size: 13px;
+		gap: 8px;
+	}
+
+	/* On: the taught move's line is the engine's; off: the line the explanation walks through. */
+	.engine-toggle {
+		padding: 2px 9px;
+		border-radius: 999px;
+		border: 1px solid var(--line);
+		color: var(--text-3);
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.engine-toggle[aria-pressed='true'] {
+		color: var(--accent);
+		border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+		background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev));
+	}
+
+	.sheet-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 19;
+		touch-action: none;
+	}
+
+	.sheet.full {
+		top: calc(var(--safe-t) + 8px);
+	}
+
+	/* The sheet's fixed rows don't drag the page; the chips still scroll sideways. */
+	.sheet-head,
+	.sheet-step {
+		touch-action: none;
+	}
+
+	.sheet-lines {
+		touch-action: pan-x;
+	}
+
+	.expand :global(svg) {
+		transition: transform 160ms var(--ease);
+	}
+
+	.expand.up :global(svg) {
+		transform: rotate(180deg);
 	}
 
 	.sheet-body {

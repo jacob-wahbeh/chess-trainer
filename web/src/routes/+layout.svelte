@@ -217,6 +217,8 @@
 			padding-top: calc(var(--safe-t) + 4px);
 			padding-left: 6px;
 			padding-right: 6px;
+			/* Continue's sticky footer already clears the home bar. */
+			padding-bottom: 0;
 		}
 	}
 

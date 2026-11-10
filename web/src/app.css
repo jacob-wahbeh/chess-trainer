@@ -314,3 +314,10 @@ button {
 		animation-duration: 0ms !important;
 	}
 }
+
+/* A sheet is open over the page (drill review on phones): the page behind it doesn't scroll. */
+html.sheet-open,
+html.sheet-open body {
+	overflow: hidden;
+	overscroll-behavior: none;
+}
