@@ -189,6 +189,17 @@
 			<button aria-pressed={settings.introSpeed === speed} onclick={() => ((settings.introSpeed = speed), saveSettings())}>{label}</button>
 		{/each}
 	</div>
+	<div class="dim small">Card order</div>
+	<div class="segmented" role="group" aria-label="Card order">
+		{#each [['need', 'By need'], ['random', 'Random']] as const as [order, label] (order)}
+			<button aria-pressed={settings.drillOrder === order} onclick={() => ((settings.drillOrder = order), saveSettings())}>{label}</button>
+		{/each}
+	</div>
+	<div class="faint small">
+		{settings.drillOrder === 'random'
+			? 'Every card once, in a random order. Streaks still count, so switching back to By need picks up where you are.'
+			: 'Mistakes you played again and misses first, then new mistakes from recent games, then the rest.'}
+	</div>
 	<div class="faint small num">{drill.total} cards · {drill.known} known · {drill.learning} learning · {drill.fresh} new</div>
 	<button class="danger" onclick={resetDrills} disabled={!drill.total}>
 		{confirmReset ? 'Tap again to reset all drill progress' : 'Reset drill progress'}

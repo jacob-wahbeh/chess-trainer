@@ -310,8 +310,8 @@ const api = {
 		return db.cards.where('user').equals(user.toLowerCase()).count();
 	},
 
-	async deck(): Promise<Deck> {
-		return buildDeck(await db.cards.where('user').equals(user.toLowerCase()).toArray());
+	async deck(order: 'need' | 'random' = 'need'): Promise<Deck> {
+		return buildDeck(await db.cards.where('user').equals(user.toLowerCase()).toArray(), Date.now(), Math.random, order);
 	},
 
 	async cardDetail(id: string): Promise<CardDetail | null> {

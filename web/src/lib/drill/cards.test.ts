@@ -61,6 +61,16 @@ describe('buildDeck', () => {
 		expect(ids).toEqual([...learning.slice(0, 8).map((c) => c.id), known[0].id, learning[8].id, known[1].id]);
 	});
 
+	it('shuffles every card in random order, keeping the counts', () => {
+		const cards = Array.from({ length: 12 }, (_, i) => card(`a2a${i}`, i, { seen: i % 3, streak: i % 4, lastSeen: NOW - i * DAY }));
+		const byNeed = buildDeck(cards, NOW, inOrder);
+		let n = 0;
+		const deck = buildDeck(cards, NOW, () => ((n = (n * 7 + 3) % 11), n / 11), 'random');
+		expect(new Set(deck.ids)).toEqual(new Set(byNeed.ids));
+		expect(deck.ids).not.toEqual(byNeed.ids);
+		expect({ ...deck, ids: [] }).toEqual({ ...byNeed, ids: [] });
+	});
+
 	it('skips suspended cards', () => {
 		const deck = buildDeck([card('f1c4', 3, { suspended: true }), card('d2d3', 1)], NOW, inOrder);
 		expect(deck.total).toBe(1);

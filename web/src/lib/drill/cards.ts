@@ -125,7 +125,7 @@ export interface Deck {
  * practised longest ago first), older new cards (costliest first), and known cards, one mixed in every few cards
  * so they stay fresh.
  */
-export function buildDeck(cards: CardRecord[], now = Date.now(), random = Math.random): Deck {
+export function buildDeck(cards: CardRecord[], now = Date.now(), random = Math.random, order: 'need' | 'random' = 'need'): Deck {
 	const active = cards.filter((c) => !c.suspended);
 	const leastRecent = (a: CardRecord, b: CardRecord) => (a.lastSeen ?? 0) - (b.lastSeen ?? 0);
 	const costliest = (a: CardRecord, b: CardRecord) => b.points - a.points;
@@ -147,7 +147,8 @@ export function buildDeck(cards: CardRecord[], now = Date.now(), random = Math.r
 	}
 	ids.push(...k.map((c) => c.id));
 	return {
-		ids,
+		// Random order: every card shuffled, ignoring need (the counts still describe the deck).
+		ids: order === 'random' ? shuffled(active, random).map((c) => c.id) : ids,
 		playedAgain: again.length,
 		missed: missed.length,
 		recent: recent.length,

@@ -365,7 +365,7 @@
 		await data().syncCards();
 		const only = page.url.searchParams.get('card');
 		if (only && (await data().cardDetail(only))) return begin([only]);
-		const deck = await data().deck();
+		const deck = await data().deck(settings.drillOrder);
 		if (deck.ids.length) begin(deck.ids);
 		else phase = 'empty';
 	}
@@ -602,8 +602,8 @@
 		if (!card || phase !== 'result') return;
 		const id = card.card.id;
 		phase = 'loading';
-		// A miss comes back a few cards later for practice.
-		if (!firstTry && (requeued.get(id) ?? 0) < MAX_REPEATS) {
+		// A miss comes back a few cards later for practice (not in random order: that's purely a shuffle).
+		if (!firstTry && settings.drillOrder !== 'random' && (requeued.get(id) ?? 0) < MAX_REPEATS) {
 			requeued.set(id, (requeued.get(id) ?? 0) + 1);
 			const at = Math.min(queue.length, index + 1 + REPEAT_GAP);
 			queue = [...queue.slice(0, at), id, ...queue.slice(at)];
@@ -614,7 +614,7 @@
 	/** What the answer did to the card's streak, shown above Continue. */
 	function outcome(c: CardRecord): string {
 		if (repeat) return firstTry ? 'Practice round: right this time.' : 'Practice round: it comes back again soon.';
-		if (!firstTry) return 'Back to 0 · it comes back in a few cards.';
+		if (!firstTry) return settings.drillOrder === 'random' ? 'Back to 0.' : 'Back to 0 · it comes back in a few cards.';
 		const n = c.streak + 1;
 		if (n < KNOWN_STREAK) return `${n} in a row · ${KNOWN_STREAK - n} more and it’s known.`;
 		return n === KNOWN_STREAK ? 'Known: 3 in a row.' : `Known · ${n} in a row.`;

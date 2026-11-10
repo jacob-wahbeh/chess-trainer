@@ -16,7 +16,7 @@ describe('linkSettings', () => {
 });
 
 describe('settings cookie', () => {
-	const s = { username: 'HipFlexors', timeClasses: ['blitz', 'rapid'] as ('blitz' | 'rapid')[], periodMonths: 12, minReach: 2, introSpeed: 'fast' as const };
+	const s = { username: 'HipFlexors', timeClasses: ['blitz', 'rapid'] as ('blitz' | 'rapid')[], periodMonths: 12, minReach: 2, introSpeed: 'fast' as const, drillOrder: 'random' as const };
 
 	it('round-trips the settings', () => {
 		const cookie = settingsCookie(s, '/chess-trainer/', true);

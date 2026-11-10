@@ -16,11 +16,13 @@ export interface Settings {
 	minReach: number;
 	/** How fast drills replay the moves leading to each position. */
 	introSpeed: 'slow' | 'normal' | 'fast';
+	/** Drill cards in order of need (see buildDeck), or shuffled. */
+	drillOrder: 'need' | 'random';
 }
 
 const STORAGE_KEY = 'chess-trainer/settings';
 const LICHESS_KEY = 'chess-trainer/lichess';
-const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, introSpeed: 'normal' };
+const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, introSpeed: 'normal', drillOrder: 'need' };
 /** Re-sync in the background when the last sync is older than this. */
 const STALE_SECONDS = 6 * 3600;
 /** Local Stockfish depth: matched deep Lichess evals as well as native Stockfish in the research. */
