@@ -1083,9 +1083,6 @@
 						{:else}
 							<div class="foot-row">
 								<p class="small streak" class:miss={!firstTry}>{outcome(card.card)}</p>
-								{#if narrow}
-									<button class="why-btn" onclick={openSheet} aria-haspopup="dialog">Why?</button>
-								{/if}
 								<details class="menu">
 									<summary aria-label="More options" title="More options">⋯</summary>
 									<div class="menu-body card">
@@ -1093,15 +1090,16 @@
 									</div>
 								</details>
 							</div>
-							{#if result.played !== main && !found}
-								<!-- A sound move, but not the one taught: another go at finding it costs nothing. -->
-								<div class="actions">
+							<!-- Try again (after a sound move that isn't the taught one), Why (phones), and Continue in one row. -->
+							<div class="actions">
+								{#if result.played !== main && !found}
 									<button class="btn btn-quiet" onclick={retry}>Try again</button>
-									<button class="btn btn-primary continue" onclick={next}>Continue</button>
-								</div>
-							{:else}
+								{/if}
+								{#if narrow}
+									<button class="btn btn-quiet" onclick={openSheet} aria-haspopup="dialog">Why?</button>
+								{/if}
 								<button class="btn btn-primary continue" onclick={next}>Continue</button>
-							{/if}
+							</div>
 						{/if}
 					</div>
 				{/if}
@@ -1684,8 +1682,8 @@
 		flex: 1;
 	}
 
-	.actions .btn {
-		flex: 1;
+	.actions .continue {
+		flex: 1.6;
 	}
 
 	/* What the explanation says about the selected line, and its notes (each jumps the board to its move). */
@@ -1913,16 +1911,6 @@
 
 	.continue {
 		width: 100%;
-	}
-
-	.why-btn {
-		margin-left: auto;
-		padding: 4px 14px;
-		border-radius: 999px;
-		border: 1px solid var(--line);
-		color: var(--accent);
-		font-weight: 600;
-		font-size: 13px;
 	}
 
 	.line-source {
