@@ -53,6 +53,11 @@ export const RECENT_MS = 14 * 86_400_000;
 const KNOWN_EVERY = 8;
 /** Cards within a group are shuffled in blocks this big: roughly in order of need, but never the same order. */
 const SHUFFLE_BLOCK = 10;
+/**
+ * A card missed this recently waits behind the new cards from recent games: the sitting already brought it back
+ * for practice, so reopening the app shouldn't start with it again.
+ */
+export const COOLDOWN_MS = 30 * 60_000;
 
 /** Leaks worth a card: at least ~10 win% lost in total, or a single big mistake. */
 const MIN_CARD_POINTS = 0.1;
@@ -116,8 +121,9 @@ export interface Deck {
 
 /**
  * The whole deck in order of need: mistakes you played again in a game, cards you missed last time, new mistakes
- * from your recent games (costliest first), cards you're learning (the one practised longest ago first), older new
- * cards (costliest first), and known cards, one mixed in every few cards so they stay fresh.
+ * from your recent games (costliest first), cards missed in the last half hour, cards you're learning (the one
+ * practised longest ago first), older new cards (costliest first), and known cards, one mixed in every few cards
+ * so they stay fresh.
  */
 export function buildDeck(cards: CardRecord[], now = Date.now(), random = Math.random): Deck {
 	const active = cards.filter((c) => !c.suspended);
@@ -126,12 +132,13 @@ export function buildDeck(cards: CardRecord[], now = Date.now(), random = Math.r
 	const again = active.filter((c) => c.playedAgain).sort((a, b) => b.playedAgain! - a.playedAgain!);
 	const rest = active.filter((c) => !c.playedAgain);
 	const missed = rest.filter((c) => c.seen && c.missed).sort(leastRecent);
+	const cooling = (c: CardRecord) => (c.lastSeen ?? 0) > now - COOLDOWN_MS;
 	const recent = rest.filter((c) => isRecent(c, now)).sort(costliest);
 	const learning = rest.filter((c) => statusOf(c) === 'learning' && !c.missed).sort(leastRecent);
 	const older = rest.filter((c) => !c.seen && !isRecent(c, now)).sort(costliest);
 	const known = rest.filter((c) => statusOf(c) === 'known' && !c.missed).sort(leastRecent);
 	const mix = (group: CardRecord[]) => group.flatMap((_, i) => (i % SHUFFLE_BLOCK ? [] : shuffled(group.slice(i, i + SHUFFLE_BLOCK), random)));
-	const main = [again, missed, recent, learning, older].flatMap(mix);
+	const main = [again, missed.filter((c) => !cooling(c)), recent, missed.filter(cooling), learning, older].flatMap(mix);
 	const ids: string[] = [];
 	const k = mix(known);
 	for (let i = 0; i < main.length; i++) {

@@ -87,6 +87,8 @@
 	let firstTry = $state(true);
 	/** The card already came up in this sitting (after a miss): practice only, its streak doesn't change. */
 	let repeat = $state(false);
+	/** Whether this card's result is saved: on the first answer, so leaving or reloading mid-review keeps it. */
+	let recorded = false;
 	/** Engine continuations keyed by their first move ('' = the engine's own choice when no answer is known). */
 	let lines = $state.raw<Record<string, Ply[]>>({});
 	/** The start of a line (the move, and the reply to a mistake) until the engine's continuation arrives. */
@@ -336,6 +338,7 @@
 		threat = null;
 		revealed = false;
 		firstTry = true;
+		recorded = false;
 		pv = null;
 		selected = null;
 		seeking = false;
@@ -503,6 +506,15 @@
 			firstTry = false;
 			if (r.reply) seed = { ...seed, [uci]: continuation(line.pos, [uci, r.reply]) };
 		}
+		// Only the first answer the first time a card comes up in a sitting counts toward its streak.
+		if (!repeat && !recorded) {
+			recorded = true;
+			stats.done++;
+			if (firstTry) stats.firstTry++;
+			void data()
+				.record(card.card.id, firstTry)
+				.then(() => refreshDrill());
+		}
 		result = r;
 		// A sound alternative: the main move stays hidden so it can still be found.
 		seeking = r.kind !== 'wrong' && main !== undefined && uci !== main;
@@ -590,13 +602,6 @@
 		if (!card || phase !== 'result') return;
 		const id = card.card.id;
 		phase = 'loading';
-		// Only the first time a card comes up in a sitting counts toward its streak.
-		if (!repeat) {
-			await data().record(id, firstTry);
-			stats.done++;
-			if (firstTry) stats.firstTry++;
-			void refreshDrill();
-		}
 		// A miss comes back a few cards later for practice.
 		if (!firstTry && (requeued.get(id) ?? 0) < MAX_REPEATS) {
 			requeued.set(id, (requeued.get(id) ?? 0) + 1);

@@ -9,6 +9,7 @@
 	import type { FamilyRow } from '$lib/tree/openings';
 	import { count, describeFilter, exploreHref, pct, timeAgo } from '$lib/format';
 	import Icon from '$lib/ui/Icon.svelte';
+	import InstallHint from '$lib/ui/InstallHint.svelte';
 	import ResultBar from '$lib/ui/ResultBar.svelte';
 
 	let username = $state(settings.username);
@@ -48,6 +49,8 @@
 	const summary = $derived(app.summary);
 	const firstImport = $derived(app.syncing && !summary?.stored);
 </script>
+
+{#if app.ready}<InstallHint />{/if}
 
 {#if !app.ready}
 	<div class="skeleton" aria-busy="true"></div>

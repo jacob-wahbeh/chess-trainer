@@ -37,6 +37,11 @@ Setup links fill in a friend's settings on first open (and strip themselves from
 friend's cards were exported (`npm run cards:export -- <user> <since> [--reach=N]`), so the app makes the same cards
 the explanations were written for.
 
+On iPhone a Home Screen app has its own storage, separate from Safari's; only cookies are copied in, once, when it's
+added. So settings are mirrored into a cookie (`chess-trainer-settings`, never the Lichess token) and a new Home Screen
+app picks them up; progress made in a Safari tab doesn't move over, which is why Today suggests adding the app early
+(`src/lib/ui/InstallHint.svelte`). The app also asks for persistent storage once there are games to keep.
+
 `npx vite-node scripts/compare-python.ts` runs the import + tree code over the Python CLI's cached
 archives (`../data/<user>/archives`) and prints counts comparable to the Python research.
 

@@ -21,3 +21,44 @@ export function linkSettings(search: string): Partial<Settings> {
 	if (REACHES.includes(reach)) out.minReach = reach;
 	return out;
 }
+
+/**
+ * Settings mirrored into a cookie. On iPhone, a Home Screen app gets its own storage, separate from Safari's, but
+ * Safari's cookies are copied into it once when it's added: so a friend who opens a setup link in Safari and then
+ * adds the app keeps their settings. Only the choices travel (never the Lichess token: cookies go to the server).
+ */
+export const SETTINGS_COOKIE = 'chess-trainer-settings';
+type CookieSettings = Pick<Settings, 'username' | 'timeClasses' | 'periodMonths' | 'minReach' | 'introSpeed'>;
+
+export function settingsCookie(s: Settings, path: string, secure: boolean): string {
+	const value: CookieSettings = {
+		username: s.username,
+		timeClasses: s.timeClasses,
+		periodMonths: s.periodMonths,
+		minReach: s.minReach,
+		introSpeed: s.introSpeed
+	};
+	const attrs = [`path=${path}`, 'max-age=34560000', 'SameSite=Lax', ...(secure ? ['Secure'] : [])];
+	return `${SETTINGS_COOKIE}=${encodeURIComponent(JSON.stringify(value))}; ${attrs.join('; ')}`;
+}
+
+/** The settings saved in the cookie, if any (`cookies` is document.cookie). */
+export function readSettingsCookie(cookies: string): Partial<Settings> {
+	for (const part of cookies.split(';')) {
+		const [name, ...rest] = part.trim().split('=');
+		if (name !== SETTINGS_COOKIE) continue;
+		try {
+			const value = JSON.parse(decodeURIComponent(rest.join('='))) as Partial<CookieSettings>;
+			const out: Partial<Settings> = {};
+			if (typeof value.username === 'string') out.username = value.username;
+			if (Array.isArray(value.timeClasses) && value.timeClasses.length) out.timeClasses = value.timeClasses;
+			if (typeof value.periodMonths === 'number') out.periodMonths = value.periodMonths;
+			if (typeof value.minReach === 'number') out.minReach = value.minReach;
+			if (value.introSpeed === 'slow' || value.introSpeed === 'normal' || value.introSpeed === 'fast') out.introSpeed = value.introSpeed;
+			return out;
+		} catch {
+			return {};
+		}
+	}
+	return {};
+}

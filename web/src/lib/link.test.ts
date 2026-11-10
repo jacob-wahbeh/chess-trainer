@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { linkSettings } from './link';
+import { linkSettings, readSettingsCookie, settingsCookie } from './link';
 
 describe('linkSettings', () => {
 	it('reads the username, period and reach', () => {
@@ -12,5 +12,22 @@ describe('linkSettings', () => {
 		expect(linkSettings('')).toEqual({});
 		expect(linkSettings('?user=a&period=7&reach=4')).toEqual({});
 		expect(linkSettings('?user=<script>&period=forever')).toEqual({});
+	});
+});
+
+describe('settings cookie', () => {
+	const s = { username: 'HipFlexors', timeClasses: ['blitz', 'rapid'] as ('blitz' | 'rapid')[], periodMonths: 12, minReach: 2, introSpeed: 'fast' as const };
+
+	it('round-trips the settings', () => {
+		const cookie = settingsCookie(s, '/chess-trainer/', true);
+		expect(cookie).toContain('path=/chess-trainer/');
+		expect(cookie).toContain('Secure');
+		const pair = cookie.split(';')[0];
+		expect(readSettingsCookie(`other=1; ${pair}; more=2`)).toEqual(s);
+	});
+
+	it('ignores a missing or broken cookie', () => {
+		expect(readSettingsCookie('')).toEqual({});
+		expect(readSettingsCookie('chess-trainer-settings=%7Bnope')).toEqual({});
 	});
 });

@@ -1,7 +1,8 @@
 import type { AnalysisProgress } from './analysis/runner';
 import { EnginePool } from './engine/pool';
 import type { Filter, TimeClass } from './games/types';
-import { linkSettings } from './link';
+import { base } from '$app/paths';
+import { linkSettings, readSettingsCookie, settingsCookie } from './link';
 import { revokeToken, type LichessAuth } from './lichess/oauth';
 import type { Summary, SyncProgress } from './worker/data.worker';
 import { data, proxy } from './worker/client';
@@ -35,7 +36,9 @@ function load<T>(key: string, fallback: T): T {
 
 /** Settings from a setup link (see link.ts), applied over the saved ones. */
 const linked = linkSettings(location.search);
-export const settings: Settings = $state({ ...load(STORAGE_KEY, DEFAULTS), ...linked });
+/** A Home Screen app on iPhone starts with empty storage but Safari's cookies: fall back to the settings cookie. */
+const saved = localStorage.getItem(STORAGE_KEY) ? load(STORAGE_KEY, DEFAULTS) : { ...DEFAULTS, ...readSettingsCookie(document.cookie) };
+export const settings: Settings = $state({ ...saved, ...linked });
 export const lichess: LichessAuth = $state(load(LICHESS_KEY, { token: '', username: '' }));
 
 export const app = $state({
@@ -81,6 +84,20 @@ async function syncCards() {
 
 export function saveSettings() {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+	document.cookie = settingsCookie(settings, `${base}/`, location.protocol === 'https:');
+}
+
+/**
+ * Asks the browser not to clear this app's storage when the device runs low on space. Browsers decide by their
+ * own rules (Safari grants it to Home Screen apps). Only asked once there's something to keep, since Firefox asks
+ * the user.
+ */
+async function keepStorage() {
+	try {
+		if (navigator.storage?.persist && !(await navigator.storage.persisted())) await navigator.storage.persist();
+	} catch {
+		// Not supported: storage stays best-effort.
+	}
 }
 
 export function setLichess(auth: LichessAuth | null) {
@@ -105,7 +122,10 @@ export const ready = new Promise<void>((resolve) => (markReady = resolve));
 
 export async function boot() {
 	const fromLink = Object.keys(linked).length > 0;
-	if (fromLink) saveSettings();
+	// Save settings (and keep the cookie copy current): from a link, from the cookie in a new Home Screen app,
+	// or ones saved before the cookie existed.
+	if (fromLink || settings.username) saveSettings();
+	if (settings.username) void keepStorage();
 	if (settings.username) {
 		try {
 			app.summary = await data().load(settings.username, currentFilter());
@@ -134,6 +154,7 @@ export async function sync() {
 			currentFilter(),
 			proxy((p: SyncProgress) => (app.progress = p))
 		);
+		if (app.summary?.games) void keepStorage();
 	} catch (err) {
 		app.error = err instanceof Error ? err.message : String(err);
 	} finally {

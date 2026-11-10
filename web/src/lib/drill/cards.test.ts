@@ -44,6 +44,16 @@ describe('buildDeck', () => {
 		expect(deck).toMatchObject({ playedAgain: 1, missed: 1, recent: 1, fresh: 2, learning: 4, known: 0, total: 6 });
 	});
 
+	it('puts a card missed in the last half hour behind the new cards from recent games', () => {
+		const recent = card('b1c3', 1, {}, 3);
+		const learning = card('f1c4', 2, { seen: 2, streak: 1, lastSeen: NOW - 5 * DAY });
+		const justMissed = card('g1f3', 2, { seen: 1, missed: true, lastSeen: NOW - 5 * 60_000 });
+		const missed = card('d1h5', 2, { seen: 1, missed: true, lastSeen: NOW - DAY });
+		const deck = buildDeck([learning, justMissed, recent, missed], NOW, inOrder);
+		expect(deck.ids).toEqual([missed.id, recent.id, justMissed.id, learning.id]);
+		expect(deck.missed).toBe(2);
+	});
+
 	it('mixes in one known card every eight cards and keeps the rest for the end', () => {
 		const learning = Array.from({ length: 9 }, (_, i) => card(`a2a${i}`, 1, { seen: 1, streak: 1, lastSeen: NOW - (20 - i) * DAY }));
 		const known = [card('h2h3', 1, { seen: 4, streak: 3, lastSeen: NOW - 30 * DAY }), card('h2h4', 1, { seen: 4, streak: 4, lastSeen: NOW - 10 * DAY })];
