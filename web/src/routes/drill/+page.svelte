@@ -276,7 +276,7 @@
 		const best = answerShown && main ? sanOf(line.pos, main) : 'the best move';
 		if (!mine || !card.eval) return `${label}.`;
 		return chip.kind === 'bad'
-			? `${label}: ${standingSentence(mine)} (${formatEval(mine)}). ${best} keeps ${kept(card.eval)}.`
+			? `${label}: ${standingSentence(mine)} (${formatEval(mine)}). ${best[0].toUpperCase() + best.slice(1)} keeps ${kept(card.eval)}.`
 			: `${label}: ${standingSentence(mine).replace(/^It’s/, 'it’s')} (${formatEval(mine)}), close to ${best} (${formatEval(card.eval)}).`;
 	};
 	/** "it level (+0.14)" / "White better (+1.07)": what a move keeps, in words and as the eval. */
@@ -348,7 +348,10 @@
 		return cursor === end ? card?.eval : undefined;
 	});
 	/** Under the board when there's no note for the move on it: which line and move it is, or what to do. */
-	const lineSummary = $derived(viewN === 1 && viewKey !== null ? summary(viewKey) : '');
+	const lineSummary = $derived(
+		// After a miss the verdict box already compares the move with the best one.
+		viewN === 1 && viewKey !== null && !(result?.kind === 'wrong' && viewKey === result.played) ? summary(viewKey) : ''
+	);
 	const caption = $derived.by(() => {
 		if (phase !== 'result' || !result) return '';
 		if (pv) {
@@ -1069,8 +1072,7 @@
 							</p>
 						{:else if result.kind === 'wrong' && why === 'punish' && !revealed}
 							<p class="faint small">
-								Hint: {slip}{#if card.opponentBefore && card.eval} took the game from {stateOf(card.opponentBefore)} to {stateOf(card.eval)}{:else} was a slip{/if}.
-								Look for the move that punishes it.
+								{`Hint: ${slip} was a slip. Find the move that punishes it.`}
 							</p>
 						{/if}
 						{#if revealed && !found && result.kind === 'wrong'}
