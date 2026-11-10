@@ -26,6 +26,7 @@
 	import Board from '$lib/ui/Board.svelte';
 	import EvalBar from '$lib/ui/EvalBar.svelte';
 	import Icon from '$lib/ui/Icon.svelte';
+	import { haptic, type Haptic } from '$lib/haptics';
 
 	type Phase = 'loading' | 'intro' | 'ask' | 'checking' | 'result' | 'done' | 'empty';
 	interface Result {
@@ -287,6 +288,7 @@
 	});
 	const storyFor = (key: string) => (!story ? [] : key === card?.card.wrong ? story.wrong : key === (main ?? '') ? story.main : []);
 
+	const feel = (kind: Haptic) => settings.haptics && haptic(kind);
 	const evaluate = async (fen: string, depth: number) => (await (engine ??= EnginePool.create(1))).evaluate(fen, depth);
 	const toWhite = (r: EvalResult, pos: Chess): Eval => {
 		const sign = pos.turn === 'white' ? 1 : -1;
@@ -542,6 +544,7 @@
 					? { kind: 'also', played: uci, drop, eval: ev }
 					: { kind: 'wrong', played: uci, drop, reply: chessopsUci(next.pos, res.pv[0]), eval: ev };
 		}
+		feel(r.kind === 'wrong' ? 'error' : 'success');
 		if (r.kind === 'wrong') {
 			firstTry = false;
 			if (r.reply) seed = { ...seed, [uci]: continuation(line.pos, [uci, r.reply]) };
@@ -565,6 +568,7 @@
 	/** A move played on the drill position after answering: the main move when looking for it, or a new line. */
 	async function tryMove(uci: string) {
 		if (!card || !line) return;
+		feel('move');
 		const id = card.card.id;
 		if (seeking && uci === main) {
 			seeking = false;

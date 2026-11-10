@@ -200,6 +200,12 @@
 			? 'Every card once, in a random order. Streaks still count, so switching back to By need picks up where you are.'
 			: 'Mistakes you played again and misses first, then new mistakes from recent games, then the rest.'}
 	</div>
+	<div class="dim small">Haptic feedback</div>
+	<div class="segmented" role="group" aria-label="Haptic feedback">
+		{#each [[true, 'On'], [false, 'Off']] as const as [on, label] (label)}
+			<button aria-pressed={settings.haptics === on} onclick={() => ((settings.haptics = on), saveSettings())}>{label}</button>
+		{/each}
+	</div>
 	<div class="faint small num">{drill.total} cards · {drill.known} known · {drill.learning} learning · {drill.fresh} new</div>
 	<button class="danger" onclick={resetDrills} disabled={!drill.total}>
 		{confirmReset ? 'Tap again to reset all drill progress' : 'Reset drill progress'}

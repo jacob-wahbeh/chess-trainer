@@ -28,7 +28,7 @@ export function linkSettings(search: string): Partial<Settings> {
  * adds the app keeps their settings. Only the choices travel (never the Lichess token: cookies go to the server).
  */
 export const SETTINGS_COOKIE = 'chess-trainer-settings';
-type CookieSettings = Pick<Settings, 'username' | 'timeClasses' | 'periodMonths' | 'minReach' | 'introSpeed' | 'drillOrder'>;
+type CookieSettings = Pick<Settings, 'username' | 'timeClasses' | 'periodMonths' | 'minReach' | 'introSpeed' | 'drillOrder' | 'haptics'>;
 
 export function settingsCookie(s: Settings, path: string, secure: boolean): string {
 	const value: CookieSettings = {
@@ -37,7 +37,8 @@ export function settingsCookie(s: Settings, path: string, secure: boolean): stri
 		periodMonths: s.periodMonths,
 		minReach: s.minReach,
 		introSpeed: s.introSpeed,
-		drillOrder: s.drillOrder
+		drillOrder: s.drillOrder,
+		haptics: s.haptics
 	};
 	const attrs = [`path=${path}`, 'max-age=34560000', 'SameSite=Lax', ...(secure ? ['Secure'] : [])];
 	return `${SETTINGS_COOKIE}=${encodeURIComponent(JSON.stringify(value))}; ${attrs.join('; ')}`;
@@ -57,6 +58,7 @@ export function readSettingsCookie(cookies: string): Partial<Settings> {
 			if (typeof value.minReach === 'number') out.minReach = value.minReach;
 			if (value.introSpeed === 'slow' || value.introSpeed === 'normal' || value.introSpeed === 'fast') out.introSpeed = value.introSpeed;
 			if (value.drillOrder === 'need' || value.drillOrder === 'random') out.drillOrder = value.drillOrder;
+			if (typeof value.haptics === 'boolean') out.haptics = value.haptics;
 			return out;
 		} catch {
 			return {};
