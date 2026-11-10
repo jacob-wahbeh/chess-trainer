@@ -1,6 +1,9 @@
 // Explanations as notes on the moves of a drill card's lines, so the drill can show them on the board one move
 // at a time instead of as paragraphs: computed facts go on the move they're about, and the written explanation is
 // split into what it says about the habit and what it says about the taught move.
+import type { Chess } from 'chessops/chess';
+import { parseSan } from 'chessops/san';
+import { makeUci } from 'chessops/util';
 import type { Fact, Shape } from './facts';
 
 export interface Note {
@@ -53,6 +56,52 @@ export function splitWritten(why: string, wrongSan: string, mainSan: string): { 
 		if (m && !w) side = 'main';
 		else if (w && !m) side = 'wrong';
 		out[side].push(sentence);
+	}
+	return out;
+}
+
+/** A move in a written explanation: "5.f4", "3...Nxe5", or a bare "Bc5" right after another move ("4.Nc3 Bc5"). */
+const MOVE = /(?<![A-Za-z0-9])(?:(\d+)(\.\.\.|\.)\s?)?(O-O-O|O-O|[KQRBN][a-h]?[1-8]?x?[a-h][1-8]|[a-h](?:x[a-h])?[1-8](?:=[QRBN])?)[+#!?]*(?![A-Za-z0-9])/g;
+
+/**
+ * The line a written explanation walks through after the taught move ("3.dxe5 ... 3...Nxe5, and after 4.Nc3 Bc5
+ * 5.f4"), as UCI moves from `pos`: starting with `first`, then each move the text names for the next ply, for as
+ * long as they follow on and are legal. Moves named again later are skipped; a gap ends the line. A bare move only
+ * counts right after another one, so "the knight on e5" isn't read as a move.
+ */
+export function writtenLine(text: string, pos: Chess, first: string): string[] {
+	const start = (pos.fullmoves - 1) * 2 + (pos.turn === 'white' ? 0 : 1);
+	const cur = pos.clone();
+	const out: string[] = [];
+	let expected = start;
+	let prev: { end: number; ply: number } | null = null;
+	for (const m of text.matchAll(MOVE)) {
+		const [whole, number, dots, san] = m;
+		const at = m.index ?? 0;
+		let ply: number;
+		if (number) ply = (Number(number) - 1) * 2 + (dots === '...' ? 1 : 0);
+		else if (prev && /^\s+$/.test(text.slice(prev.end, at))) ply = prev.ply + 1;
+		else {
+			prev = null;
+			continue;
+		}
+		prev = { end: at + whole.length, ply };
+		if (!out.length) {
+			if (ply !== start) continue;
+			const move = parseSan(cur, san);
+			if (!move || makeUci(move) !== first) continue;
+			cur.play(move);
+			out.push(first);
+			expected++;
+			continue;
+		}
+		if (ply < expected) continue;
+		if (ply > expected) break;
+		const move = parseSan(cur, san);
+		if (!move) break;
+		out.push(makeUci(move));
+		cur.play(move);
+		expected++;
 	}
 	return out;
 }

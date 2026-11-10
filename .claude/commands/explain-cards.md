@@ -62,3 +62,7 @@ Rules for each explanation (the reader is a club player who keeps playing `habit
 - `themes`: 1–3 short tags such as `development`, `centre`, `king safety`, `tactics: fork`.
 - `sources`: the Wikibooks page titles (`theory[].page`) and URLs you actually drew on; omit if none.
 - Plain, direct sentences. No hedging, no exclamation marks.
+- Refer to the opponent by side ("Black castles") or as "the opponent"/"they", never "he", "him" or "his".
+- In `why`, name the taught move's follow-up as a numbered sequence ("after 4.Nc3 Bc5 5.f4") when you describe
+  one: the drill plays the moves the explanation names on the board, as long as they follow on from the taught
+  move and are legal.

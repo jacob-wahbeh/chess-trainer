@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Fact } from './facts';
-import { notesFor, splitSentences, splitWritten } from './notes';
+import { replaySans, replayUcis } from '../chess/pgn';
+import { notesFor, splitSentences, splitWritten, writtenLine } from './notes';
 
 describe('notesFor', () => {
 	const facts: Fact[] = [
@@ -54,5 +55,23 @@ describe('splitWritten', () => {
 			main: ['O-O is safe.']
 		});
 		expect(splitWritten('Bxf7+ wins a pawn. Nxf7 loses.', 'Nxf7', 'Bxf7+').main).toEqual(['Bxf7+ wins a pawn.']);
+	});
+});
+
+describe('writtenLine', () => {
+	const pos = replayUcis(replaySans(['e4', 'e5', 'd4', 'Nc6']).ucis).pos;
+
+	it('follows the moves the explanation names after the taught move', () => {
+		const why =
+			'3.c3 invites 3...d5, opening the centre while you are undeveloped. 3.dxe5, played by masters 43% of the time, ' +
+			'liquidates the centre on your terms: the knight recaptures with 3...Nxe5, and after 4.Nc3 Bc5 5.f4 your pawn ' +
+			'kicks it again with gain of space. The knight on e5 has to move.';
+		expect(writtenLine(why, pos, 'd4e5')).toEqual(['d4e5', 'c6e5', 'b1c3', 'f8c5', 'f2f4']);
+	});
+
+	it('stops at a gap or an illegal move, and needs the taught move first', () => {
+		expect(writtenLine('3.dxe5 Nxe5 5.f4', pos, 'd4e5')).toEqual(['d4e5', 'c6e5']);
+		expect(writtenLine('3.dxe5 Nxe5 4.Qh8', pos, 'd4e5')).toEqual(['d4e5', 'c6e5']);
+		expect(writtenLine('3.Nf3 and 4.Nc3', pos, 'd4e5')).toEqual([]);
 	});
 });

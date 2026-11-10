@@ -274,7 +274,8 @@ function describeMove(pos: Chess, ply: Ply): { parts: string[]; shapes: Shape[] 
 	else if (minor(piece.role) && squareRank(move.from) === (piece.color === 'white' ? 0 : 7)) {
 		const file = squareFile(move.to);
 		parts.push(`develops the ${piece.role}${file >= 2 && file <= 5 ? ' toward the centre' : ''}`);
-	} else if (piece.role === 'pawn' && [27, 28, 35, 36].includes(move.to)) parts.push('claims the centre');
+	} else if (piece.role === 'pawn' && !capture && [27, 28, 35, 36].includes(move.to)) parts.push('claims the centre');
+	// (A pawn capture into the centre, like dxe5, trades centre pawns off rather than claiming the centre.)
 	if (!capture && !ply.san.startsWith('O-O')) {
 		const after = pos.clone();
 		after.play(move);

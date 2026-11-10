@@ -174,7 +174,7 @@
 	},
 	"1095756382312296|d1e2": {
 		"headline": "Punish ...g6 with ...e6: 8.Nb5 jumps at the d6 hole",
-		"why": "With ...g6 and ...e6 both played, no black pawn can ever guard d6, and your bishop on f4 already eyes d6 and c7. 8.Qe2 is too slow: Black closes the hole with 8...a6 and 9...d6, and the chance is gone. 8.Nb5 jumps straight at those squares: after 8...Qa5+ 9.Kf1 Kf8 10.Bc7 b6 11.Bd6+ Black's king is stuck on f8, his pieces are tied up, and White is close to winning. The theory warns that ...g6 combined with ...e6 weakens the dark squares around Black's king and gives the same 8.Nb5 jump as the punishment.",
+		"why": "With ...g6 and ...e6 both played, no black pawn can ever guard d6, and your bishop on f4 already eyes d6 and c7. 8.Qe2 is too slow: Black closes the hole with 8...a6 and 9...d6, and the chance is gone. 8.Nb5 jumps straight at those squares: after 8...Qa5+ 9.Kf1 Kf8 10.Bc7 b6 11.Bd6+ Black's king is stuck on f8, Black's pieces are tied up, and White is close to winning. The theory warns that ...g6 combined with ...e6 weakens the dark squares around Black's king and gives the same 8.Nb5 jump as the punishment.",
 		"principle": "A square the enemy pawns can no longer cover is an outpost: once ...e6 is played, aim your knight and bishop at d6 before Black can plug it with a piece.",
 		"principleId": "outpost",
 		"themes": [
@@ -189,7 +189,7 @@
 	"1095756382312296|e1h1": {
 		"headline": "Strike at d6 with 8.Nb5 before Black castles",
 		"why": "8.O-O gives Black time for 8...a6 9.Bb3 Nge7 and castling, and almost all of your huge advantage disappears. Theory warns that combining ...g6 with ...e6 badly weakens the dark squares around Black's king, and with your bishop already on f4 the d6 square is a target. 8.Nb5 aims the knight at d6 and c7 together: after 8...Qa5+ 9.Kf1 Kf8 Black has given up castling, and 10.Bc7 b6 11.Bd6+ Nge7 keeps Black's pieces tied up.",
-		"principle": "With more pieces out and the enemy king uncastled, open lines and strike at once; give Black one quiet move and he castles to safety.",
+		"principle": "With more pieces out and the enemy king uncastled, open lines and strike at once; give Black one quiet move and Black castles to safety.",
 		"principleId": "development-lead",
 		"themes": [
 			"dark squares",
@@ -995,7 +995,7 @@
 	"2094672111620588|d4e5": {
 		"headline": "Answer 3...f6 with 4.Bc4, aiming at the weakened light squares",
 		"why": "3...f6 holds e5 but costs a developing move and opens the a2-g8 diagonal toward Black's king. 4.dxe5 releases the tension: after 4...dxe5 the e5 pawn is firmly protected by the f6 pawn, and White's edge is small. 4.Bc4 develops onto that open diagonal, aiming through f7 at g8, where Black's king wants to castle; after 4...Nc6 5.h3 Nge7 6.O-O exd4 7.Nxd4 you have the extra development the theory says 3...f6 hands White, and a clear advantage.",
-		"principle": "Black's ...f6 cost him development and weakened his king, so keep building your lead with developing moves and castling, and open the centre once your pieces are ready.",
+		"principle": "Black's ...f6 cost them development and weakened their king, so keep building your lead with developing moves and castling, and open the centre once your pieces are ready.",
 		"principleId": "development-lead",
 		"themes": [
 			"development lead",
@@ -1412,7 +1412,7 @@
 	"269926073920586|c1e3": {
 		"headline": "Question the pinning bishop at once with 6.h3",
 		"why": "6.Be3 lets Black keep the pin on your knight on f3 and finish developing with 6...e6 and 7...c6, and most of your advantage disappears. 6.h3, the choice in 89.9% of master games, asks the bishop on g4 to decide now: after 6...Bxf3 7.Qxf3 you have the bishop pair and an active queen, then 8.Bd2 unpins the knight on c3 before 9.O-O-O, with a clear edge. If Black retreats instead, the theory shows the bishop being chased by g4 to g6.",
-		"principle": "A pin ties your knight to the queen; break it while it costs Black something, here by hitting the pinning bishop with the h-pawn before he can support it.",
+		"principle": "A pin ties your knight to the queen; break it while it costs Black something, here by hitting the pinning bishop with the h-pawn before Black can support it.",
 		"principleId": "pins",
 		"themes": [
 			"pins",
@@ -1613,7 +1613,7 @@
 	},
 	"2927847296126403|e7e6": {
 		"headline": "Take on f3 with 4...exf3 and keep the gambit pawn",
-		"why": "White's f3 pawn attacks your e4 pawn, and 4.fxe4 would win back the gambit pawn. 4...e6 does nothing about it: after 5.fxe4 material is level, White has a broad pawn centre, and he is better. 4...exf3, the master choice in 78.7% of games, keeps the extra pawn; after 5.Nxf3 White has development for it, but you fianchetto with ...g6 and ...Bg7, castle, and stay a pawn up with the better game. 4...Bf5 and 4...e3 are also playable.",
+		"why": "White's f3 pawn attacks your e4 pawn, and 4.fxe4 would win back the gambit pawn. 4...e6 does nothing about it: after 5.fxe4 material is level, White has a broad pawn centre, and White is better. 4...exf3, the master choice in 78.7% of games, keeps the extra pawn; after 5.Nxf3 White has development for it, but you fianchetto with ...g6 and ...Bg7, castle, and stay a pawn up with the better game. 4...Bf5 and 4...e3 are also playable.",
 		"principle": "Accept a gambit only if you can hold on to the pawn: here capturing on f3 keeps it, and a quick fianchetto and castling consolidate.",
 		"principleId": "gambits",
 		"themes": [
@@ -1759,7 +1759,7 @@
 	"3087437353600707|d1e2": {
 		"headline": "Open lines with 7.e5 before Black finishes developing",
 		"why": "6...Nf6 develops without first playing ...e6, which the theory says Black uses to blunt your bishop and prepare ...Be7 and castling. 7.Qe2 is too slow: 7...Bg4 pins your knight on f3 to the queen, Black swaps it with 9...Bxf3, and Black is slightly better. 7.e5, the top master choice (56.7%), hits the knight on f6; after 7...Ng4 8.exd6 exd6 Black's d6 pawn is isolated and the e-file opens for 11.Re1, which gives you full compensation for the pawn.",
-		"principle": "You are a pawn down but ahead in development, so open lines while Black's king is still in the centre; a slow queen move gives him time to catch up.",
+		"principle": "You are a pawn down but ahead in development, so open lines while Black's king is still in the centre; a slow queen move gives Black time to catch up.",
 		"principleId": "development-lead",
 		"themes": [
 			"development lead",
@@ -2068,8 +2068,8 @@
 	},
 	"3420590449456095|c1e3": {
 		"headline": "Pin the c6 knight with 6.Bb5 before ...e5 arrives",
-		"why": "5...Nc6 adds pressure on d4 and prepares ...e5, which the theory says the queen on a5 supports. 6.Be3 lets Black carry it out: after 6...Bg4 7.h3 Bxf3 8.Qxf3 O-O-O 9.O-O-O e5 10.d5 Nd4 his knight lands in the centre and Black has active play. 6.Bb5, the most popular master move (48%), pins the knight on c6 to the king so it cannot join the fight for d4, and if Black lets you take it, 8.Bxc6+ bxc6 leaves him with doubled c-pawns.",
-		"principle": "A pin ties down two pieces at once: pin the knight that is doing Black's work against d4, and his central break loses its support.",
+		"why": "5...Nc6 adds pressure on d4 and prepares ...e5, which the theory says the queen on a5 supports. 6.Be3 lets Black carry it out: after 6...Bg4 7.h3 Bxf3 8.Qxf3 O-O-O 9.O-O-O e5 10.d5 Nd4 Black's knight lands in the centre and Black has active play. 6.Bb5, the most popular master move (48%), pins the knight on c6 to the king so it cannot join the fight for d4, and if Black lets you take it, 8.Bxc6+ bxc6 leaves Black with doubled c-pawns.",
+		"principle": "A pin ties down two pieces at once: pin the knight that is doing Black's work against d4, and Black's central break loses its support.",
 		"principleId": "pins",
 		"themes": [
 			"pins",
@@ -2690,7 +2690,7 @@
 	},
 	"3699514865674152|d1e2": {
 		"headline": "7.Ng5 hits f7 twice and wins the gambit pawn back",
-		"why": "The theory explains that Black usually plays ...e6 to relieve your bishop's pressure on f7; ...e5 and ...Nf6 leave f7 guarded only by the king. 7.Qe2 is too slow: Black plays 7...Be7 and castles, f7 is safe, and with the gambit pawn in hand he is slightly better. 7.Ng5 hits f7 a second time, so Black answers 7...d5 to block the bishop, but 8.Bxd5 Nxd5 9.exd5 wins the pawn back and your d5 pawn hits the knight on c6, leaving White clearly better.",
+		"why": "The theory explains that Black usually plays ...e6 to relieve your bishop's pressure on f7; ...e5 and ...Nf6 leave f7 guarded only by the king. 7.Qe2 is too slow: Black plays 7...Be7 and castles, f7 is safe, and with the gambit pawn in hand Black is slightly better. 7.Ng5 hits f7 a second time, so Black answers 7...d5 to block the bishop, but 8.Bxd5 Nxd5 9.exd5 wins the pawn back and your d5 pawn hits the knight on c6, leaving White clearly better.",
 		"principle": "Moving the knight a second time is justified when it wins something concrete: here it doubles the attack on f7 and forces Black to give the pawn back.",
 		"principleId": "same-piece-twice",
 		"themes": [
@@ -2760,7 +2760,7 @@
 	"3726374757153429|f1c4": {
 		"headline": "5.Bg5 pins the e7 knight and stops 5...Nec6",
 		"why": "5.Bc4 lets Black untangle at once with 5...Nec6, and after 6.Nc3 Be7 7.Nd5 Nxd4 8.Qxd4 O-O the knights are traded and Black is comfortable, so half your edge is gone. 4...Ne7 blocks the f8 bishop, and 5.Bg5 pins that knight to the queen on d8, so it cannot move without losing the queen. Black spends 5...h6 chasing the bishop, and after 6.Be3 Nec6 7.Nc3 Be7 8.Nd5 O-O 9.Nb5 your knights take over d5 and b5 while Black's knight ends up on a6.",
-		"principle": "Develop your bishop to a square where it pins or attacks, so the opponent has to spend a move answering it instead of carrying out his plan.",
+		"principle": "Develop your bishop to a square where it pins or attacks, so the opponent has to spend a move answering it instead of carrying out their plan.",
 		"principleId": "tempo",
 		"themes": [
 			"tactics: pin",
@@ -3958,7 +3958,7 @@
 	"4886445385944472|c2c3": {
 		"headline": "Resolve the tension with 3.dxe5; 3.c3 invites ...d5",
 		"why": "Black threatens 3...Nxd4, and 3.c3 holds the pawn but lets Black hit back with 3...d5; after 4.dxe5 Be6 5.exd5 Qxd5 6.Nf3 Qxd1+ 7.Kxd1 O-O-O+ the queens are off, your king is in the open and your advantage has vanished. Theory says that both pushing the pawn and taking on e5 are very good for White. 3.dxe5, played by masters 43% of the time, liquidates the centre on your terms: the knight recaptures with 3...Nxe5, and after 4.Nc3 Bc5 5.f4 your pawn kicks it again with gain of space.",
-		"principle": "When your opponent attacks a centre pawn twice, settle the tension on your terms by exchanging or advancing, rather than propping the pawn up in a way that lets him open the centre himself.",
+		"principle": "When your opponent attacks a centre pawn twice, settle the tension on your terms by exchanging or advancing, rather than propping the pawn up in a way that lets them open the centre themselves.",
 		"principleId": "centre",
 		"themes": [
 			"centre",
@@ -4427,7 +4427,7 @@
 	},
 	"5231539809808326|e6e5": {
 		"headline": "Recapture 4...Qxd5; 4...e5 just hangs a pawn to the knight",
-		"why": "4...e5 puts a pawn on a square the knight on f3 attacks and nothing defends: 5.Nxe5 wins it, and after 5...Qxd5 6.Bb5+ Bd7 7.Nxd7 you are a pawn down and clearly worse. 4...Qxd5, the most common master move (58.5%), takes back the pawn on d5, which your queen and e6 pawn both attack. With White's pawn on c3, his knight cannot hit your queen from c3, and in the main line it goes to a3 instead, as in 5.Na3 Nf6 6.d4 Nc6. Recapturing with 4...exd5, as the theory describes for 2...e6, is also good.",
+		"why": "4...e5 puts a pawn on a square the knight on f3 attacks and nothing defends: 5.Nxe5 wins it, and after 5...Qxd5 6.Bb5+ Bd7 7.Nxd7 you are a pawn down and clearly worse. 4...Qxd5, the most common master move (58.5%), takes back the pawn on d5, which your queen and e6 pawn both attack. With White's pawn on c3, White's knight cannot hit your queen from c3, and in the main line it goes to a3 instead, as in 5.Na3 Nf6 6.d4 Nc6. Recapturing with 4...exd5, as the theory describes for 2...e6, is also good.",
 		"principle": "Count attackers and defenders before moving a centre pawn: d5 is attacked twice and defended by nothing, while e5 would be attacked by the knight and defended by nothing.",
 		"principleId": "count-defenders",
 		"themes": [
@@ -4525,7 +4525,7 @@
 	},
 	"5414391277109696|h2h3": {
 		"headline": "Don't ask with 5.h3: 5.Bxf7+ exploits the undefended g4 bishop",
-		"why": "5.h3 lets Black solve his problems by swapping: after 5...Bxf3 6.Qxf3 e6 f7 is covered and your big chance has passed. The bishop on g4 has no defender, so strike at once with 5.Bxf7+ Kxf7 6.Ng5+: the knight leaves with check, your queen's diagonal to g4 opens, and 7.Qxg4 takes the bishop back. After 7...Bxd4 8.Qe6 Black can no longer castle, his king faces your queen and knight, and White is close to winning.",
+		"why": "5.h3 lets Black solve their problems by swapping: after 5...Bxf3 6.Qxf3 e6 f7 is covered and your big chance has passed. The bishop on g4 has no defender, so strike at once with 5.Bxf7+ Kxf7 6.Ng5+: the knight leaves with check, your queen's diagonal to g4 opens, and 7.Qxg4 takes the bishop back. After 7...Bxd4 8.Qe6 Black can no longer castle, Black's king faces your queen and knight, and White is close to winning.",
 		"principle": "When an enemy piece is undefended, look for a check that unblocks one of your pieces against it; here the sacrifice on f7 and the knight check do exactly that.",
 		"principleId": "loose-pieces",
 		"themes": [
@@ -4913,7 +4913,7 @@
 	"5915229736017859|c5d4": {
 		"headline": "4.d4 left e4 hanging: take it with 4...dxe4",
 		"why": "4.d4 ignores the attack on e4: the pawn is hit by your d5 pawn and nothing defends it. 4...cxd4 lets White off the hook with 5.e5, closing the centre into a French-style structure where the game is level. 4...dxe4 takes the pawn and hits the knight on f3 at the same time, so White has to retreat with 5.Nfd2, and after 6...cxd4 you are a clean pawn up with a clear advantage.",
-		"principle": "When your opponent makes a pawn move in the centre, first check what he left undefended: here e4 had no guard, and taking it also attacks a knight.",
+		"principle": "When your opponent makes a pawn move in the centre, first check what they left undefended: here e4 had no guard, and taking it also attacks a knight.",
 		"principleId": "loose-pieces",
 		"themes": [
 			"tactics: loose pawn",
@@ -5289,7 +5289,7 @@
 	"6309463160940467|e1h1": {
 		"headline": "6...d6 left f7 weak: hit it twice with 7.Qb3",
 		"why": "6...d6 does nothing for f7, which is defended only by the king and already eyed by your bishop on c4. 7.O-O lets Black untangle: 7...Nc6 8.Ng5 Ne5 9.Qb3 Nxc4 swaps off that bishop, and your initiative fades. 7.Qb3 doubles on f7 at once: after 7...Nh6 8.Bxh6 Bxh6 9.Bxf7+ Kf8 you remove the knight that guarded it, take the f7 pawn and leave Black's king stuck on f8, keeping the advantage.",
-		"principle": "With your bishop already on c4, adding the queen against f7 forces Black to defend it at once, before he can trade off the bishop or castle.",
+		"principle": "With your bishop already on c4, adding the queen against f7 forces Black to defend it at once, before Black can trade off the bishop or castle.",
 		"principleId": "f7-f2",
 		"themes": [
 			"f7 weakness",
@@ -5867,7 +5867,7 @@
 	"6773809115680684|e1h1": {
 		"headline": "Punish 6...h6 with 7.Qb3, hitting f7 twice",
 		"why": "6...h6 spends a tempo on a pawn move while f7 is still defended only by the king. 7.O-O is natural but lets Black catch up with 7...d6 and 8...Bg4, and most of your advantage slips away. 7.Qb3 lines up the queen with the bishop on c4 against f7, so Black must defend it, and the engine's 7...Qe7 shuts in the bishop on f8; after 9.Nd5 the queen is hit again and you keep a clear advantage.",
-		"principle": "With the bishop already on c4, adding the queen against f7 forces Black to defend instead of developing, which is how you cash in his lost tempo.",
+		"principle": "With the bishop already on c4, adding the queen against f7 forces Black to defend instead of developing, which is how you cash in Black's lost tempo.",
 		"principleId": "f7-f2",
 		"themes": [
 			"f7 weakness",
@@ -6279,8 +6279,8 @@
 	},
 	"7062831770535036|e1h1": {
 		"headline": "Grab space with 7.d5 before Black sets up ...e6 and ...c6",
-		"why": "7.O-O is safe but lets Black build a solid shell with 7...e6 and 9...c6, and your edge shrinks. 7.d5 gains central space at once while Black's queen sits out of play on h5 and his light-squared bishop is already gone: the pawn takes c6 away from Black's knight, which has to go to d7. After 7...Nf6 8.Qd3 Nbd7 9.Be3 both sides castle queenside and you keep a clear edge.",
-		"principle": "Judge the differences: Black's queen is offside and his light-squared bishop has been traded, so use the moment to take central space he cannot challenge.",
+		"why": "7.O-O is safe but lets Black build a solid shell with 7...e6 and 9...c6, and your edge shrinks. 7.d5 gains central space at once while Black's queen sits out of play on h5 and Black's light-squared bishop is already gone: the pawn takes c6 away from Black's knight, which has to go to d7. After 7...Nf6 8.Qd3 Nbd7 9.Be3 both sides castle queenside and you keep a clear edge.",
+		"principle": "Judge the differences: Black's queen is offside and their light-squared bishop has been traded, so use the moment to take central space they cannot challenge.",
 		"principleId": "imbalances",
 		"themes": [
 			"centre",
@@ -6316,7 +6316,7 @@
 	"7127830528967939|e7e6": {
 		"headline": "Grab space with 3...d4 against the Grob's wing pawns",
 		"why": "3...e6 is solid but passive: it shuts in your c8 bishop, and after 4.d4 White's odd first move hardly matters any more and the game is level. 3...d4 takes space instead: in the engine line your pawns follow up with ...e5 and ...e4, driving White's knight back home with 7.Ng1, while 4...h5 makes the advanced g-pawn commit with 5.g5, and Black has a clear advantage. 3...dxc4 is also fine; the theory notes White then has to spend a move on Qa4 to win the pawn back.",
-		"principle": "When White spends his first moves on wing pawns like g4 and c4, claim the centre with your pawns and use the space to push his pieces back.",
+		"principle": "When White spends their first moves on wing pawns like g4 and c4, claim the centre with your pawns and use the space to push White's pieces back.",
 		"principleId": "centre",
 		"themes": [
 			"centre",
@@ -6576,7 +6576,7 @@
 	"7422621539281278|c1g5": {
 		"headline": "Strike at d6 with 7.Nb5 before ...a6 covers b5",
 		"why": "7.Bg5 hits the queen, but 7...Ne7 simply blocks, and after 8.O-O Nbc6 9.Qd2 a6 Black has covered b5 and is ready to castle, so most of your advantage is gone. 6...e6 on top of ...g6 left d6 with no pawn able to cover it and the bishop gone to g7. 7.Nb5 goes straight for that square: after 7...Nf6 8.Nd6+ Ke7 Black's king is stuck in the centre, and 9.e5 Ne8 10.Bg5+ f6 11.exf6+ Bxf6 rips its cover open.",
-		"principle": "When you are ahead in development and the opponent's position has a hole, attack it at once; one quiet move lets him cover it and castle.",
+		"principle": "When you are ahead in development and the opponent's position has a hole, attack it at once; one quiet move lets them cover it and castle.",
 		"principleId": "right-to-attack",
 		"themes": [
 			"dark squares",
@@ -7072,7 +7072,7 @@
 	"7908463020324267|b8c6": {
 		"headline": "Hit e4 with 4...Nf6 first so White has no time for c4",
 		"why": "4...Nc6 attacks nothing, so White has time for 5.c4, putting pawns on c4 and e4 that clamp the d5 square; after 6.Nc3 g6 7.f3 Black is cramped. 4...Nf6, chosen in 99.5% of master games, hits the e4 pawn first, and White defends it with 5.Nc3, which blocks the c-pawn and rules out an early c4. Then you pick your system, for example 5...a6 as in the taught line.",
-		"principle": "Develop with a threat: a knight move that attacks e4 makes White spend his move on Nc3 instead of building a pawn clamp on c4 and e4.",
+		"principle": "Develop with a threat: a knight move that attacks e4 makes White spend their move on Nc3 instead of building a pawn clamp on c4 and e4.",
 		"principleId": "tempo",
 		"themes": [
 			"development",
@@ -7343,7 +7343,7 @@
 	"8292354532353769|f3e5": {
 		"headline": "The e5 pawn is poisoned: trade knights with 4.Nxd4",
 		"why": "4.Nxe5 falls into the trap: 4...Qg5 attacks the knight on e5 and the pawn on g2 at once, and after 5.O-O Qxe5 you have lost a knight for a pawn. Theory calls 3...Nd4 a one-trick pony: Black moved the knight a second time to tempt you into taking e5, and as long as you avoid that you are comfortably ahead. 4.Nxd4 exd4 trades the knights and dislodges Black's pawn from e5, and after 5.O-O Nf6 6.Re1 d6 7.c3 Be7 8.cxd4 you win a pawn with a lead in development.",
-		"principle": "When your opponent moves the same knight twice to bait you, don't take the bait: trade the knight off and the time he spent on it is simply lost.",
+		"principle": "When your opponent moves the same knight twice to bait you, don't take the bait: trade the knight off and the time they spent on it is simply lost.",
 		"principleId": "same-piece-twice",
 		"themes": [
 			"tactics: double attack",
@@ -7385,7 +7385,7 @@
 	"8308599203837326|e4f5": {
 		"headline": "Meet the Rousseau Gambit with 4.d4, not 4.exf5",
 		"why": "Black threatens 4...fxe4, but 4.exf5 lets Black kick your knight with 4...e4, and after 5.Nd4 Nf6 most of your advantage is gone; theory calls the capture a common beginners' mistake. 3...f5 loosens Black's centre, so hit it: after 4.d4 fxe4 5.Nxe5 you are in an improved version of the Latvian Gambit main line, and after 4...exd4 5.e5 the centre opens and you castle quickly with a big initiative.",
-		"principle": "When your opponent loosens his centre with an early flank pawn move, strike in the centre with your own pawn instead of grabbing the flank pawn he offers.",
+		"principle": "When your opponent loosens their centre with an early flank pawn move, strike in the centre with your own pawn instead of grabbing the flank pawn they offer.",
 		"principleId": "centre",
 		"themes": [
 			"centre",
@@ -7899,7 +7899,7 @@
 	"8716466597702343|d2d4": {
 		"headline": "Take the gambit pawn with 3.dxe6: 2...e6 gives too little",
 		"why": "Black threatens 3...exd5 to win the pawn back, and 3.d4 does nothing about it: after 3.d4 exd5 you reach a symmetrical, quiet position where queens can come off with 6.Qe2+ Qe7 7.Qxe7+ Kxe7, and most of your advantage is gone. Theory lists 2...e6 among the Scandinavian gambits that are inferior and don't give enough for the pawn. 3.dxe6 Bxe6 simply keeps the extra pawn, and after 4.Nf3 Nf6 5.d4 you are developed and a clean pawn up.",
-		"principle": "When an unsound gambit offers you a pawn that you can keep without danger, take it and develop; giving it back only hands your opponent the equality he gambled for.",
+		"principle": "When an unsound gambit offers you a pawn that you can keep without danger, take it and develop; giving it back only hands your opponent the equality they gambled for.",
 		"principleId": "gambits",
 		"themes": [
 			"gambits",
@@ -7921,7 +7921,7 @@
 	},
 	"8751595729469873|c1a3": {
 		"headline": "Hit the queen first: 9.e5 gains time before 10.Nxc3",
-		"why": "9.Ba3 aims at e7 to keep Black's king in the centre, but 9...Nge7 blocks the diagonal, and after 10.Bxe7 Qxe7 11.Nxc3 O-O Black has castled and keeps his extra pawns with the better game. 9.e5 attacks the queen on f6 first, so after 9...Qg6 you recapture with 10.Nxc3 having gained a tempo, and your e5 pawn takes f6 away from Black's knight, which has to develop with 10...Nge7; White keeps a small edge.",
+		"why": "9.Ba3 aims at e7 to keep Black's king in the centre, but 9...Nge7 blocks the diagonal, and after 10.Bxe7 Qxe7 11.Nxc3 O-O Black has castled and keeps their extra pawns with the better game. 9.e5 attacks the queen on f6 first, so after 9...Qg6 you recapture with 10.Nxc3 having gained a tempo, and your e5 pawn takes f6 away from Black's knight, which has to develop with 10...Nge7; White keeps a small edge.",
 		"principle": "Develop with threats: a pawn move that hits the queen lets you win back material with gain of time, while a quiet bishop move gives Black the time to block and castle.",
 		"principleId": "tempo",
 		"themes": [
@@ -8010,7 +8010,7 @@
 	},
 	"8877803564094104|d2d4": {
 		"headline": "6.h3 stops ...Ng4 and keeps your extra pawn",
-		"why": "Black's bishop on c5 already aims at f2, and 6...Ng4 would add the knight and win a pawn. 6.d4 hits the bishop, but it simply takes, 6...Bxd4, and Black has his pawn back with a level game. 6.h3 takes g4 away from the knight and you stay a pawn up; Black's queen comes out with 6...Qd4 7.Qf3 Qe5, but after 8.d3 Bd4 9.Nd1 the queens come off with 10...Qxg3 and you keep the extra pawn.",
+		"why": "Black's bishop on c5 already aims at f2, and 6...Ng4 would add the knight and win a pawn. 6.d4 hits the bishop, but it simply takes, 6...Bxd4, and Black has the pawn back with a level game. 6.h3 takes g4 away from the knight and you stay a pawn up; Black's queen comes out with 6...Qd4 7.Qf3 Qe5, but after 8.d3 Bd4 9.Nd1 the queens come off with 10...Qxg3 and you keep the extra pawn.",
 		"principle": "Ask what your opponent wants: here everything Black has aims at ...Ng4 and f2, so one small pawn move that takes g4 away keeps the pawn you won.",
 		"principleId": "prophylaxis",
 		"themes": [

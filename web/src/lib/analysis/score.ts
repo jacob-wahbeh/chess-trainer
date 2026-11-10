@@ -66,6 +66,29 @@ export function formatEvalShort(e: Eval | undefined): string {
 }
 
 /** Centipawns from White's point of view, mates mapped beyond the win% clamp. */
+/**
+ * Who stands better, in words, so an eval reads the same whichever side you play: "level", "White slightly
+ * better", "Black clearly better", "White winning", "Black has mate". Bands in centipawns (White's view).
+ */
+export function standingOf(e: Eval): string {
+	if (e.mate !== undefined) return `${e.mate > 0 ? 'White' : 'Black'} has mate`;
+	const cp = e.cp ?? 0;
+	const side = cp > 0 ? 'White' : 'Black';
+	const size = Math.abs(cp);
+	if (size <= 35) return 'level';
+	if (size <= 90) return `${side} slightly better`;
+	if (size <= 200) return `${side} better`;
+	if (size <= 500) return `${side} clearly better`;
+	return `${side} winning`;
+}
+
+/** "White is clearly better" / "It's level": a standing as a sentence start. */
+export function standingSentence(e: Eval): string {
+	const s = standingOf(e);
+	if (s === 'level') return 'It’s level';
+	return s.endsWith('has mate') ? s : s.replace(/^(White|Black) /, '$1 is ');
+}
+
 export function whiteCp(e: Eval): number {
 	if (e.mate !== undefined) return e.mate > 0 ? 100000 : -100000;
 	return e.cp ?? 0;
