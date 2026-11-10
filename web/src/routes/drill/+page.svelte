@@ -148,6 +148,10 @@
 	const written = $derived(card ? explanations[`${card.card.key}|${card.card.wrong}`] : undefined);
 	/** The move explained as failing: the one just played if it was wrong, otherwise the usual habit. */
 	const wrongMove = $derived(result?.kind === 'wrong' ? result.played : card?.card.wrong);
+	/** How the result shows: "Correct" (green) only for the taught move; any other sound move is "Good move" (blue). */
+	const tone = $derived<Result['kind'] | null>(
+		!result ? null : result.kind === 'wrong' ? 'wrong' : main !== undefined && result.played !== main ? 'also' : 'correct'
+	);
 	/** Not while retrying a miss, or while looking for the main move after a sound alternative. */
 	const answerShown = $derived(!!result && (result.kind !== 'wrong' || revealed) && !seeking);
 	/** Checked facts about the failing move and the taught one, from the engine lines as they arrive. */
@@ -669,7 +673,11 @@
 	/** What the answer did to the card's streak, shown above Continue. */
 	function outcome(c: CardRecord): string {
 		if (repeat) return firstTry ? 'Practice round: right this time.' : 'Practice round: it comes back again soon.';
-		if (!firstTry) return settings.drillOrder === 'random' ? 'Back to 0.' : 'Back to 0 · it comes back in a few cards.';
+		if (!firstTry) {
+			// Right now, but only after a miss: say so, so "back to 0" doesn't read as contradicting the result.
+			const lead = result && result.kind !== 'wrong' ? 'Missed on the first try · back to 0' : 'Back to 0';
+			return settings.drillOrder === 'random' ? `${lead}.` : `${lead} · it comes back in a few cards.`;
+		}
 		const n = c.streak + 1;
 		if (n < KNOWN_STREAK) return `${n} in a row · ${KNOWN_STREAK - n} more and it’s known.`;
 		return n === KNOWN_STREAK ? 'Known: 3 in a row.' : `Known · ${n} in a row.`;
@@ -824,7 +832,7 @@
 {/snippet}
 
 {#snippet verdictLabel(r: Result)}
-	{#if r.kind === 'correct'}Correct{:else if r.kind === 'also'}Also good{:else}Not quite{/if}
+	{#if r.kind === 'wrong'}Not quite{:else if main !== undefined && r.played !== main}Good move{:else}Correct{/if}
 {/snippet}
 
 <div class="drill">
@@ -833,7 +841,7 @@
 		<div class="track" aria-hidden="true"><span style:width="{100 * progress}%"></span></div>
 		{#if phase === 'result' && result && line}
 			<!-- On phones the result sits up here, so the board and the review fit the screen. -->
-			<div class="status {result.kind}">
+			<div class="status {tone}">
 				<Icon name={result.kind === 'wrong' ? 'close' : 'check'} size={16} />
 				{@render verdictLabel(result)}
 				<strong>{sanOf(line.pos, result.played)}</strong>
@@ -981,11 +989,6 @@
 						<p class="phone opening-note">{card.opening ?? 'Opening'} · as {color}</p>
 					{:else if phase === 'checking'}
 						<p class="faint">Checking…</p>
-					{:else if seeking}
-						<p class="seek">
-							<strong>Now find {theMain}.</strong>
-							<button class="text-btn" onclick={showMain}>Show it</button>
-						</p>
 					{:else if lineSummary || notesHere.length}
 						{#if lineSummary}<p class="summary {kindOf(viewKey ?? '')}">{lineSummary}</p>{/if}
 						{#if notesHere.length}
@@ -1018,7 +1021,7 @@
 						{#if phase === 'ask'}<p class="faint small">← → to step through the moves</p>{/if}
 					</div>
 				{:else if result}
-					<div class="verdict {result.kind}">
+					<div class="verdict {tone}">
 						<div class="headline">
 							<span class="badge-icon" aria-hidden="true"><Icon name={result.kind === 'wrong' ? 'close' : 'check'} size={18} /></span>
 							{@render verdictLabel(result)}
@@ -1059,6 +1062,11 @@
 							{:else}
 								<p class="dim">{@render mainNote(line.pos, card)}</p>
 							{/if}
+						{:else if seeking}
+							<p class="dim seek">
+								{why === 'thematic' ? 'Masters mostly play something else here.' : why === 'punish' ? `There’s a stronger way to punish ${slip}.` : 'The engine prefers another move.'}
+								Try again to find it, or <button class="text-btn" onclick={showMain}>show it</button>.
+							</p>
 						{:else if result.kind === 'wrong' && why === 'punish' && !revealed}
 							<p class="faint small">
 								Hint: {slip}{#if card.opponentBefore && card.eval} took the game from {stateOf(card.opponentBefore)} to {stateOf(card.eval)}{:else} was a slip{/if}.
@@ -1525,12 +1533,13 @@
 		color: var(--text);
 	}
 
-	.seek {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 2px 12px;
-		color: var(--text);
+	.seek .text-btn {
+		display: inline;
+		padding: 0;
+		font: inherit;
+		color: var(--accent);
+		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 
 	.headline-note {
