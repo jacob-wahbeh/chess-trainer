@@ -1727,8 +1727,11 @@
 		--c: var(--loss);
 	}
 
-	.chip-line:hover {
-		background: color-mix(in srgb, var(--c) 10%, transparent);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.chip-line:hover {
+			background: color-mix(in srgb, var(--c) 10%, transparent);
+		}
 	}
 
 	.chip-line.selected {
@@ -1824,10 +1827,17 @@
 		color: var(--text-3);
 	}
 
-	button.mv:hover,
 	.mv.current {
 		background: var(--bg-elev-2);
 		color: var(--text);
+	}
+
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		button.mv:hover {
+			background: var(--bg-elev-2);
+			color: var(--text);
+		}
 	}
 
 	.mv.good {
@@ -2127,9 +2137,15 @@
 		border-radius: 4px;
 	}
 
-	.note-link:hover,
 	.note-link.current {
 		color: var(--text);
+	}
+
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.note-link:hover {
+			color: var(--text);
+		}
 	}
 
 	.note-link.current {
@@ -2253,9 +2269,12 @@
 		display: none;
 	}
 
-	.menu summary:hover {
-		background: var(--bg-elev-2);
-		color: var(--text);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.menu summary:hover {
+			background: var(--bg-elev-2);
+			color: var(--text);
+		}
 	}
 
 	.menu-body {

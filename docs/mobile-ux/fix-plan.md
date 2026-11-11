@@ -113,31 +113,40 @@ As built:
 - [x] **D1. Move ⋯** to the right end of the top bar (44x44 hit area; slot reserved while answering). Replace the `<details class="menu">` with a light-dismiss `popover` (Safari 17+) or an action sheet with rows of at least 48px plus Cancel.
 - [x] **D2. Undo.** After `skipForGood()` → `suspendCard`, show a 5s toast, "Stopped drilling Bc4 · Undo". Add `unsuspendCard(id)` next to `suspendCard` in `lib/worker/data.worker.ts` (≈line 362): `db.cards.update(id, { suspended: false })`.
 
-### E: global touch CSS and the other screens (S-M, about 2 hours)
+### E: global touch CSS and the other screens (S-M, about 2 hours). Done 2026-11-10
 
-- [ ] **E1.** `app.css`:
+Measured, before → after, counting targets under 44px:
+- Settings 15 → 0; Mistakes 5 → 1; Lines 3 → 1; Explore 6 → 0; Home 1 → 1.
+- The ones left are inline text links at 41-44px: "All", "Change", "Connect Lichess".
+
+Skipped on purpose (E4):
+- Pinning the Explore board.
+- A back button on Explore: the tab bar is shown there, and each move is a history entry.
+
+
+- [x] **E1.** `app.css`:
   - Wrap `:hover` rules in `@media (hover: hover)` (also the drill's hover rules); hover sticks after a tap on iPhone.
   - A shared `:active` state with a 0ms transition on `.icon-btn, .chip-line, .play, .chip, .segmented button, .text-btn, .tabbar a, summary`.
   - `touch-action: manipulation` on buttons and links.
   - `.input { font-size: 16px }`, so iOS doesn't zoom on focus.
   - `html, body { overscroll-behavior: none }`.
   - `-webkit-touch-callout: none` on UI links, not on external ones.
-- [ ] **E2. Segmented controls.** Today: 32px buttons in a 38px pill. Change to 44px buttons with no dead rim, and an accent-colored selected state (today's contrast is 1.08:1). Time-control `.chip`: 34 → 44.
-- [ ] **E3. Settings.**
+- [x] **E2. Segmented controls.** Today: 32px buttons in a 38px pill. Change to 44px buttons with no dead rim, and an accent-colored selected state (today's contrast is 1.08:1). Time-control `.chip`: 34 → 44.
+- [x] **E3. Settings.**
   - "Reset drill progress" and "Clear stored games" become 44px rows. The armed state disarms after 4s, and a second tap within 600ms is ignored.
   - Re-tapping the selected Period or Reach doesn't restart the analysis.
-- [ ] **E4. Explore.**
+- [x] **E4. Explore.**
   - The icon row becomes a grid `44px 1fr 1fr 44px` with 12px gaps and visible pills, so Start (which wipes the line) isn't next to Back.
   - Crumbs and moves become 44px, 6-8px apart.
   - Pin the board; add a 44x44 back button (a Home Screen app has no browser Back).
-- [ ] **E5. Home, Mistakes, Lines.**
+- [x] **E5. Home, Mistakes, Lines.**
   - Remove the "All" links (15x19px) or make the header a 44px row.
   - Drill card: always link to `/drill`.
   - LeakCard's Drill becomes a full-width 44px row.
   - "Drill these" becomes 44px tall.
   - Text links ("Change", "Use a personal token instead", "Connect Lichess") become 44px buttons.
   - Tab bar inactive labels use `--text-2`.
-- [ ] **E6. Service worker update.** Don't reload on `controllerchange` in the middle of a drill (`+layout.svelte`). Reload on Home or between cards, or show a "New version · Reload" chip.
+- [x] **E6. Service worker update.** Don't reload on `controllerchange` in the middle of a drill (`+layout.svelte`). Reload on Home or between cards, or show a "New version · Reload" chip.
 
 ### F: fixed-height drill column (M-L, half a day; after A-C; decisions 1 and 3)
 

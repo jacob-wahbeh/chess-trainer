@@ -163,9 +163,12 @@ button {
 	transition: background 120ms var(--ease);
 }
 
-.icon-btn:hover {
-	background: var(--bg-elev-2);
-	color: var(--text);
+/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+@media (hover: hover) {
+	.icon-btn:hover {
+		background: var(--bg-elev-2);
+		color: var(--text);
+	}
 }
 
 .icon-btn:disabled {
@@ -174,16 +177,19 @@ button {
 
 .segmented {
 	display: inline-flex;
-	padding: 3px;
-	gap: 2px;
 	background: var(--bg-elev-2);
-	border-radius: 11px;
+	border-radius: 12px;
 }
 
+/* Each button fills its share of the pill, rim included, so a tap on the edge still counts: the 3px transparent border
+   is part of the 44px target while the selected fill stays inset. */
 .segmented button {
-	height: 32px;
+	min-width: 44px;
+	height: 44px;
 	padding: 0 14px;
-	border-radius: 8px;
+	border: 3px solid transparent;
+	background-clip: padding-box;
+	border-radius: 12px;
 	color: var(--text-2);
 	font-weight: 550;
 	font-size: 14px;
@@ -193,14 +199,14 @@ button {
 }
 
 .segmented button[aria-pressed='true'] {
-	background: var(--bg-elev);
-	color: var(--text);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	background-color: var(--accent);
+	color: var(--accent-ink);
+	font-weight: 650;
 }
 
 .chip {
-	height: 34px;
-	padding: 0 14px;
+	height: 44px;
+	padding: 0 16px;
 	border-radius: 999px;
 	border: 1px solid var(--line);
 	color: var(--text-2);
@@ -216,6 +222,8 @@ button {
 
 .input {
 	height: 46px;
+	/* 16px or more, or iOS zooms in on focus and stays zoomed. */
+	font-size: 16px;
 	width: 100%;
 	padding: 0 14px;
 	border-radius: 12px;
@@ -320,4 +328,38 @@ html.sheet-open,
 html.sheet-open body {
 	overflow: hidden;
 	overscroll-behavior: none;
+}
+
+/* Touch: no double-tap-zoom on controls, no long-press preview on the app's own links, and immediate press feedback. */
+html,
+body {
+	overscroll-behavior: none;
+}
+
+a,
+button,
+summary,
+label,
+[role='button'] {
+	touch-action: manipulation;
+}
+
+a:not([target='_blank']) {
+	-webkit-touch-callout: none;
+}
+
+/* Links inside text ("Change", "Connect Lichess"): a 44px-tall hit area without moving the line (inline padding doesn't affect layout). */
+p a,
+a.link {
+	padding-block: 13px;
+	margin-block: -13px;
+}
+
+.icon-btn:active,
+.chip:active,
+.segmented button:active,
+.text-btn:active,
+summary:active {
+	transform: scale(0.96);
+	transition-duration: 0ms;
 }

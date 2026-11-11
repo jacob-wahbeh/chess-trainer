@@ -78,8 +78,11 @@
 			border-color 120ms var(--ease);
 	}
 
-	.leak:hover {
-		background: var(--bg-elev-2);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.leak:hover {
+			background: var(--bg-elev-2);
+		}
 	}
 
 	.main {
@@ -89,11 +92,12 @@
 		color: inherit;
 	}
 
+	/* A full-width Drill button, 12px below the card's explorer link. */
 	.actions {
 		display: flex;
 		align-items: center;
-		justify-content: flex-end;
 		gap: 10px;
+		margin-top: 4px;
 	}
 
 	.tag {
@@ -103,8 +107,7 @@
 	}
 
 	.drill {
-		padding: 6px 16px;
-		font-size: 14px;
+		flex: 1;
 	}
 
 	.thumb {

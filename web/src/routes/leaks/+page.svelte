@@ -111,7 +111,6 @@
 	}
 
 	.drill-btn {
-		height: 36px;
 		margin-left: auto;
 	}
 

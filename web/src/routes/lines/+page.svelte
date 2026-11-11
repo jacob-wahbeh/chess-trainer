@@ -207,9 +207,12 @@
 		transition: background 120ms var(--ease);
 	}
 
-	.var:hover,
-	.explore:hover {
-		background: var(--bg-elev-2);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.var:hover,
+		.explore:hover {
+			background: var(--bg-elev-2);
+		}
 	}
 
 	.vname {

@@ -27,6 +27,13 @@
 	const key = $derived(line.keys[line.keys.length - 1]);
 
 	let flipped = $state(false);
+	/** The move trail, kept scrolled to its last move. */
+	let crumbsEl = $state<HTMLElement | undefined>();
+	$effect(() => {
+		void ucis.length;
+		const row = crumbsEl;
+		if (row) row.scrollLeft = row.scrollWidth;
+	});
 	let node = $state<NodeDetail | null | undefined>(undefined);
 	let main = $state<string[]>([]);
 	let opening = $state<Opening | undefined>(undefined);
@@ -125,15 +132,16 @@
 			{shapes}
 			{onMove}
 		/>
+		<!-- Start and Flip at the ends, Back and Forward wide in the middle, 12px apart so Start (which drops the line) isn't hit for Back. -->
 		<div class="controls">
 			<button class="icon-btn" onclick={() => go([])} disabled={!ucis.length} aria-label="Start position" title="Start (Home)">
 				<Icon name="first" />
 			</button>
-			<button class="icon-btn" onclick={() => go(ucis.slice(0, -1))} disabled={!ucis.length} aria-label="Back" title="Back (←)">
+			<button class="icon-btn wide" onclick={() => go(ucis.slice(0, -1))} disabled={!ucis.length} aria-label="Back" title="Back (←)">
 				<Icon name="chevron-left" />
 			</button>
 			<button
-				class="icon-btn"
+				class="icon-btn wide"
 				onclick={() => node?.moves[0] && go([...ucis, node.moves[0].uci])}
 				disabled={!node?.moves.length}
 				aria-label="Most common move"
@@ -148,7 +156,7 @@
 	</div>
 
 	<aside class="panel">
-		<nav class="crumbs" aria-label="Moves">
+		<nav class="crumbs" aria-label="Moves" bind:this={crumbsEl}>
 			<button class="crumb" class:current={!ucis.length} onclick={() => go([])}>Start</button>
 			{#each line.plies as ply, i (i)}
 				<button class="crumb num" class:current={i === line.plies.length - 1} onclick={() => go(ucis.slice(0, i + 1))}>
@@ -285,9 +293,19 @@
 	}
 
 	.controls {
-		display: flex;
-		justify-content: center;
-		gap: 6px;
+		display: grid;
+		grid-template-columns: 44px 1fr 1fr 44px;
+		gap: 12px;
+	}
+
+	.controls .icon-btn {
+		width: auto;
+		background: var(--bg-elev-2);
+		color: var(--text);
+	}
+
+	.controls .icon-btn:disabled {
+		color: var(--text-3);
 	}
 
 	.panel {
@@ -299,7 +317,7 @@
 
 	.crumbs {
 		display: flex;
-		gap: 2px;
+		gap: 6px;
 		overflow-x: auto;
 		scrollbar-width: none;
 		padding-bottom: 2px;
@@ -309,8 +327,13 @@
 	.crumb,
 	.ply {
 		flex: none;
-		padding: 6px 9px;
-		border-radius: 8px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 44px;
+		min-height: 44px;
+		padding: 0 11px;
+		border-radius: 10px;
 		color: var(--text-2);
 		font-weight: 550;
 		white-space: nowrap;
@@ -319,10 +342,13 @@
 			color 120ms var(--ease);
 	}
 
-	.crumb:hover,
-	.ply:hover {
-		background: var(--bg-elev-2);
-		color: var(--text);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.crumb:hover,
+		.ply:hover {
+			background: var(--bg-elev-2);
+			color: var(--text);
+		}
 	}
 
 	.crumb.current {
@@ -378,14 +404,18 @@
 		grid-template-columns: minmax(6.5em, 1.6fr) 3.4em 3em minmax(36px, 1fr) 3em;
 		gap: 12px;
 		align-items: center;
+		min-height: 48px;
 		padding: 10px 8px;
 		border-radius: 10px;
 		text-align: left;
 		transition: background 120ms var(--ease);
 	}
 
-	.move:hover {
-		background: var(--bg-elev-2);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.move:hover {
+			background: var(--bg-elev-2);
+		}
 	}
 
 	.san {
@@ -409,7 +439,7 @@
 	.mainline {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 2px;
+		gap: 6px;
 	}
 
 	.empty {

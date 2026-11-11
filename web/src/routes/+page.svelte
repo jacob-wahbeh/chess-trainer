@@ -107,7 +107,7 @@
 		drill.missed && `${drill.missed} missed last time`,
 		drill.recent && `${drill.recent} new from your recent games`
 	].filter(Boolean)}
-	<a class="drill-cta card" class:done={!needs.length} href={`${base}${drill.total ? '/drill' : '/leaks'}`}>
+	<a class="drill-cta card" class:done={!needs.length} href="{base}/drill">
 		<div class="cta-body">
 			<div class="label">Drill</div>
 			<div class="cta-title">
@@ -410,6 +410,12 @@
 		padding: 0 10px 8px;
 	}
 
+	/* "All": a 44px hit area around the small label, without moving it. */
+	.list-head a {
+		padding: 13px 14px;
+		margin: -13px -14px;
+	}
+
 	.row {
 		display: grid;
 		grid-template-columns: 1fr auto 3.2em;
@@ -422,8 +428,11 @@
 		transition: background 120ms var(--ease);
 	}
 
-	.row:hover {
-		background: var(--bg-elev-2);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.row:hover {
+			background: var(--bg-elev-2);
+		}
 	}
 
 	.name {

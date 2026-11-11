@@ -48,12 +48,27 @@
 	}
 
 	let confirmReset = $state(false);
+	/** Two-tap destructive buttons: the first tap arms (for 4 s), and a second tap within 600 ms (a double tap) doesn't count. */
+	let armed: { id: string; at: number; set: (on: boolean) => void } | null = null;
+	let disarm: ReturnType<typeof setTimeout> | undefined;
+	function arm(id: string, set: (on: boolean) => void): boolean {
+		const now = performance.now();
+		if (armed?.id === id) {
+			if (now - armed.at < 600) return false;
+			clearTimeout(disarm);
+			armed = null;
+			return true;
+		}
+		armed?.set(false);
+		armed = { id, at: now, set };
+		set(true);
+		clearTimeout(disarm);
+		disarm = setTimeout(() => (armed?.set(false), (armed = null)), 4000);
+		return false;
+	}
 
 	async function resetDrills() {
-		if (!confirmReset) {
-			confirmReset = true;
-			return;
-		}
+		if (!arm('reset', (on) => (confirmReset = on))) return;
 		await data().resetCards();
 		await data().syncCards();
 		await refreshDrill();
@@ -61,6 +76,7 @@
 	}
 
 	function setMinReach(n: number) {
+		if (n === settings.minReach) return;
 		settings.minReach = n;
 		saveSettings();
 		void analyze();
@@ -76,6 +92,7 @@
 	}
 
 	function setPeriod(months: number) {
+		if (months === settings.periodMonths) return;
 		const widened = months === 0 ? settings.periodMonths !== 0 : settings.periodMonths !== 0 && months > settings.periodMonths;
 		settings.periodMonths = months;
 		void applyFilter(widened);
@@ -92,10 +109,7 @@
 	}
 
 	async function clearData() {
-		if (!confirmClear) {
-			confirmClear = true;
-			return;
-		}
+		if (!arm('clear', (on) => (confirmClear = on))) return;
 		app.summary = await data().clear(settings.username);
 		confirmClear = false;
 	}
@@ -289,8 +303,11 @@
 		transition: background 120ms var(--ease);
 	}
 
-	.link-row:hover {
-		background: var(--bg-elev-2);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.link-row:hover {
+			background: var(--bg-elev-2);
+		}
 	}
 
 	.small {
@@ -312,6 +329,7 @@
 
 	.text-btn {
 		align-self: flex-start;
+		min-height: 44px;
 		color: var(--accent);
 		font-weight: 560;
 		font-size: 14px;
@@ -327,9 +345,10 @@
 
 	.danger {
 		align-self: flex-start;
+		min-height: 44px;
+		padding: 0 2px;
 		color: var(--loss);
 		font-weight: 560;
-		padding: 6px 0;
 	}
 
 	.danger:disabled {

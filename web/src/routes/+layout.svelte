@@ -33,6 +33,12 @@
 	/** Drills are a focus mode: no tab bar on phones. */
 	const focus = $derived(page.route.id?.startsWith('/drill') ?? false);
 
+	/** A new version is ready, waiting for the drill to be left before reloading. */
+	let reloadPending = $state(false);
+	$effect(() => {
+		if (reloadPending && !focus) location.reload();
+	});
+
 	onMount(() => {
 		void boot();
 		// A setup link's settings are saved now; drop them from the address so a reload doesn't re-apply them.
@@ -43,9 +49,18 @@
 			setTimeout(() => replaceState(url, page.state));
 		}
 		if (!dev && 'serviceWorker' in navigator) {
-			// After a deploy the new worker takes over; reload once so the page and its cached assets match.
+			// After a deploy the new worker takes over; reload once so the page and its cached assets match, but not in the
+			// middle of a drill: then it waits until the drill is left.
 			const updating = !!navigator.serviceWorker.controller;
-			navigator.serviceWorker.addEventListener('controllerchange', () => updating && location.reload(), { once: true });
+			navigator.serviceWorker.addEventListener(
+				'controllerchange',
+				() => {
+					if (!updating) return;
+					if (focus) reloadPending = true;
+					else location.reload();
+				},
+				{ once: true }
+			);
 			void navigator.serviceWorker.register(`${base}/service-worker.js`);
 		}
 	});
@@ -127,8 +142,11 @@
 			color 120ms var(--ease);
 	}
 
-	.top nav a:hover {
-		color: var(--text);
+	/* Hover only with a pointer that hovers: on iPhone it sticks after a tap. */
+	@media (hover: hover) {
+		.top nav a:hover {
+			color: var(--text);
+		}
 	}
 
 	.top nav a[aria-current='page'] {
@@ -166,7 +184,7 @@
 		gap: 3px;
 		font-size: 11px;
 		font-weight: 600;
-		color: var(--text-3);
+		color: var(--text-2);
 		transition: color 120ms var(--ease);
 	}
 
