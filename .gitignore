@@ -9,3 +9,4 @@ __pycache__/
 !.env.example
 .claude/*
 !.claude/commands/
+!.claude/workflows/

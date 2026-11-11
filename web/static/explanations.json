@@ -214,16 +214,96 @@
 		]
 	},
 	"1110098787406126|c1e3": {
-		"headline": "6.f3 starts a pawn chase against the bishop and the e6 queen",
-		"why": "6.Be3 develops, but it lets Black trade bishops with 6...Bxe2 7.Qxe2 and settle with ...Nf6, ...c6 and ...Nd5; your edge shrinks. As the theory notes say, the early queen checks achieve little and Black's queen blocks the e-pawn. 6.f3 attacks the bishop on g4, and after 6...Bf5 7.g4 Bg6 8.f4 your pawns gain space with tempo, since a pawn on f5 would hit both the queen on e6 and the bishop on g6; Black has to stop it with 8...f5, and White keeps a large advantage.",
-		"principle": "When the opponent's bishop and early queen stand where your pawns can reach them, advance the pawns with tempo: you gain space and they lose time.",
+		"headline": "Chase the g4 bishop with 6.f3 so it can't trade itself off",
+		"why": "6.Be3 blocks the pin but lets Black trade bishops with 6...Bxe2 7.Qxe2. After 7...Nf6 8.Nf3 c6 9.O-O-O Nd5 Black's queen is no longer a target and much of your lead is gone. 6.f3 attacks the bishop and also blocks its path to e2, so Black can't trade. After 6...Bf5 7.g4 Bg6 8.f4 you threaten to push to f5, hitting queen and bishop at once, and Black must spend 8...f5 to stop it.",
+		"principle": "A piece that pawns can chase and cut off from its exchange is a target: each pawn move gains space with tempo.",
 		"principleId": "pawn-chase",
 		"themes": [
-			"early queen",
-			"space"
+			"pawn chase",
+			"pins"
 		],
 		"sources": [
+			"Jeremy Silman, First Verbalize, Then Analyze (chess.com) | https://www.chess.com/article/view/first-verbalize-then-analyze-plus-one-from-the-rule-books",
+			"John Elburg, review of Jovanka Houska's Starting Out: The Scandinavian | http://chessbooks.nl/elburg141.html",
+			"Scandinavian Defense Guide (Control The Center) | https://openings.controlthecenter.com/openings/scandinavian-defense/?side=white",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3"
+		],
+		"ideas": [
+			{
+				"title": "Mind the pin on e2",
+				"side": "both",
+				"text": "Black's queen on e6 pins your e2 bishop to your king, and the g4 bishop is ready to trade it off.",
+				"arrows": [
+					"e6e1"
+				],
+				"squares": [
+					"e2"
+				]
+			},
+			{
+				"title": "Black's bishop trade on e2",
+				"side": "opponent",
+				"text": "Black wants 6...Bxe2 to swap off your bishop and settle the queen. Quiet moves like 6.Be3 allow it.",
+				"arrows": [
+					"g4e2"
+				],
+				"squares": [
+					"e2"
+				]
+			},
+			{
+				"title": "Chase the bishop with pawns",
+				"side": "you",
+				"text": "6.f3 hits the bishop and blocks its way to e2. After 6...Bf5 7.g4 Bg6 8.f4 a pawn on f5 would hit queen and bishop.",
+				"arrows": [
+					"f2f3"
+				],
+				"squares": [
+					"g4",
+					"f5"
+				]
+			},
+			{
+				"title": "Push d5 while you lead",
+				"side": "you",
+				"text": "Black's king is still on e8 and only queen and bishop are out. Later 10.d5 hits the queen again.",
+				"arrows": [
+					"d4d5"
+				],
+				"squares": [
+					"e6"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be3 blocks the pin but lets Black trade bishops with 6...Bxe2 7.Qxe2. After 7...Nf6 8.Nf3 c6 9.O-O-O Nd5 Black's queen is no longer a target and much of your lead is gone.",
+			"strays": {
+				"idea": "Black's bishop trade on e2",
+				"text": "It lets Black swap off the bishop and settle the queen."
+			}
+		},
+		"taught": {
+			"why": "6.f3 attacks the bishop and also blocks its path to e2, so Black can't trade. After 6...Bf5 7.g4 Bg6 8.f4 you threaten to push to f5, hitting queen and bishop at once, and Black must spend 8...f5 to stop it.",
+			"enforces": {
+				"idea": "Chase the bishop with pawns",
+				"text": "Each pawn move hits the bishop and gains space toward Black's queen."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "d4d5",
+				"label": "inaccuracy",
+				"before": "6.d5 hits the queen, but Black first trades with 6...Bxe2 and after 7.Ngxe2 Qd7 the queen is safe. The bishop that was Black's problem piece is gone.",
+				"after": "6.f3 keeps the bishop on the board as a target: it can no longer reach e2, and 7.g4 and 8.f4 chase it while you gain space.",
+				"idea": "Black's bishop trade on e2"
+			},
+			{
+				"uci": "h2h3",
+				"label": "mistake",
+				"before": "6.h3 attacks the bishop, but Black just trades with 6...Bxe2 7.Ngxe2 Qd7, and your pawn move did nothing to the queen.",
+				"after": "6.f3 also attacks the bishop but stands between g4 and e2, so Black can't trade and has to run with 6...Bf5.",
+				"idea": "Black's bishop trade on e2"
+			}
 		]
 	},
 	"1132065952318888|g5f3": {
@@ -1087,16 +1167,101 @@
 		]
 	},
 	"2107090482514507|c1e3": {
-		"headline": "Castle with 7.O-O to break the pin on c3",
-		"why": "6...Bb4 pins your knight on c3 to the king. 7.Be3 leaves the pin in place, and after 7...O-O 8.Qe2 Bxc3+ 9.bxc3 Black takes the knight with check and most of your edge is gone. 7.O-O breaks the pin by taking the king off the diagonal. Black can still swap on c3 later, as in 7...O-O 8.Qe2 b6 9.Bg5 Bxc3 10.bxc3, but by then your bishop on g5 pins the knight on f6 and you keep a clear edge; the theory notes that 3...Qd8 gives White a free hand to develop.",
-		"principle": "Break a pin before the pinned piece is attacked again: castling takes your king off the b4-e1 diagonal and turns the knight on c3 back into a normal piece.",
+		"headline": "Castle to break the pin on your c3-knight",
+		"why": "7.Be3 leaves the c3-knight pinned with your king still on e1. After 7...O-O 8.Qe2 Bxc3+ 9.bxc3 Black takes it with check, doubles your c-pawns, and most of your edge is gone. 7.O-O takes your king off the b4-e1 diagonal, so the c3-knight is no longer pinned to it. If Black still trades after 7...O-O 8.Qe2 b6 9.Bg5 Bxc3 10.bxc3, it comes without check and your g5-bishop already pins the f6-knight.",
+		"principle": "Break a pin before the pinned piece is attacked again: castling takes your king off the b4-e1 diagonal and frees the c3-knight.",
 		"principleId": "pins",
 		"themes": [
 			"pins",
 			"king safety"
 		],
 		"sources": [
+			"IM Alberto Chueca, Scandinavian Defense | https://www.albertochueca.com/blog/scandinavian-defense/",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qd8"
+		],
+		"ideas": [
+			{
+				"title": "Break the pin by castling",
+				"side": "you",
+				"text": "The b4-bishop pins your c3-knight to the king. 7.O-O takes the king off that diagonal, so a later ...Bxc3 comes without check.",
+				"arrows": [
+					"e1g1"
+				],
+				"squares": [
+					"c3",
+					"b4"
+				]
+			},
+			{
+				"title": "Pin against pin",
+				"side": "you",
+				"text": "Once you've castled, 9.Bg5 pins the f6-knight to Black's queen, so Black's pieces are tied up too.",
+				"arrows": [
+					"c1g5"
+				],
+				"squares": [
+					"f6"
+				]
+			},
+			{
+				"title": "Bishop shut in by ...e6",
+				"side": "opponent",
+				"text": "4...e6 came before Black's c8-bishop got out, so it needs ...b6 and ...Bb7 to find a diagonal, as in the 7.O-O line.",
+				"arrows": [
+					"b7b6"
+				],
+				"squares": [
+					"c8"
+				]
+			},
+			{
+				"title": "Bishop pair vs doubled pawns",
+				"side": "both",
+				"text": "Black can take on c3 to double your c-pawns; you get the bishop pair in return, which is fine once your king is safe.",
+				"arrows": [
+					"b4c3"
+				],
+				"squares": [
+					"c3"
+				]
+			}
+		],
+		"habit": {
+			"why": "7.Be3 leaves the c3-knight pinned with your king still on e1. After 7...O-O 8.Qe2 Bxc3+ 9.bxc3 Black takes it with check, doubles your c-pawns, and most of your edge is gone.",
+			"strays": {
+				"idea": "Break the pin by castling",
+				"text": "The king stays on e1, so 8...Bxc3+ comes with check."
+			}
+		},
+		"taught": {
+			"why": "7.O-O takes your king off the b4-e1 diagonal, so the c3-knight is no longer pinned to it. If Black still trades after 7...O-O 8.Qe2 b6 9.Bg5 Bxc3 10.bxc3, it comes without check and your g5-bishop already pins the f6-knight.",
+			"enforces": {
+				"idea": "Break the pin by castling",
+				"text": "With your king castled, the c3-knight is a normal piece again."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1d2",
+				"label": "sound",
+				"before": "7.Bd2 breaks the pin with a developing move, and after 7...a6 8.a3 Bd6 9.Qe2 b5 10.Ba2 Bb7 11.O-O-O you castle long. It's sound, but another move keeps more of your edge.",
+				"after": "7.O-O breaks the pin and makes your king safe in one move. After 7.Bd2 you castle long on the side where Black has already pushed ...a6 and ...b5.",
+				"idea": "Break the pin by castling"
+			},
+			{
+				"uci": "c1g5",
+				"label": "sound",
+				"before": "7.Bg5 answers the pin with a pin of its own, and after 7...h6 8.Bh4 c5 Black hits your centre. It's sound, but another move keeps more of your edge.",
+				"after": "7.O-O makes your king safe first and keeps the bishop pin from g5 for later, as in 9.Bg5, when Black can no longer take on c3 with check.",
+				"idea": "Pin against pin"
+			},
+			{
+				"uci": "a2a3",
+				"label": "slightly worse",
+				"before": "7.a3 asks the bishop at once, but 7...Bxc3+ 8.bxc3 doubles your c-pawns with check, and Black develops calmly with 8...b6 and 9...Bb7.",
+				"after": "7.O-O keeps your pawns whole for now; if Black trades on c3 later, you've already castled and developed.",
+				"idea": "Bishop pair vs doubled pawns"
+			}
 		]
 	},
 	"2118572924932318|g7g6": {
@@ -1113,16 +1278,94 @@
 		]
 	},
 	"2122895618389281|c8f5": {
-		"headline": "Undermine the d5 pawn with 3...c6 before White consolidates",
-		"why": "3...Bf5 develops but leaves White's extra pawn alone: after 4.d4 e6 5.dxe6 fxe6 you are a pawn down with an isolated pawn on e6, and White is clearly better. Theory explains that White's 3.c4 is an attempt to hold the d5 pawn, and that Black's two main answers chip away at the pawn chain with 3...c6 or 3...e6. After 3...c6 4.d4 cxd5 you have the pawn back and the game has transposed into a Panov-Botvinnik Caro-Kann, which theory now rates as even; masters choose 3...c6 52.8% of the time.",
-		"principle": "If you delay recapturing a gambit pawn, use your next move to win it back before your opponent can consolidate it.",
+		"headline": "Hit the d5 pawn at once with 3...c6",
+		"why": "3...Bf5 develops but doesn't touch the d5 pawn, so White keeps it. After 4.d4 e6 5.dxe6 fxe6 you are still a pawn down and your e-pawn is weak. 3...c6 attacks d5 a second time, and after 4.d4 cxd5 the pawn is back. With 5.Nc3 Nc6 6.Nf3 Bg4 you reach a Caro-Kann Panov-Botvinnik with your pieces pressing on d4.",
+		"principle": "When the opponent props up an extra pawn, hit it with a pawn at once; the bishop can come out later.",
 		"principleId": "gambits",
 		"themes": [
-			"centre",
-			"material"
+			"pawn grab",
+			"centre"
 		],
 		"sources": [
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6/3. c4"
+			"Matthew Astle, The Icelandic Gambit: An Opening Guide for White & Black (Chessable) | https://www.chessable.com/blog/icelandic-gambit/",
+			"Friso Nijboer & Geert van der Stricht, Tactics in the Chess Opening 3 | https://books.google.com/books?id=p7tRCwAAQBAJ",
+			"Djuric, Komarov & Pantaleoni, Chess Opening Essentials: The Complete 1.e4 | https://books.google.com/books?id=EihBCwAAQBAJ",
+			"Marek Soszynski, Double Trouble Scandinavian Style | https://books.google.com/books?id=TS8WEQAAQBAJ",
+			"Max Illingworth, Chess Grandmaster's Favourite Gambit vs. 1.e4! (chess.com) | https://www.chess.com/blog/Illingworth/chess-grandmasters-favourite-gambit-vs-1-e4",
+			"David Smerdon, Smerdon's Scandinavian (publisher excerpt) | https://www.newinchess.com/media/wysiwyg/product_pdf/7537.pdf",
+			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6"
+		],
+		"ideas": [
+			{
+				"title": "Undermine the d5 pawn",
+				"side": "you",
+				"text": "3.c4 props up White's extra pawn. Strike it at once with a pawn: after 3...c6 4.d4 cxd5 the pawn is back.",
+				"arrows": [
+					"c7c6",
+					"e7e6"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Pawn first, bishop later",
+				"side": "you",
+				"text": "Usually your bishop comes out before ...c6 and ...e6. Here it waits: 3...Bf5 leaves d5 alone and White keeps the pawn.",
+				"arrows": [
+					"c7c6"
+				],
+				"squares": [
+					"c8",
+					"d5"
+				]
+			},
+			{
+				"title": "Target d4",
+				"side": "you",
+				"text": "Once White has pawns on c4 and d4, aim your pieces at d4, as in 5.Nc3 Nc6 6.Nf3 Bg4.",
+				"arrows": [
+					"b8c6",
+					"c8g4"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "White clings to d5",
+				"side": "opponent",
+				"text": "White's 3.c4 hopes to stay a pawn up. Against slow moves it works: 3...Bf5 4.d4 e6 5.dxe6 fxe6 leaves you a pawn short.",
+				"arrows": [
+					"d2d4"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "3...Bf5 develops but doesn't touch the d5 pawn, so White keeps it. After 4.d4 e6 5.dxe6 fxe6 you are still a pawn down and your e-pawn is weak.",
+			"strays": {
+				"idea": "Undermine the d5 pawn",
+				"text": "The bishop move leaves d5 alone, so White's extra pawn survives."
+			}
+		},
+		"taught": {
+			"why": "3...c6 attacks d5 a second time, and after 4.d4 cxd5 the pawn is back. With 5.Nc3 Nc6 6.Nf3 Bg4 you reach a Caro-Kann Panov-Botvinnik with your pieces pressing on d4.",
+			"enforces": {
+				"idea": "Undermine the d5 pawn",
+				"text": "The c-pawn hits d5 at once and wins the pawn back."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "e7e6",
+				"label": "inaccuracy",
+				"idea": "Undermine the d5 pawn",
+				"before": "3...e6 is the Icelandic Gambit: after 4.dxe6 Bxe6 you give a pawn for a big lead in development. The engine marks it down, since after 5.Nf3 Qe7 6.Qe2 Nc6 7.d4 Bf5 8.Qxe7+ the queens come off and you are still a pawn short.",
+				"after": "3...c6 wins the pawn back for sure, while 3...e6 keeps it a gambit. Masters play the two almost equally (53% and 47%) and books rate the Icelandic well, but the engine prefers 3...c6."
+			}
 		]
 	},
 	"2162412998029713|f1c4": {
@@ -1492,28 +1735,197 @@
 	},
 	"269926073920586|c1e3": {
 		"headline": "Question the pinning bishop at once with 6.h3",
-		"why": "6.Be3 lets Black keep the pin on your knight on f3 and finish developing with 6...e6 and 7...c6, and most of your advantage disappears. 6.h3, the choice in 89.9% of master games, asks the bishop on g4 to decide now: after 6...Bxf3 7.Qxf3 you have the bishop pair and an active queen, then 8.Bd2 unpins the knight on c3 before 9.O-O-O, with a clear edge. If Black retreats instead, the theory shows the bishop being chased by g4 to g6.",
-		"principle": "A pin ties your knight to the queen; break it while it costs Black something, here by hitting the pinning bishop with the h-pawn before Black can support it.",
+		"why": "6.Be3 lets Black keep the pin on f3 and develop with 6...e6 and 7...c6. After 8.h3 Bh5 9.Bd3 Nbd7 10.Qe2 Bb4 the bishop is still on the board, 10...Bb4 adds to the pin on your c3-knight, and most of your edge is gone. 6.h3, the choice in 90% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 c6 8.Bd2 Nbd7 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+		"principle": "A pin ties your knight down; break it while that costs Black something, by hitting the pinning bishop with the h-pawn before Black can support it.",
 		"principleId": "pins",
 		"themes": [
 			"pins",
 			"bishop pair"
 		],
 		"sources": [
+			"A Chess Terrorist's Guide to the Center Counter (Chess Life) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6.h3%22+Scandinavian+Qa5+%22Bxf3+7.Qxf3%22",
+			"Eric Schiller and others on ...Bg4 6 h3 in the 3...Qa5 Scandinavian (Google Books) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6+h3%22+Scandinavian+%22Qa5%22+%22c6%22",
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "Ask the Bg4 question with h3",
+				"side": "you",
+				"text": "h3 makes the g4-bishop decide now: after 6...Bxf3 7.Qxf3 you have the bishop pair and your queen is already active.",
+				"arrows": [
+					"h2h3"
+				],
+				"squares": [
+					"g4"
+				]
+			},
+			{
+				"title": "Bd2, long castling, pawn storm",
+				"side": "you",
+				"text": "Then 8.Bd2 unpins the c3-knight and 9.O-O-O follows; if the bishop retreats instead, g4 chases it to g6.",
+				"arrows": [
+					"c1d2",
+					"e1c1"
+				],
+				"squares": [
+					"c3"
+				]
+			},
+			{
+				"title": "Black's pressure on d4",
+				"side": "opponent",
+				"text": "The g4-bishop eyes your f3-knight, a defender of d4; with ...Nc6 and ...O-O-O Black can pile up on the pawn.",
+				"arrows": [
+					"g4f3"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Be3 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be3 lets Black keep the pin on f3 and develop with 6...e6 and 7...c6. After 8.h3 Bh5 9.Bd3 Nbd7 10.Qe2 Bb4 the bishop is still on the board, 10...Bb4 adds to the pin on your c3-knight, and most of your edge is gone.",
+			"strays": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "h3 comes two moves late, and the bishop simply drops back to h5."
+			}
+		},
+		"taught": {
+			"why": "6.h3, the choice in 90% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 c6 8.Bd2 Nbd7 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+			"enforces": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "Black must trade on f3 or retreat right now."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "f1e2",
+				"label": "inaccuracy",
+				"before": "6.Be2 is passive: after 6...Nbd7 7.a3 c6 Black develops calmly, then trades with 8...Bxf3 9.Bxf3 e6, and your edge shrinks.",
+				"after": "6.h3 makes Black decide right away instead of two moves later. Masters play it in 90% of games, 6.Be2 in 5%.",
+				"idea": "Ask the Bg4 question with h3"
+			},
+			{
+				"uci": "c1d2",
+				"label": "inaccuracy",
+				"before": "6.Bd2 breaks the pin on c3, but 6...Qf5 7.Bd3 Bxf3 8.gxf3 wrecks your kingside pawns, and after 8...Qd7 9.Ne4 Qxd4 Black has won the d4 pawn.",
+				"after": "6.h3 settles the bishop first, so after 6...Bxf3 7.Qxf3 you take back with the queen and your pawns stay whole.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "f1c4",
+				"label": "mistake",
+				"before": "After 6.Bc4 Nc6 the knight joins the bishop against d4. Black trades on f3, castles long with 8...O-O-O, and after 9.d5 Ne5 the knight hits your queen and bishop. Your edge is gone.",
+				"after": "6.h3 settles the bishop before Black's knight and rook join the attack on d4; masters play it in 90% of games, 6.Bc4 in only 2%.",
+				"idea": "Black's pressure on d4"
+			}
 		]
 	},
 	"269926073920586|f1e2": {
 		"headline": "Ask the g4 bishop at once with 6.h3",
-		"why": "6.Be2 is not a blunder, but it lets Black finish ...Nbd7 and ...c6 before deciding about the bishop: after 6.Be2 Nbd7 7.a3 c6 8.h3 Bxf3 9.Bxf3 your edge shrinks to a small one. 6.h3 (89.9% of masters games) puts the question immediately. After 6...Bxf3 7.Qxf3 you keep both bishops, your queen is already in play, and the plan 8.Bd2 and 9.O-O-O keeps a clear edge.",
-		"principle": "When an enemy bishop pins or eyes your knight from a square a pawn can attack, chase it with the pawn right away, while the trade still costs your opponent time.",
+		"why": "6.Be2 lets Black finish ...Nbd7 and ...c6 before deciding about the bishop. After 6...Nbd7 7.a3 c6 8.h3 Bxf3 9.Bxf3 you play h3 anyway, but two moves later. Black has developed in the meantime, and your edge has shrunk. 6.h3, the choice in 90% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 c6 8.Bd2 Nbd7 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+		"principle": "A bishop that a pawn can attack is a target: hit it with the h-pawn right away, while the trade on f3 still costs Black something.",
 		"principleId": "pawn-chase",
 		"themes": [
 			"bishop pair",
 			"development"
 		],
 		"sources": [
+			"A Chess Terrorist's Guide to the Center Counter (Chess Life) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6.h3%22+Scandinavian+Qa5+%22Bxf3+7.Qxf3%22",
+			"Eric Schiller and others on ...Bg4 6 h3 in the 3...Qa5 Scandinavian (Google Books) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6+h3%22+Scandinavian+%22Qa5%22+%22c6%22",
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "Ask the Bg4 question with h3",
+				"side": "you",
+				"text": "h3 makes the g4-bishop decide now: after 6...Bxf3 7.Qxf3 you have the bishop pair and your queen is already active.",
+				"arrows": [
+					"h2h3"
+				],
+				"squares": [
+					"g4"
+				]
+			},
+			{
+				"title": "Bd2, long castling, pawn storm",
+				"side": "you",
+				"text": "Then 8.Bd2 unpins the c3-knight and 9.O-O-O follows; if the bishop retreats instead, g4 chases it to g6.",
+				"arrows": [
+					"c1d2",
+					"e1c1"
+				],
+				"squares": [
+					"c3"
+				]
+			},
+			{
+				"title": "Black's pressure on d4",
+				"side": "opponent",
+				"text": "The g4-bishop eyes your f3-knight, a defender of d4; with ...Nc6 and ...O-O-O Black can pile up on the pawn.",
+				"arrows": [
+					"g4f3"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Be2 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be2 lets Black finish ...Nbd7 and ...c6 before deciding about the bishop. After 6...Nbd7 7.a3 c6 8.h3 Bxf3 9.Bxf3 you play h3 anyway, but two moves later. Black has developed in the meantime, and your edge has shrunk.",
+			"strays": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "You play h3 two moves later, after Black has developed."
+			}
+		},
+		"taught": {
+			"why": "6.h3, the choice in 90% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 c6 8.Bd2 Nbd7 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+			"enforces": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "Black must trade on f3 or retreat right now."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1d2",
+				"label": "inaccuracy",
+				"before": "6.Bd2 breaks the pin on c3, but 6...Qf5 7.Bd3 Bxf3 8.gxf3 wrecks your kingside pawns, and after 8...Qd7 9.Ne4 Qxd4 Black has won the d4 pawn.",
+				"after": "6.h3 settles the bishop first, so after 6...Bxf3 7.Qxf3 you take back with the queen and your pawns stay whole.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "f1c4",
+				"label": "mistake",
+				"before": "After 6.Bc4 Nc6 the knight joins the bishop against d4. Black trades on f3, castles long with 8...O-O-O, and after 9.d5 Ne5 the knight hits your queen and bishop. Your edge is gone.",
+				"after": "6.h3 settles the bishop before Black's knight and rook join the attack on d4; masters play it in 90% of games, 6.Bc4 in only 2%.",
+				"idea": "Black's pressure on d4"
+			}
 		]
 	},
 	"2731765578959899|c4b3": {
@@ -2148,29 +2560,225 @@
 		]
 	},
 	"3420590449456095|c1e3": {
-		"headline": "Pin the c6 knight with 6.Bb5 before ...e5 arrives",
-		"why": "5...Nc6 adds pressure on d4 and prepares ...e5, which the theory says the queen on a5 supports. 6.Be3 lets Black carry it out: after 6...Bg4 7.h3 Bxf3 8.Qxf3 O-O-O 9.O-O-O e5 10.d5 Nd4 Black's knight lands in the centre and Black has active play. 6.Bb5, the most popular master move (48%), pins the knight on c6 to the king so it cannot join the fight for d4, and if Black lets you take it, 8.Bxc6+ bxc6 leaves Black with doubled c-pawns.",
-		"principle": "A pin ties down two pieces at once: pin the knight that is doing Black's work against d4, and Black's central break loses its support.",
+		"headline": "Pin the c6-knight with 6.Bb5 before it hits d4",
+		"why": "6.Be3 adds a defender to d4 but leaves the c3-knight pinned and the c6-knight free. After 6...Bg4 7.h3 Bxf3 8.Qxf3 O-O-O 9.O-O-O e5 10.d5 Nd4 Black's knight lands in the centre with active play. 6.Bb5 develops and pins the c6-knight to your king, so it can't take part in the fight for d4. After 6...Nd5 7.Rb1 a6 8.Bxc6+ bxc6 9.O-O Black's c-pawns are doubled and isolated, and you have castled.",
+		"principle": "A pin ties a piece down: pin the knight that would attack d4, and Black's pressure on your centre loses its key piece.",
 		"principleId": "pins",
 		"themes": [
 			"pins",
 			"centre"
 		],
 		"sources": [
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "Pin the c6-knight",
+				"side": "you",
+				"text": "6.Bb5 pins the c6-knight to your king, so it can't join ...Bg4 and ...O-O-O against d4. It's the masters' top choice (48%).",
+				"arrows": [
+					"f1b5"
+				],
+				"squares": [
+					"c6"
+				]
+			},
+			{
+				"title": "Black's pressure on d4",
+				"side": "opponent",
+				"text": "Black's knight, a bishop on g4 and a rook after ...O-O-O can all hit d4; only your queen and f3-knight defend it.",
+				"arrows": [
+					"c6d4",
+					"c8g4"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Be3 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			},
+			{
+				"title": "Broken pawns for Black",
+				"side": "you",
+				"text": "If Black chases the bishop with ...a6, 8.Bxc6+ bxc6 leaves Black with doubled, isolated c-pawns.",
+				"squares": [
+					"c6",
+					"c7"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be3 adds a defender to d4 but leaves the c3-knight pinned and the c6-knight free. After 6...Bg4 7.h3 Bxf3 8.Qxf3 O-O-O 9.O-O-O e5 10.d5 Nd4 Black's knight lands in the centre with active play.",
+			"strays": {
+				"idea": "Pin the c6-knight",
+				"text": "The c6-knight stays free and lands on d4 in the end."
+			}
+		},
+		"taught": {
+			"why": "6.Bb5 develops and pins the c6-knight to your king, so it can't take part in the fight for d4. After 6...Nd5 7.Rb1 a6 8.Bxc6+ bxc6 9.O-O Black's c-pawns are doubled and isolated, and you have castled.",
+			"enforces": {
+				"idea": "Pin the c6-knight",
+				"text": "While the pin lasts, the c6-knight can't jump to d4 or e5."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1d2",
+				"label": "sound",
+				"before": "6.Bd2 breaks the pin on c3 and is the masters' second choice (33%). It's sound, but d4 needs watching: after 6...a6 7.Bc4 Nxd4 the c6-knight joins in with a tactic.",
+				"after": "6.Bb5 takes the c6-knight out of play first, so a trick like 7...Nxd4 can't happen while the pin lasts. Masters play 6.Bb5 in 48% of games, 6.Bd2 in 33%.",
+				"idea": "The pin on c3"
+			},
+			{
+				"uci": "f1c4",
+				"label": "mistake",
+				"before": "After 6.Bc4 Bg4 7.h3 Bxf3 8.Qxf3 O-O-O Black's pieces pile up on d4, and after 9.d5 Ne5 the knight hits your queen and bishop. Your edge is gone.",
+				"after": "6.Bb5 pins the c6-knight, so it can't join the attack on d4 or jump to e5.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "f1e2",
+				"label": "inaccuracy",
+				"before": "6.Be2 is too quiet: 6...Bg4 7.h3 Bxf3 8.Bxf3 e5 lets Black strike at d4 at once.",
+				"after": "6.Bb5 pins the c6-knight, the piece that supports ...e5 and hits d4. Masters prefer it, 48% to 4%.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "d4d5",
+				"label": "inaccuracy",
+				"before": "6.d5 chases the knight, but after 6...Nb4 7.Bc4 e6 8.dxe6 Bxe6 9.Bxe6 fxe6 Black is developed and comfortable. Masters play it in 7% of games, but the engine doesn't like it.",
+				"after": "6.Bb5 develops a piece and keeps your pawn on d4, while 6.d5 spends a move and then trades it off.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "h2h3",
+				"label": "sound",
+				"before": "6.h3 stops ...Bg4 before it comes, so the f3-knight keeps guarding d4; after 6...a6 7.Bc4 b5 8.Bb3 Black gains queenside space. Sound, but another move does more.",
+				"after": "6.Bb5 develops and deals with the c6-knight directly, while 6.h3 spends a pawn move on prevention. Masters prefer 6.Bb5, 48% to 6%; the engine rates both close.",
+				"idea": "Black's pressure on d4"
+			}
 		]
 	},
 	"3420590449456095|f1d3": {
-		"headline": "Black is eyeing d4: pin the c6 knight with 6.Bb5",
-		"why": "Your d4 pawn is defended by the queen and the knight on f3, and 6.Bd3 cuts the queen off. Black goes straight for the other defender: 6...Bg4 7.Bd2 O-O-O 8.Nb5 Qb6 9.a4 Bxf3 10.Qxf3 Nxd4, and Black has won the pawn and is slightly better. 6.Bb5, the masters' top choice (48%), develops the bishop and pins the knight on c6 to the king, so it cannot join an attack on d4. 6.Bd2 is also good.",
-		"principle": "Ask what your opponent is preparing: here ...Nc6, ...Bg4 and ...O-O-O all aim at d4, so develop with a move that takes one of those attackers out of the game.",
-		"principleId": "prophylaxis",
+		"headline": "Black is eyeing d4: pin the c6-knight with 6.Bb5",
+		"why": "6.Bd3 blocks your queen's guard of d4, leaving only the f3-knight to defend it. Black goes after that knight: 6...Bg4 7.Bd2 O-O-O 8.Nb5 Qb6 9.a4 Bxf3 10.Qxf3 Nxd4 wins the pawn. 6.Bb5 develops and pins the c6-knight to your king, so it can't take part in the fight for d4. After 6...Nd5 7.Rb1 a6 8.Bxc6+ bxc6 9.O-O Black's c-pawns are doubled and isolated, and d4 is safe.",
+		"principle": "Count the defenders before you develop: 6.Bd3 blocks the queen's guard of d4 just as Black lines up the knight, the g4-bishop and a rook against it.",
+		"principleId": "count-defenders",
 		"themes": [
 			"centre",
 			"pins"
 		],
 		"sources": [
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "Pin the c6-knight",
+				"side": "you",
+				"text": "6.Bb5 pins the c6-knight to your king, so it can't join ...Bg4 and ...O-O-O against d4. It's the masters' top choice (48%).",
+				"arrows": [
+					"f1b5"
+				],
+				"squares": [
+					"c6"
+				]
+			},
+			{
+				"title": "Black's pressure on d4",
+				"side": "opponent",
+				"text": "Black's knight, a bishop on g4 and a rook after ...O-O-O can all hit d4; only your queen and f3-knight defend it.",
+				"arrows": [
+					"c6d4",
+					"c8g4"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Bd3 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			},
+			{
+				"title": "Broken pawns for Black",
+				"side": "you",
+				"text": "If Black chases the bishop with ...a6, 8.Bxc6+ bxc6 leaves Black with doubled, isolated c-pawns.",
+				"squares": [
+					"c6",
+					"c7"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Bd3 blocks your queen's guard of d4, leaving only the f3-knight to defend it. Black goes after that knight: 6...Bg4 7.Bd2 O-O-O 8.Nb5 Qb6 9.a4 Bxf3 10.Qxf3 Nxd4 wins the pawn.",
+			"strays": {
+				"idea": "Black's pressure on d4",
+				"text": "The bishop cuts your queen off d4, so the pawn falls."
+			}
+		},
+		"taught": {
+			"why": "6.Bb5 develops and pins the c6-knight to your king, so it can't take part in the fight for d4. After 6...Nd5 7.Rb1 a6 8.Bxc6+ bxc6 9.O-O Black's c-pawns are doubled and isolated, and d4 is safe.",
+			"enforces": {
+				"idea": "Pin the c6-knight",
+				"text": "While the pin lasts, the c6-knight can't jump to d4 or e5."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1d2",
+				"label": "sound",
+				"before": "6.Bd2 breaks the pin on c3 and is the masters' second choice (33%); after 6...a6 7.Bc4 Qh5 8.Be2 Bg4 9.h3 you hold d4. It's sound, but masters prefer another move.",
+				"after": "6.Bb5 takes the c6-knight out of the fight for d4 first, while 6.Bd2 deals with the pin on c3. Masters: 48% to 33%.",
+				"idea": "The pin on c3"
+			},
+			{
+				"uci": "f1c4",
+				"label": "inaccuracy",
+				"before": "6.Bc4 runs into 6...Bg4 7.h3 Qh5: the queen keeps the pin on f3, and after 8.Be3 O-O-O 9.Be2 e5 Black's pieces all aim at your centre.",
+				"after": "6.Bb5 pins the c6-knight before Black's ...O-O-O and ...e5 build up against d4.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "f1e2",
+				"label": "slightly worse",
+				"before": "6.Be2 is too quiet: after 6...Bg4 7.h3 Bxf3 8.Bxf3 O-O-O Black's rook joins the pressure on d4, and 10...e5 follows.",
+				"after": "6.Bb5 pins the c6-knight at once, the piece that supports ...e5 and hits d4. Masters prefer it, 48% to 4%.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "d4d5",
+				"label": "slightly worse",
+				"before": "6.d5 chases the knight, but after 6...Nb4 7.Bc4 e6 8.dxe6 Bxe6 9.Bxe6 fxe6 Black is developed and comfortable. Masters play it in 7% of games, but the engine doesn't like it.",
+				"after": "6.Bb5 develops a piece and keeps your pawn on d4, while 6.d5 spends a move and then trades it off.",
+				"idea": "Black's pressure on d4"
+			},
+			{
+				"uci": "h2h3",
+				"label": "sound",
+				"before": "6.h3 stops ...Bg4 before it comes, so the f3-knight keeps guarding d4; after 6...a6 7.Bc4 b5 8.Bb3 Black gains queenside space. Sound, but another move does more.",
+				"after": "6.Bb5 develops and deals with the c6-knight directly, while 6.h3 spends a pawn move on prevention. Masters prefer 6.Bb5, 48% to 6%; the engine rates both close.",
+				"idea": "Black's pressure on d4"
+			}
 		]
 	},
 	"3428826784804820|d7d5": {
@@ -3529,17 +4137,84 @@
 		]
 	},
 	"4424038725631884|g1f3": {
-		"headline": "Break the pin on e2 with tempo: 5.d4 hits the queen",
-		"why": "The bishop on e2 is pinned by the queen on e5, so after 5.Nf3 Bxf3 you can only take back with 6.gxf3, your kingside pawns are broken and the advantage passes to Black. 5.d4 attacks the pinning queen with a central pawn: after 5...Bxe2 6.Ngxe2 you recapture with a developing move, the queen still has to move, and 7.b4 gains more time on it. The theory says ...Qe5+ achieves little for exactly this reason: the queen blocks Black's e-pawn and gets chased again.",
-		"principle": "An early queen in the centre is a target: attack it with pawns and pieces that also develop or free your position, and each time it must move you gain a tempo.",
-		"principleId": "early-queen",
+		"headline": "Your e2 bishop is pinned: hit the queen with 5.d4",
+		"why": "Your e2 bishop is pinned by the queen on e5, so after 5.Nf3 Bxf3 you can't take back with it and must play 6.gxf3. Your kingside pawns are broken, and after 6...Nc6 7.Ne4 f5 Black is the one doing well. 5.d4 attacks the queen with a pawn and opens your c1 bishop; all 35 master games chose it. After 5...Bxe2 6.Ngxe2 the queen is still attacked, and 6...Qa5 7.b4 Qh5 chases her once more.",
+		"principle": "When an early queen pins one of your pieces, attack the queen: the pin is gone once she has to move.",
+		"principleId": "pins",
 		"themes": [
-			"tactics: pin",
-			"tempo",
+			"pins",
 			"early queen"
 		],
 		"sources": [
+			"Jeremy Silman, First Verbalize, Then Analyze (chess.com) | https://www.chess.com/article/view/first-verbalize-then-analyze-plus-one-from-the-rule-books",
+			"John Elburg, review of Jovanka Houska's Starting Out: The Scandinavian | http://chessbooks.nl/elburg141.html",
+			"Scandinavian Defense Guide (Control The Center) | https://openings.controlthecenter.com/openings/scandinavian-defense/?side=white",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3"
+		],
+		"ideas": [
+			{
+				"title": "Mind the pin on e2",
+				"side": "both",
+				"text": "Black's queen on e5 pins your e2 bishop to your king, so the bishop can't take back on f3.",
+				"arrows": [
+					"e5e1"
+				],
+				"squares": [
+					"e2"
+				]
+			},
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "Moves that hit the queen gain time: 5.d4 attacks her, and after 5...Bxe2 6.Ngxe2 she still has to move.",
+				"arrows": [
+					"d2d4"
+				],
+				"squares": [
+					"e5"
+				]
+			},
+			{
+				"title": "Black's bishop trade on e2",
+				"side": "opponent",
+				"text": "4...Bg4 aims to swap off your e2 bishop. After 5.d4 Bxe2 6.Ngxe2 the swap just brings your knight out.",
+				"arrows": [
+					"g4e2"
+				],
+				"squares": [
+					"e2"
+				]
+			}
+		],
+		"habit": {
+			"why": "Your e2 bishop is pinned by the queen on e5, so after 5.Nf3 Bxf3 you can't take back with it and must play 6.gxf3. Your kingside pawns are broken, and after 6...Nc6 7.Ne4 f5 Black is the one doing well.",
+			"strays": {
+				"idea": "Mind the pin on e2",
+				"text": "The pinned bishop can't recapture, so 5...Bxf3 breaks your pawns."
+			}
+		},
+		"taught": {
+			"why": "5.d4 attacks the queen with a pawn and opens your c1 bishop; all 35 master games chose it. After 5...Bxe2 6.Ngxe2 the queen is still attacked, and 6...Qa5 7.b4 Qh5 chases her once more.",
+			"enforces": {
+				"idea": "Develop with tempo on the queen",
+				"text": "The pawn hits the queen, and the recapture on e2 brings out a knight."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "f2f3",
+				"label": "slightly worse",
+				"before": "5.f3 kicks the bishop and stops it from trading on e2, and 5...Bf5 6.g4 Bg6 keeps gaining time. But those pawn moves loosen your kingside while your king still stands on e1.",
+				"after": "5.d4 hits the queen rather than the bishop, with no weakening pawn moves on the king's side. Every master game in the database chose it.",
+				"idea": "Black's bishop trade on e2"
+			},
+			{
+				"uci": "h2h3",
+				"label": "slightly worse",
+				"before": "5.h3 asks the bishop to decide, and Black simply trades with 5...Bxe2. After 6.Ncxe2 Nf6 7.Nf3 Qa5 your knight has left c3 and Black develops in peace.",
+				"after": "5.d4 makes the same trade come with a threat: after 5...Bxe2 6.Ngxe2 the queen is still attacked and must move again.",
+				"idea": "Black's bishop trade on e2"
+			}
 		]
 	},
 	"4444685778052974|e7e5": {
@@ -3653,16 +4328,92 @@
 		]
 	},
 	"4559296915298785|f1d3": {
-		"headline": "Bd3 cuts the queen off from d4: develop with 6.Nf3",
-		"why": "Your d4 pawn is defended only by the queen on d1, and 6.Bd3 blocks that line. 6...Qxd4 takes it, and 7.Bxf5 Qe5+ 8.Be4 Nxe4 leaves you a pawn down, because the queen check also hits the bishop. 6.Nf3 develops toward the centre and defends d4; it also punishes 5...Bf5, which left b7 without its defender, since after 6...e6 7.Qb3 your queen attacks it, with a clear edge.",
-		"principle": "Develop the king's knight before the bishop: Nf3 has an obvious square that guards d4, while a bishop on d3 can block your own queen's defence.",
-		"principleId": "knights-first",
+		"headline": "Guard d4 with 6.Nf3 before your bishop blocks the queen",
+		"why": "6.Bd3 blocks your queen's guard of d4, so 6...Qxd4 takes the pawn. If 7.Bxf5, 7...Qe5+ forks your king and bishop, and after 8.Be4 Nxe4 Black is a pawn up. 6.Nf3 guards d4 a second time, and after 6...e6 7.Qb3 your queen hits b7, which Black's bishop no longer covers. After 7...Nc6 8.Be3 Bb4 9.Be2 you are developed with a firm centre.",
+		"principle": "Before you develop a piece, count the defenders of the pawns behind it: a bishop can cut off the only guard.",
+		"principleId": "count-defenders",
 		"themes": [
-			"development",
-			"tactics: loose pawn"
+			"loose pawns",
+			"development"
 		],
 		"sources": [
+			"Valeri Beim, Paul Morphy | https://books.google.com/books?id=NpcftSbUA_EC",
+			"Hilbert & Lahde, Albert Beauregard Hodges | https://books.google.com/books?id=Myg3EQAAQBAJ",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6/3. d4"
+		],
+		"ideas": [
+			{
+				"title": "Black targets d4",
+				"side": "opponent",
+				"text": "Black's queen eyes d4 down the open d-file, and only your queen guards it. Block that guard and 6...Qxd4 takes the pawn.",
+				"arrows": [
+					"d8d4"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "Knight to f3 first",
+				"side": "you",
+				"text": "6.Nf3 develops and adds a guard to d4, so your bishop can come out next without dropping the pawn.",
+				"arrows": [
+					"g1f3"
+				],
+				"squares": [
+					"d4"
+				]
+			},
+			{
+				"title": "Hit b7 with Qb3",
+				"side": "you",
+				"text": "Black's bishop has left c8, so nothing guards b7. After 6.Nf3 e6, 7.Qb3 attacks it.",
+				"arrows": [
+					"d1b3"
+				],
+				"squares": [
+					"b7"
+				]
+			},
+			{
+				"title": "Watch the queen's checks",
+				"side": "opponent",
+				"text": "With your e-pawn gone, a queen on e5 checks your king. After 6.Bd3 Qxd4 7.Bxf5, 7...Qe5+ forks king and bishop.",
+				"squares": [
+					"e5",
+					"e1"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Bd3 blocks your queen's guard of d4, so 6...Qxd4 takes the pawn. If 7.Bxf5, 7...Qe5+ forks your king and bishop, and after 8.Be4 Nxe4 Black is a pawn up.",
+			"strays": {
+				"idea": "Knight to f3 first",
+				"text": "The bishop cuts your queen off from d4 before the knight guards it."
+			}
+		},
+		"taught": {
+			"why": "6.Nf3 guards d4 a second time, and after 6...e6 7.Qb3 your queen hits b7, which Black's bishop no longer covers. After 7...Nc6 8.Be3 Bb4 9.Be2 you are developed with a firm centre.",
+			"enforces": {
+				"idea": "Knight to f3 first",
+				"text": "The knight guards d4, so your bishops can come out next."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1e3",
+				"label": "slightly worse",
+				"idea": "Knight to f3 first",
+				"before": "6.Be3 guards d4, so nothing hangs, but the bishop commits early and Black develops easily with 6...Nbd7 and ...e6.",
+				"after": "6.Nf3 guards d4 and keeps your options open, ready for 7.Qb3 against b7; the bishop can pick its square later."
+			},
+			{
+				"uci": "c1g5",
+				"label": "slightly worse",
+				"idea": "Black targets d4",
+				"before": "6.Bg5 pins the knight but leaves d4 guarded only by your queen. After 6...e6 7.Bd3 h6 8.Bxf6 Qxf6 9.Bxf5 Qxf5 both your bishops are gone and Black's queen is active.",
+				"after": "6.Nf3 adds a defender to d4 instead of giving up bishops for Black's minor pieces."
+			}
 		]
 	},
 	"4572718139339834|c1a3": {
@@ -5045,32 +5796,218 @@
 		]
 	},
 	"5887905008267832|c2c4": {
-		"headline": "Give the d5 pawn back with 3.d4 and take the centre",
-		"why": "3.c4 tries to hold the extra pawn, but Black chips at it with 3...c6, and after 4.d4 cxd5 the pawn is gone and you are in a Caro-Kann Panov attack, which theory now rates as only even. 3.d4, the masters' main move at 53.2%, gives the pawn back at once but takes the centre and opens lines for the queen and the queen's bishop. After 3...Nxd5 4.Nf3 White usually adds c4 to kick the knight, and Black can end up cramped.",
-		"principle": "A pawn you can't keep isn't worth defending: spend the move building a central pawn front instead.",
+		"headline": "Give the pawn back with 3.d4 and take the centre",
+		"why": "3.c4 props up the pawn, but 3...c6 hits it again, and after 4.d4 cxd5 it is gone and you are in a Caro-Kann Panov-Botvinnik. That is a level game: you have given the pawn back anyway, on Black's terms. 3.d4 gives back d5 at once and takes the centre; after 3...Nxd5 4.Nf3 you have space and easy development. If 4...Bf5, 5.Nh4 hits the bishop, and by 7.Bg2 Bb5 it has moved three times while your pieces came out.",
+		"principle": "Rather than spend moves holding a pawn the opponent will win back, return it and take the centre.",
 		"principleId": "centre",
 		"themes": [
 			"centre",
-			"gambits"
+			"pawn grab"
 		],
 		"sources": [
+			"Max Illingworth, Chess Grandmaster's Favourite Gambit vs. 1.e4! (chess.com) | https://www.chess.com/blog/Illingworth/chess-grandmasters-favourite-gambit-vs-1-e4",
+			"Djuric, Komarov & Pantaleoni, Chess Opening Essentials: The Complete 1.e4 | https://books.google.com/books?id=EihBCwAAQBAJ",
+			"Marek Soszynski, Double Trouble Scandinavian Style | https://books.google.com/books?id=TS8WEQAAQBAJ",
+			"Cyrus Lakdawala, Opening Repertoire (Everyman) | https://books.google.com/books?id=xVSZEQAAQBAJ",
+			"Matthew Astle, The Icelandic Gambit: An Opening Guide for White & Black (Chessable) | https://www.chessable.com/blog/icelandic-gambit/",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6",
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6/3. c4",
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6/3. d4"
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense"
+		],
+		"ideas": [
+			{
+				"title": "Return the pawn, take the centre",
+				"side": "you",
+				"text": "Don't cling to the d5 pawn. 3.d4 gives it back but grabs the centre and opens lines for your queen and c1-bishop.",
+				"arrows": [
+					"d2d4"
+				],
+				"squares": [
+					"d4",
+					"c1"
+				]
+			},
+			{
+				"title": "Black undermines d5",
+				"side": "opponent",
+				"text": "If you hold d5 with 3.c4, Black hits it with 3...c6 or 3...e6 and wins it back or gets a fast gambit.",
+				"arrows": [
+					"c7c6",
+					"e7e6"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Squeeze with Nf3 and c4",
+				"side": "you",
+				"text": "After 3...Nxd5 you usually follow with 4.Nf3 and c4, kicking the knight; Black can end up cramped.",
+				"arrows": [
+					"g1f3",
+					"c2c4"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "No tempo on the queen",
+				"side": "opponent",
+				"text": "After 3.Nc3 Nxd5 and a knight trade, Black's queen reaches d5 without being chased: a better version of 2...Qxd5 for Black.",
+				"arrows": [
+					"d8d5"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.c4 props up the pawn, but 3...c6 hits it again, and after 4.d4 cxd5 it is gone and you are in a Caro-Kann Panov-Botvinnik. That is a level game: you have given the pawn back anyway, on Black's terms.",
+			"strays": {
+				"idea": "Return the pawn, take the centre",
+				"text": "Holding d5 only invites 3...c6, and the pawn falls anyway."
+			}
+		},
+		"taught": {
+			"why": "3.d4 gives back d5 at once and takes the centre; after 3...Nxd5 4.Nf3 you have space and easy development. If 4...Bf5, 5.Nh4 hits the bishop, and by 7.Bg2 Bb5 it has moved three times while your pieces came out.",
+			"enforces": {
+				"idea": "Return the pawn, take the centre",
+				"text": "The d-pawn claims the centre, and you develop while Black's bishop wanders."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "slightly worse",
+				"idea": "No tempo on the queen",
+				"before": "3.Nc3 develops, but after 3...Nxd5 4.Nf3 g6 5.Nxd5 Qxd5 Black's queen reaches d5 without losing time. That is a better version of the 2...Qxd5 lines for Black.",
+				"after": "3.d4 takes the centre first, so you don't end up trading knights on d5 and handing Black a free central queen. Masters play 3.d4 in 53% of games, 3.Nc3 in 4%."
+			},
+			{
+				"uci": "g1f3",
+				"label": "sound",
+				"idea": "Squeeze with Nf3 and c4",
+				"before": "3.Nf3 is a flexible developing move, and after 3...Nxd5 it often transposes to the main lines, with 7.c4 later kicking the knight. It's sound, though there's a slightly stronger move.",
+				"after": "The two often meet: 3.Nf3 Nxd5 4.d4 is the same position as 3.d4 Nxd5 4.Nf3. Masters play 3.d4 almost four times as often (53% to 14%)."
+			},
+			{
+				"uci": "f1b5",
+				"label": "sound",
+				"idea": "Return the pawn, take the centre",
+				"before": "3.Bb5+ is another way to keep the pawn: after 3...Bd7 4.Bc4 Bg4 5.f3 Bc8 you hold d5 for now, as in Alexandria-Gaprindashvili. It's sound, though there's a stronger move.",
+				"after": "3.d4 doesn't spend bishop moves holding d5; it gives the pawn back and takes the centre. Masters choose 3.d4 in 53% of games, 3.Bb5+ in 15%."
+			}
 		]
 	},
 	"5887905008267832|f1c4": {
-		"headline": "Give the d5 pawn back with 3.d4 and take the centre",
-		"why": "3.Bc4 gives up the pawn on d5 for nothing: 3...Nxd5 recaptures, Black develops freely with ...Bf5 and ...e6, and later trades off the bishop with 7...Bxd3. The theory calls 3.d4 White's most robust reply: it returns the pawn too, but takes the centre and opens lines for the queen and the bishop on c1. After 3...Nxd5 White usually follows with Nf3 and c4, and Black can end up cramped.",
-		"principle": "When you can't keep a gambit pawn safely, give it back on your own terms, in return for the centre.",
-		"principleId": "gambits",
+		"headline": "Give the pawn back with 3.d4 and take the centre",
+		"why": "3.Bc4 does nothing to stop 3...Nxd5, so Black wins the pawn back with a knight in the centre. After 4.d4 Bf5 5.Nf3 e6 6.O-O Be7 7.Bd3 Bxd3 your bishop has moved twice only to be traded off. 3.d4 gives back d5 at once and takes the centre; after 3...Nxd5 4.Nf3 you have space and easy development. If 4...Bf5, 5.Nh4 hits the bishop, and by 7.Bg2 Bb5 it has moved three times while your pieces came out.",
+		"principle": "If the pawn is lost anyway, give it back in the way that takes the centre, not with a piece that will be chased.",
+		"principleId": "centre",
 		"themes": [
 			"centre",
-			"gambits"
+			"tempo"
 		],
 		"sources": [
+			"Max Illingworth, Chess Grandmaster's Favourite Gambit vs. 1.e4! (chess.com) | https://www.chess.com/blog/Illingworth/chess-grandmasters-favourite-gambit-vs-1-e4",
+			"Djuric, Komarov & Pantaleoni, Chess Opening Essentials: The Complete 1.e4 | https://books.google.com/books?id=EihBCwAAQBAJ",
+			"Marek Soszynski, Double Trouble Scandinavian Style | https://books.google.com/books?id=TS8WEQAAQBAJ",
+			"Cyrus Lakdawala, Opening Repertoire (Everyman) | https://books.google.com/books?id=xVSZEQAAQBAJ",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6",
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6/3. d4"
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense"
+		],
+		"ideas": [
+			{
+				"title": "Return the pawn, take the centre",
+				"side": "you",
+				"text": "Don't cling to the d5 pawn. 3.d4 gives it back but grabs the centre and opens lines for your queen and c1-bishop.",
+				"arrows": [
+					"d2d4"
+				],
+				"squares": [
+					"d4",
+					"c1"
+				]
+			},
+			{
+				"title": "Black's knight takes d5",
+				"side": "opponent",
+				"text": "Nothing stops 3...Nxd5: the knight wins the pawn back and stands in the centre, and a bishop on c4 becomes its target.",
+				"arrows": [
+					"f6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Black undermines d5",
+				"side": "opponent",
+				"text": "If you hold d5 with 3.c4, Black hits it with 3...c6 or 3...e6 and wins it back or gets a fast gambit.",
+				"arrows": [
+					"c7c6",
+					"e7e6"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "No tempo on the queen",
+				"side": "opponent",
+				"text": "After 3.Nc3 Nxd5 and a knight trade, Black's queen reaches d5 without being chased: a better version of 2...Qxd5 for Black.",
+				"arrows": [
+					"d8d5"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.Bc4 does nothing to stop 3...Nxd5, so Black wins the pawn back with a knight in the centre. After 4.d4 Bf5 5.Nf3 e6 6.O-O Be7 7.Bd3 Bxd3 your bishop has moved twice only to be traded off.",
+			"strays": {
+				"idea": "Return the pawn, take the centre",
+				"text": "The pawn falls to 3...Nxd5 anyway, and the bishop must move again."
+			}
+		},
+		"taught": {
+			"why": "3.d4 gives back d5 at once and takes the centre; after 3...Nxd5 4.Nf3 you have space and easy development. If 4...Bf5, 5.Nh4 hits the bishop, and by 7.Bg2 Bb5 it has moved three times while your pieces came out.",
+			"enforces": {
+				"idea": "Return the pawn, take the centre",
+				"text": "The d-pawn claims the centre, and you develop while Black's bishop wanders."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "slightly worse",
+				"idea": "No tempo on the queen",
+				"before": "3.Nc3 develops, but after 3...Nxd5 4.Nf3 g6 5.Nxd5 Qxd5 Black's queen reaches d5 without losing time. That is a better version of the 2...Qxd5 lines for Black.",
+				"after": "3.d4 takes the centre first, so you don't end up trading knights on d5 and handing Black a free central queen. Masters play 3.d4 in 53% of games, 3.Nc3 in 4%."
+			},
+			{
+				"uci": "c2c4",
+				"label": "sound",
+				"idea": "Black undermines d5",
+				"before": "3.c4 holds d5 for a move, but 3...c6 hits it again and Black wins it back, reaching a Caro-Kann Panov-Botvinnik. It's sound, though there's a stronger move.",
+				"after": "3.d4 gives the pawn back on your terms, without inviting 3...c6 or the Icelandic Gambit 3...e6. Masters choose 3.d4 in 53% of games, 3.c4 in 13%."
+			},
+			{
+				"uci": "g1f3",
+				"label": "sound",
+				"idea": "Return the pawn, take the centre",
+				"before": "3.Nf3 is a flexible developing move, and after 3...Nxd5 it often transposes to the main lines, with 7.c4 later kicking the knight. It's sound, though there's a slightly stronger move.",
+				"after": "The two often meet: 3.Nf3 Nxd5 4.d4 is the same position as 3.d4 Nxd5 4.Nf3. Masters play 3.d4 almost four times as often (53% to 14%)."
+			},
+			{
+				"uci": "f1b5",
+				"label": "sound",
+				"idea": "Return the pawn, take the centre",
+				"before": "3.Bb5+ uses the bishop with check to keep the pawn: after 3...Bd7 4.Bc4 Bg4 5.f3 Bc8 you hold d5 for now, as in Alexandria-Gaprindashvili. It's sound, though there's a stronger move.",
+				"after": "3.d4 doesn't spend bishop moves holding d5; it gives the pawn back and takes the centre. Masters choose 3.d4 in 53% of games, 3.Bb5+ in 15%."
+			}
 		]
 	},
 	"5915229736017859|c5d4": {
@@ -5468,17 +6405,98 @@
 		]
 	},
 	"6251023477722752|c1e3": {
-		"headline": "Bishop to c4 and castle: the book plan against ...Bf5",
-		"why": "6.Be3 is not a mistake, but it is off the main path: it develops the queen's bishop before the king's bishop and delays castling, and in the game line your king's bishop then goes to d3 only to be traded off with 7...Bxd3. 6.Bc4 is the most common master move (37%) and the setup the theory gives against ...Bf5 and ...e6, with White standing better: the bishop takes an active diagonal and you castle next with 7.O-O. Then 8.Nh4 goes after the f5 bishop, and after 8...Bg6 9.Nxg6 hxg6 you have the bishop pair.",
-		"principle": "Develop the kingside pieces first so you can castle: the king's bishop has an obvious active square, while the queen's bishop can wait to see where it is needed.",
+		"headline": "Bishop to c4 and castle: the classic plan against ...Bf5",
+		"why": "6.Be3 puts the bishop where it does nothing against ...Bf5, and after 6...e6 7.Bd3 Bxd3 8.Qxd3 your king's bishop is traded off before you've castled. Black goes on with 8...c6 9.O-O-O Qa5, and your e3-bishop later drops back with 10.Bd2. 6.Bc4 takes an active diagonal and lets you castle at once with 7.O-O; Jaenisch and Staunton already gave this bishop move against ...Bf5 and ...e6, with White better. After 7...c6 8.Nh4 Bg6 9.Nxg6 hxg6 you have the bishop pair.",
+		"principle": "Develop the kingside pieces first so you can castle: the king's bishop has an obvious active square on c4, while the queen's bishop can wait.",
 		"principleId": "development",
 		"themes": [
 			"development",
-			"king safety",
 			"bishop pair"
 		],
 		"sources": [
+			"John Emms, Discovering Chess Openings (2006) | https://www.google.com/books/feeds/volumes?q=%22Qd8%22+%22Nf6+5.Nf3+Bf5+6.Bc4%22",
+			"The 3...Qd8 Scandinavian (chess.com forum, IM pfren) | https://www.chess.com/forum/view/chess-openings/the-3qd8-scandinavian?page=2",
+			"IM Alberto Chueca, Scandinavian Defense | https://www.albertochueca.com/blog/scandinavian-defense/",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qd8"
+		],
+		"ideas": [
+			{
+				"title": "Kingside pieces first",
+				"side": "you",
+				"text": "Your f1-bishop has a good square on c4 and clears the way to castle; the c1-bishop can wait until its job is clear.",
+				"arrows": [
+					"f1c4",
+					"e1g1"
+				]
+			},
+			{
+				"title": "Hunt the f5 bishop",
+				"side": "you",
+				"text": "Black's bishop on f5 is a target: a knight on e5 with g4 and h4, or 8.Nh4 Bg6 9.Nxg6, which wins you the bishop pair.",
+				"arrows": [
+					"f3e5",
+					"f3h4"
+				],
+				"squares": [
+					"f5"
+				]
+			},
+			{
+				"title": "Bishop out before ...e6/...c6",
+				"side": "opponent",
+				"text": "Black got the bishop to f5 before playing ...e6 and ...c6, so it stands outside the solid pawn wall.",
+				"arrows": [
+					"e7e6",
+					"c7c6"
+				],
+				"squares": [
+					"f5"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be3 puts the bishop where it does nothing against ...Bf5, and after 6...e6 7.Bd3 Bxd3 8.Qxd3 your king's bishop is traded off before you've castled. Black goes on with 8...c6 9.O-O-O Qa5, and your e3-bishop later drops back with 10.Bd2.",
+			"strays": {
+				"idea": "Kingside pieces first",
+				"text": "The c1-bishop comes out first, and the f1-bishop gets swapped off."
+			}
+		},
+		"taught": {
+			"why": "6.Bc4 takes an active diagonal and lets you castle at once with 7.O-O; Jaenisch and Staunton already gave this bishop move against ...Bf5 and ...e6, with White better. After 7...c6 8.Nh4 Bg6 9.Nxg6 hxg6 you have the bishop pair.",
+			"enforces": {
+				"idea": "Hunt the f5 bishop",
+				"text": "Castle first, then 8.Nh4 trades your knight for the f5-bishop."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "f1d3",
+				"label": "sound",
+				"before": "6.Bd3 develops and offers to swap Black's active bishop: after 6...Bxd3 7.Qxd3 c6 8.Bg5 e6 9.O-O-O you are castled quickly. Masters play it in 22% of games, but another move keeps more.",
+				"after": "6.Bc4 keeps pieces on and wins the bishop pair with 8.Nh4 instead of swapping bishops. Masters choose 6.Bc4 in 37% of games, 6.Bd3 in 22%.",
+				"idea": "Hunt the f5 bishop"
+			},
+			{
+				"uci": "c1g5",
+				"label": "slightly worse",
+				"before": "6.Bg5 pins the f6-knight, but after 6...e6 7.Bd3 h6 8.Bh4 Bxd3 Black gains time on your bishop and still trades off your f1-bishop.",
+				"after": "6.Bc4 develops the king's bishop and castles first; the c1-bishop chooses its square later.",
+				"idea": "Kingside pieces first"
+			},
+			{
+				"uci": "c1f4",
+				"label": "slightly worse",
+				"before": "6.Bf4 eyes c7, but the queen on d8 guards it. After 6...e6 7.Bd3 Bxd3 8.Qxd3 Bd6 Black challenges your bishop at once.",
+				"after": "6.Bc4 heads for castling, and 8.Nh4 then goes after the f5-bishop instead of letting it trade itself off.",
+				"idea": "Kingside pieces first"
+			},
+			{
+				"uci": "f3e5",
+				"label": "sound",
+				"before": "6.Ne5 is a top move too: the knight eyes f7 and backs up h4 and g4 against the f5-bishop, as in 6...Be6 7.h4. Masters play it in 33% of games.",
+				"after": "Masters pick 6.Bc4 (37%) and 6.Ne5 (33%) almost equally and the engine rates them alike. 6.Bc4 develops a new piece first, and the knight jump to e5 often follows in the same plan.",
+				"idea": "Hunt the f5 bishop"
+			}
 		]
 	},
 	"6277794409955082|b7c6": {
@@ -5603,43 +6621,273 @@
 	},
 	"6379793223839|c7c6": {
 		"headline": "Take back with 2...Qxd5; the 2...c6 gambit gives too little",
-		"why": "2...c6 offers a pawn: after 3.dxc6 Nxc6 4.Nf3 e5 5.Nc3 you have some development for it, but the theory calls the gambit inferior, and White keeps a clear edge. 2...Qxd5, the main line (70.4% of master games), takes back the pawn, which nothing defends. White gains a tempo with 3.Nc3, but your queen steps to a safe square such as d6 (3...Qd6) and you develop normally with ...Nf6 and ...c6. 2...Nf6, the Modern Scandinavian, delays recovering the pawn and is also good.",
-		"principle": "A pawn sacrifice needs concrete compensation; when the pawn you gave can simply be taken back, recover it and develop instead of gambiting a second one.",
+		"why": "2...c6 offers a pawn, and after 3.dxc6 Nxc6 4.Nf3 e5 5.Nc3 Nf6 6.Bb5 White develops normally and stays a pawn up. Your quick development isn't enough: theory calls the gambit inferior, and masters almost never play it (0.1%). 2...Qxd5 takes the pawn back at once. White gains a tempo with 3.Nc3, but after 3...Qd6 4.d4 Nf6 5.Nf3 c6 your queen is safe and the game is level and solid; 70% of master games go this way.",
+		"principle": "Win back a pawn when it only costs a tempo; a gambit without enough compensation just leaves you a pawn down.",
 		"principleId": "gambits",
 		"themes": [
 			"gambits",
 			"material"
 		],
 		"sources": [
-			"Chess Opening Theory/1. e4/1...d5/2. exd5",
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...c6",
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5"
+			"Scandinavian Defense: Blackburne-Kloosterboer Gambit (Chess Openings Lab) | https://www.chessopeningslab.com/openings/scandinavian-defense/blackburne-kloosterboer-gambit/",
+			"Review of John Emms, The Scandinavian (ChessCafe) | https://www.chesscafe.com/text/scand.txt",
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense",
+			"Chess Opening Theory/1. e4/1...d5/2. exd5"
+		],
+		"ideas": [
+			{
+				"title": "Win back d5 at once",
+				"side": "you",
+				"text": "Nothing defends White's pawn on d5, and taking it back is your first job.",
+				"arrows": [
+					"d8d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "opponent",
+				"text": "After 2...Qxd5, 3.Nc3 hits your queen and she must move again, usually to a5, d6 or d8.",
+				"arrows": [
+					"b1c3"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Keep the queen safe",
+				"side": "you",
+				"text": "Pick a square where she can't be hit again; on d6, play ...c6 soon to stop a knight jump to b5, as with 5...c6.",
+				"arrows": [
+					"c7c6"
+				],
+				"squares": [
+					"b5"
+				]
+			},
+			{
+				"title": "Grab the gambit pawn, not the centre",
+				"side": "opponent",
+				"text": "Against 2...c6, White takes a second pawn with 3.dxc6, develops and keeps the extra pawn.",
+				"arrows": [
+					"d5c6"
+				],
+				"squares": [
+					"c6"
+				]
+			}
+		],
+		"habit": {
+			"why": "2...c6 offers a pawn, and after 3.dxc6 Nxc6 4.Nf3 e5 5.Nc3 Nf6 6.Bb5 White develops normally and stays a pawn up. Your quick development isn't enough: theory calls the gambit inferior, and masters almost never play it (0.1%).",
+			"strays": {
+				"idea": "Win back d5 at once",
+				"text": "You leave White's d5 pawn alone and end up a pawn down."
+			}
+		},
+		"taught": {
+			"why": "2...Qxd5 takes the pawn back at once. White gains a tempo with 3.Nc3, but after 3...Qd6 4.d4 Nf6 5.Nf3 c6 your queen is safe and the game is level and solid; 70% of master games go this way.",
+			"enforces": {
+				"idea": "Win back d5 at once",
+				"text": "You restore material at once and accept losing a tempo for it."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "g8f6",
+				"label": "mistake",
+				"before": "2...Nf6 is the Modern Scandinavian, 29.5% of master games: you win d5 back with the knight, as in 3.d4 Nxd5 4.Nf3 Bf5 5.Bd3, where White keeps a little more space. Masters treat it as fully respectable, though the engine here rates it lower.",
+				"after": "2...Qxd5 is the main line, preferred 70% to 30% by masters: it takes the pawn at once, and the tempo White gains with 3.Nc3 costs you little.",
+				"idea": "Win back d5 at once"
+			}
 		]
 	},
 	"6423991710179470|e1h1": {
-		"headline": "Before castling, strike f7 with 6.Ne5 after 5...Bg4.",
-		"why": "6.O-O is a natural developing move but misses the moment: after 6...e6 Black shuts the bishop on c4 out of f7, and 7.h3 Bxf3 8.Qxf3 leaves White only a small edge. 5...Bg4 left f7 guarded only by the king, and 6.Ne5 attacks it at once, threatening a bishop mate on f7 while opening the queen's line to the bishop on g4. Black has to give up the bishop with 6...Be6 7.Bxe6 fxe6, and is left with doubled e-pawns and a weakened king.",
-		"principle": "Before a quiet move like castling, check for a forcing move; a knight jump that threatens mate on f7 comes first, because castling can wait.",
+		"headline": "Before castling, punish 5...Bg4 with 6.Ne5 and the f7 threat",
+		"why": "6.O-O is a natural developing move, but after 6...e6 Black blocks your c4-bishop's path to f7, and 7.h3 Bxf3 8.Qxf3 c6 leaves you only a small edge. You castled one move too early and let the chance on f7 go. 6.Ne5 steps out of the pin and threatens mate on f7, while your queen now hits the g4-bishop. Black has to give up the bishop with 6...Be6 7.Bxe6 fxe6, and after 8.Qf3 you keep a large advantage; in Balode-Sondore, Riga 1965, Black retreated the bishop to h5 instead and was mated on f7.",
+		"principle": "Before a quiet move like castling, look for a forcing move: a knight jump that threatens mate on f7 comes first, and castling can wait.",
 		"principleId": "forcing-moves",
 		"themes": [
 			"f7",
 			"tactics: mate threat"
 		],
 		"sources": [
+			"700 Opening Traps (Center Counter section) | https://archive.org/stream/700OpeningTraps/700%20Opening%20Traps_djvu.txt",
+			"Skinner & Verhoeven, Alexander Alekhine's Chess Games, 1902-1946 (2024) | https://www.google.com/books/feeds/volumes?q=%22Qd8+4.Nf3+Nf6+5.Bc4+Bg4+6.Ne5%22",
+			"Nunez de Arenas & Rubio, The Valencia variation in the Scandinavian (ChessBase) | https://en.chessbase.com/post/the-valencian-variation-in-the-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qd8"
+		],
+		"ideas": [
+			{
+				"title": "Ne5 and the f7 point",
+				"side": "you",
+				"text": "With your bishop on c4, 6.Ne5 adds a second attacker to f7, which only the king defends: the bishop takes on f7 with mate.",
+				"arrows": [
+					"f3e5",
+					"c4f7"
+				],
+				"squares": [
+					"f7"
+				]
+			},
+			{
+				"title": "Two threats at once",
+				"side": "you",
+				"text": "The knight jump also uncovers your queen against the g4-bishop. Black's only good answer is 6...Be6, which saves the bishop and covers f7.",
+				"arrows": [
+					"d1g4"
+				],
+				"squares": [
+					"g4"
+				]
+			},
+			{
+				"title": "Black's ...e6 shuts the door",
+				"side": "opponent",
+				"text": "Give Black one quiet move and ...e6 or a trade on f3 ends the trick: a pawn on e6 blocks your bishop's path to f7.",
+				"arrows": [
+					"e7e6"
+				],
+				"squares": [
+					"e6"
+				]
+			},
+			{
+				"title": "Doubled e-pawns",
+				"side": "you",
+				"text": "After 6...Be6 7.Bxe6 fxe6 Black has doubled e-pawns and a loose king, the structure Alekhine also reached in this line.",
+				"arrows": [
+					"c4e6"
+				],
+				"squares": [
+					"e6"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.O-O is a natural developing move, but after 6...e6 Black blocks your c4-bishop's path to f7, and 7.h3 Bxf3 8.Qxf3 c6 leaves you only a small edge. You castled one move too early and let the chance on f7 go.",
+			"strays": {
+				"idea": "Black's ...e6 shuts the door",
+				"text": "Castling gives Black time for ...e6, and f7 is safe again."
+			}
+		},
+		"taught": {
+			"why": "6.Ne5 steps out of the pin and threatens mate on f7, while your queen now hits the g4-bishop. Black has to give up the bishop with 6...Be6 7.Bxe6 fxe6, and after 8.Qf3 you keep a large advantage; in Balode-Sondore, Riga 1965, Black retreated the bishop to h5 instead and was mated on f7.",
+			"enforces": {
+				"idea": "Ne5 and the f7 point",
+				"text": "Knight on e5 and bishop on c4 hit f7, which only the king guards."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "h2h3",
+				"label": "blunder",
+				"before": "6.h3 is the usual answer to ...Bg4, but here 6...Bxf3 7.Qxf3 c6 lets Black swap off and settle, and your big edge is gone. Black's last move had a flaw you could punish right now.",
+				"after": "6.Ne5 steps out of the pin with a mate threat on f7, while 6.h3 lets Black trade the knight before it can jump. The 15th-century Scachs d'amor game also went 6.h3 Bxf3 7.Qxf3.",
+				"idea": "Ne5 and the f7 point"
+			},
+			{
+				"uci": "d2d3",
+				"label": "blunder",
+				"before": "6.d3 is solid but slow: after 6...e6 7.h3 Bxf3 8.Qxf3 c6 Black's position is sound and your big edge is gone. Black's last move had a flaw you could punish right now.",
+				"after": "6.Ne5 strikes before Black gets ...e6 in; once a pawn on e6 blocks your bishop, the chance on f7 is gone.",
+				"idea": "Black's ...e6 shuts the door"
+			}
 		]
 	},
 	"6423991710179470|h2h3": {
-		"headline": "With your bishop on c4, answer 5...Bg4 with 6.Ne5.",
-		"why": "6.h3 is the book move when White has a pawn on d4, but here it lets Black swap with 6...Bxf3 7.Qxf3 and White keeps only a small edge. With the bishop on c4, 5...Bg4 left f7 guarded only by the king, and 6.Ne5 hits it at once: it threatens a bishop mate on f7 and also opens the queen's line to the bishop on g4. Black has to give up the bishop with 6...Be6 7.Bxe6 fxe6, and is left with doubled e-pawns and a weakened king.",
-		"principle": "With your bishop aimed at f7, check whether f7 is defended by anything but the king; a knight jump that adds a second attacker often wins on the spot.",
+		"headline": "Punish 5...Bg4 with 6.Ne5: mate on f7 is threatened",
+		"why": "6.h3 is the standard answer to ...Bg4, already played in the 15th-century Scachs d'amor game, but here 6...Bxf3 7.Qxf3 c6 8.Ne2 e6 lets Black swap off and shut your bishop out of f7. A big advantage shrinks to a small one. 6.Ne5 steps out of the pin and threatens mate on f7, while your queen now hits the g4-bishop. Black has to give up the bishop with 6...Be6 7.Bxe6 fxe6, and after 8.Qf3 you keep a large advantage; in Balode-Sondore, Riga 1965, Black retreated the bishop to h5 instead and was mated on f7.",
+		"principle": "With your bishop aimed at f7, check whether only the king defends it: a knight jump that adds a second attacker can win on the spot.",
 		"principleId": "f7-f2",
 		"themes": [
 			"f7",
 			"tactics: mate threat"
 		],
 		"sources": [
+			"700 Opening Traps (Center Counter section) | https://archive.org/stream/700OpeningTraps/700%20Opening%20Traps_djvu.txt",
+			"Skinner & Verhoeven, Alexander Alekhine's Chess Games, 1902-1946 (2024) | https://www.google.com/books/feeds/volumes?q=%22Qd8+4.Nf3+Nf6+5.Bc4+Bg4+6.Ne5%22",
+			"Nunez de Arenas & Rubio, The Valencia variation in the Scandinavian (ChessBase) | https://en.chessbase.com/post/the-valencian-variation-in-the-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qd8"
+		],
+		"ideas": [
+			{
+				"title": "Ne5 and the f7 point",
+				"side": "you",
+				"text": "With your bishop on c4, 6.Ne5 adds a second attacker to f7, which only the king defends: the bishop takes on f7 with mate.",
+				"arrows": [
+					"f3e5",
+					"c4f7"
+				],
+				"squares": [
+					"f7"
+				]
+			},
+			{
+				"title": "Two threats at once",
+				"side": "you",
+				"text": "The knight jump also uncovers your queen against the g4-bishop. Black's only good answer is 6...Be6, which saves the bishop and covers f7.",
+				"arrows": [
+					"d1g4"
+				],
+				"squares": [
+					"g4"
+				]
+			},
+			{
+				"title": "Black's ...e6 shuts the door",
+				"side": "opponent",
+				"text": "Give Black one quiet move and ...e6 or a trade on f3 ends the trick: a pawn on e6 blocks your bishop's path to f7.",
+				"arrows": [
+					"e7e6"
+				],
+				"squares": [
+					"e6"
+				]
+			},
+			{
+				"title": "Doubled e-pawns",
+				"side": "you",
+				"text": "After 6...Be6 7.Bxe6 fxe6 Black has doubled e-pawns and a loose king, the structure Alekhine also reached in this line.",
+				"arrows": [
+					"c4e6"
+				],
+				"squares": [
+					"e6"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.h3 is the standard answer to ...Bg4, already played in the 15th-century Scachs d'amor game, but here 6...Bxf3 7.Qxf3 c6 8.Ne2 e6 lets Black swap off and shut your bishop out of f7. A big advantage shrinks to a small one.",
+			"strays": {
+				"idea": "Ne5 and the f7 point",
+				"text": "The knight is traded off before it can jump to e5."
+			}
+		},
+		"taught": {
+			"why": "6.Ne5 steps out of the pin and threatens mate on f7, while your queen now hits the g4-bishop. Black has to give up the bishop with 6...Be6 7.Bxe6 fxe6, and after 8.Qf3 you keep a large advantage; in Balode-Sondore, Riga 1965, Black retreated the bishop to h5 instead and was mated on f7.",
+			"enforces": {
+				"idea": "Ne5 and the f7 point",
+				"text": "Knight on e5 and bishop on c4 hit f7, which only the king guards."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "e1h1",
+				"label": "blunder",
+				"before": "6.O-O is a healthy move at the wrong moment: after 6...e6 7.h3 Bxf3 8.Qxf3 c6 Black is solid and your big edge is gone. Black's last move had a flaw you could punish right now.",
+				"after": "6.Ne5 threatens mate on f7 at once; castling gives Black time for ...e6, which blocks your bishop from f7 for good.",
+				"idea": "Black's ...e6 shuts the door"
+			},
+			{
+				"uci": "d2d3",
+				"label": "blunder",
+				"before": "6.d3 is solid but slow: after 6...e6 7.h3 Bxf3 8.Qxf3 c6 Black's position is sound and your big edge is gone. Black's last move had a flaw you could punish right now.",
+				"after": "6.Ne5 strikes before Black gets ...e6 in; once a pawn on e6 blocks your bishop, the chance on f7 is gone.",
+				"idea": "Black's ...e6 shuts the door"
+			}
 		]
 	},
 	"6438780653454793|g7g6": {
@@ -5843,29 +7091,196 @@
 		]
 	},
 	"6601544122617741|c2c4": {
-		"headline": "Accept the Blackburne gambit with 3.dxc6",
-		"why": "3.c4 tries to keep the d5 pawn, but 3...Nf6 4.Nc3 cxd5 wins it back anyway, and Black has a comfortable game. 3.dxc6, played in 68.8% of master games, takes a second pawn: Black recaptures with 3...Nxc6 and is a pawn down, with only a little development in return. White develops with 4.Nf3 and 5.Nc3, pins with 6.Bb5, and stays a pawn up.",
-		"principle": "Accept a gambit when your pieces can still come out naturally; then the extra pawn stays and the opponent's lead in development fades.",
+		"headline": "Take the gambit pawn with 3.dxc6, then just develop",
+		"why": "3.c4 holds d5 only for a moment: 3...Nf6 4.Nc3 cxd5 5.d4 wins the pawn back in a Panov-Botvinnik structure. After 6.Nf3 Bg4 7.cxd5 Nxd5 Black has easy development and pressure on d4. 3.dxc6 takes a second pawn, and after 3...Nxc6 4.Nf3 e5 5.Nc3 Nf6 you simply develop. 6.Bb5 pins the c6 knight, and after 7.d4 e4 you are a pawn up with your pieces out.",
+		"principle": "Accept a gambit pawn when you can simply develop afterwards; propping up the old one just hands it back.",
 		"principleId": "gambits",
 		"themes": [
-			"gambits"
+			"gambit",
+			"pawn grab"
 		],
 		"sources": [
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...c6",
-			"Chess Opening Theory/1. e4/1...d5/2. exd5"
+			"Scandinavian Defense: Blackburne-Kloosterboer Gambit (Chess Openings Lab) | https://www.chessopeningslab.com/openings/scandinavian-defense/blackburne-kloosterboer-gambit/",
+			"Marek Soszynski, Double Trouble Scandinavian Style | https://books.google.com/books?id=TS8WEQAAQBAJ",
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense"
+		],
+		"ideas": [
+			{
+				"title": "Grab the gambit pawn",
+				"side": "you",
+				"text": "Black offers a second pawn. Take it with 3.dxc6, then develop normally, as with 4.Nf3, 5.Nc3 and 6.Bb5.",
+				"arrows": [
+					"d5c6"
+				],
+				"squares": [
+					"c6"
+				]
+			},
+			{
+				"title": "Black wins back d5",
+				"side": "opponent",
+				"text": "If you don't take, the pawn comes back: after 3.c4 Nf6 4.Nc3 cxd5 it is a Panov-Botvinnik structure.",
+				"arrows": [
+					"c6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Development for a pawn",
+				"side": "opponent",
+				"text": "After 3.dxc6 Nxc6 4.Nf3 e5 Black gets quick development. The gambit is thought unsound: develop and stay a pawn up.",
+				"arrows": [
+					"b8c6",
+					"e7e5"
+				]
+			},
+			{
+				"title": "Pin with Bb5",
+				"side": "you",
+				"text": "In the main line 6.Bb5 pins the c6 knight to Black's king, because Black's d-pawn is gone.",
+				"arrows": [
+					"f1b5"
+				],
+				"squares": [
+					"c6",
+					"e8"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.c4 holds d5 only for a moment: 3...Nf6 4.Nc3 cxd5 5.d4 wins the pawn back in a Panov-Botvinnik structure. After 6.Nf3 Bg4 7.cxd5 Nxd5 Black has easy development and pressure on d4.",
+			"strays": {
+				"idea": "Grab the gambit pawn",
+				"text": "Propping up d5 fails; 4...cxd5 takes the pawn back anyway."
+			}
+		},
+		"taught": {
+			"why": "3.dxc6 takes a second pawn, and after 3...Nxc6 4.Nf3 e5 5.Nc3 Nf6 you simply develop. 6.Bb5 pins the c6 knight, and after 7.d4 e4 you are a pawn up with your pieces out.",
+			"enforces": {
+				"idea": "Grab the gambit pawn",
+				"text": "You take the pawn and develop; Black's activity doesn't make up for it."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "inaccuracy",
+				"idea": "Black wins back d5",
+				"before": "3.Nc3 develops but doesn't hold d5: after 3...cxd5 4.d4 Nc6 Black has the pawn back in a Caro-Kann Exchange-type position.",
+				"after": "3.dxc6 keeps you a pawn up; 3.Nc3 lets Black regain it at once with 3...cxd5."
+			},
+			{
+				"uci": "d2d4",
+				"label": "inaccuracy",
+				"idea": "Black wins back d5",
+				"before": "3.d4 lets Black take back with 3...cxd5, which is exactly a Caro-Kann Exchange: the pawn is returned for nothing.",
+				"after": "3.dxc6 keeps the extra pawn. Masters played 3.d4 in a quarter of these 32 games, but 3.dxc6 (69%) is both their main choice and the engine's."
+			},
+			{
+				"uci": "g1f3",
+				"label": "inaccuracy",
+				"idea": "Black wins back d5",
+				"before": "3.Nf3 allows 3...cxd5, and after 4.d4 Nf6 Black has regained the pawn with a normal game.",
+				"after": "3.dxc6 banks a second pawn instead; after 3.Nf3 cxd5 the gambit has done its job for Black."
+			}
 		]
 	},
 	"6601544122617741|d2d4": {
-		"headline": "Take the gambit pawn with 3.dxc6; 3.d4 just gives it back",
-		"why": "After 2...c6 Black threatens 3...cxd5, and 3.d4 does nothing about it: 3...cxd5 restores material and your edge almost disappears. 3.dxc6 accepts the Blackburne gambit, and after 3...Nxc6 you are a clear pawn up. Black's compensation is the faster development the theory describes, so keep developing with 4.Nf3, 5.Nc3 and 6.Bb5 and hold on to the extra pawn.",
-		"principle": "When a gambit pawn is on offer and you can finish your development afterwards, take it; a half-measure that lets the opponent recapture for free wastes the chance.",
+		"headline": "Take the gambit pawn with 3.dxc6, then just develop",
+		"why": "3.d4 leaves d5 to 3...cxd5, so the pawn is simply back and Black has no worries. After 4.Nf3 Nc6 5.c4 Nf6 6.Nc3 Bg4 Black's pieces are out and pressing on d4. 3.dxc6 takes a second pawn, and after 3...Nxc6 4.Nf3 e5 5.Nc3 Nf6 you simply develop. 6.Bb5 pins the c6 knight, and after 7.d4 e4 you are a pawn up with your pieces out.",
+		"principle": "Accept a gambit pawn when you can simply develop afterwards; declining hands the material back for nothing.",
 		"principleId": "gambits",
 		"themes": [
-			"gambits",
-			"material"
+			"gambit",
+			"pawn grab"
 		],
 		"sources": [
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...c6"
+			"Scandinavian Defense: Blackburne-Kloosterboer Gambit (Chess Openings Lab) | https://www.chessopeningslab.com/openings/scandinavian-defense/blackburne-kloosterboer-gambit/",
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense"
+		],
+		"ideas": [
+			{
+				"title": "Grab the gambit pawn",
+				"side": "you",
+				"text": "Black offers a second pawn. Take it with 3.dxc6, then develop normally, as with 4.Nf3, 5.Nc3 and 6.Bb5.",
+				"arrows": [
+					"d5c6"
+				],
+				"squares": [
+					"c6"
+				]
+			},
+			{
+				"title": "Black wins back d5",
+				"side": "opponent",
+				"text": "If you don't take, 3...cxd5 wins the pawn back; after 3.d4 cxd5 you are simply in a Caro-Kann Exchange.",
+				"arrows": [
+					"c6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Development for a pawn",
+				"side": "opponent",
+				"text": "After 3.dxc6 Nxc6 4.Nf3 e5 Black gets quick development. The gambit is thought unsound: develop and stay a pawn up.",
+				"arrows": [
+					"b8c6",
+					"e7e5"
+				]
+			},
+			{
+				"title": "Pin with Bb5",
+				"side": "you",
+				"text": "In the main line 6.Bb5 pins the c6 knight to Black's king, because Black's d-pawn is gone.",
+				"arrows": [
+					"f1b5"
+				],
+				"squares": [
+					"c6",
+					"e8"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.d4 leaves d5 to 3...cxd5, so the pawn is simply back and Black has no worries. After 4.Nf3 Nc6 5.c4 Nf6 6.Nc3 Bg4 Black's pieces are out and pressing on d4.",
+			"strays": {
+				"idea": "Grab the gambit pawn",
+				"text": "You turn down a free pawn and reach an ordinary Caro-Kann Exchange."
+			}
+		},
+		"taught": {
+			"why": "3.dxc6 takes a second pawn, and after 3...Nxc6 4.Nf3 e5 5.Nc3 Nf6 you simply develop. 6.Bb5 pins the c6 knight, and after 7.d4 e4 you are a pawn up with your pieces out.",
+			"enforces": {
+				"idea": "Grab the gambit pawn",
+				"text": "You take the pawn and develop; Black's activity doesn't make up for it."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "inaccuracy",
+				"idea": "Black wins back d5",
+				"before": "3.Nc3 develops but doesn't hold d5: after 3...cxd5 4.d4 Nc6 Black has the pawn back in a Caro-Kann Exchange-type position.",
+				"after": "3.dxc6 keeps you a pawn up; 3.Nc3 lets Black regain it at once with 3...cxd5."
+			},
+			{
+				"uci": "g1f3",
+				"label": "inaccuracy",
+				"idea": "Black wins back d5",
+				"before": "3.Nf3 allows 3...cxd5, and after 4.d4 Nf6 Black has regained the pawn with a normal game.",
+				"after": "3.dxc6 banks a second pawn instead; after 3.Nf3 cxd5 the gambit has done its job for Black."
+			},
+			{
+				"uci": "c2c4",
+				"label": "slightly worse",
+				"idea": "Black wins back d5",
+				"before": "3.c4 holds d5 only for a moment: after 3...Nf6 4.Nc3 cxd5 5.d4 you reach a Panov-Botvinnik structure with level material.",
+				"after": "3.dxc6 is what masters play (69% of games); 3.c4 gives the pawn back by a slower route."
+			}
 		]
 	},
 	"6606016440769341|g5f7": {
@@ -6127,16 +7542,86 @@
 		]
 	},
 	"6790604267482997|e2f3": {
-		"headline": "Let the queen take g2: develop with 5.Nf3",
-		"why": "Black threatens 5...Qxg2, but 5.Bf3 defends it by moving the bishop a second time while two minor pieces are still at home, and after 5...e5 Black catches up in development and most of your advantage is gone. Theory says chasing the g2 pawn is folly and White should be happy to give it up. After 5.Nf3 Qxg2 6.Rg1 Qh3 you have four pieces developed, d4 is coming and the rook on the open g-file can kick the queen again with Rg3, while Black has only the queen out.",
-		"principle": "When your opponent's queen comes out early, keep developing and let her grab a pawn: every piece you add gains time on her.",
+		"headline": "Let g2 go: develop with 5.Nf3, not 5.Bf3",
+		"why": "5.Bf3 guards g2 by moving the bishop a second time while your g1 knight and c1 bishop wait at home. After 5...e5 6.Qe2 Nc6 7.Bxc6+ Qxc6 8.Qxe5+ you grab a pawn only by giving up that bishop for a knight, and Black's two bishops and quick development make up for it. 5.Nf3 develops and simply lets the g2 pawn go: after 5...Qxg2 6.Rg1 Qh3 you have four pieces out and the open g-file, while Black has only the queen. If Black declines with 5...Qb6, then 6.d4 Nf6 7.Ne5 keeps you well ahead in development.",
+		"principle": "When the opponent's queen goes pawn-hunting, keep developing: every extra queen move adds to your lead.",
 		"principleId": "early-queen",
 		"themes": [
-			"development",
-			"early queen"
+			"early queen",
+			"development"
 		],
 		"sources": [
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3"
+		],
+		"ideas": [
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "Black's queen has already moved three times. Bring out new pieces, 5.Nf3 then 6.d4, and gain more time on her.",
+				"arrows": [
+					"g1f3",
+					"d2d4"
+				],
+				"squares": [
+					"g6"
+				]
+			},
+			{
+				"title": "Black's queen eyes g2",
+				"side": "opponent",
+				"text": "4...Qg6 threatens 5...Qxg2. It wins a pawn, but only with yet another queen move.",
+				"arrows": [
+					"g6g2"
+				],
+				"squares": [
+					"g2"
+				]
+			},
+			{
+				"title": "Let g2 go",
+				"side": "you",
+				"text": "After 5.Nf3 Qxg2 6.Rg1 Qh3 you have four pieces out and a rook on the open g-file, while Black has only the queen.",
+				"arrows": [
+					"h1g1"
+				],
+				"squares": [
+					"g2"
+				]
+			},
+			{
+				"title": "Don't move a piece twice",
+				"side": "you",
+				"text": "Your g1 knight and c1 bishop are still at home; moving the e2 bishop again gives back the time 3.Nc3 and 4.Be2 gained.",
+				"squares": [
+					"g1",
+					"c1",
+					"e2"
+				]
+			}
+		],
+		"habit": {
+			"why": "5.Bf3 guards g2 by moving the bishop a second time while your g1 knight and c1 bishop wait at home. After 5...e5 6.Qe2 Nc6 7.Bxc6+ Qxc6 8.Qxe5+ you grab a pawn only by giving up that bishop for a knight, and Black's two bishops and quick development make up for it.",
+			"strays": {
+				"idea": "Don't move a piece twice",
+				"text": "The bishop moves again while your g1 knight still waits at home."
+			}
+		},
+		"taught": {
+			"why": "5.Nf3 develops and simply lets the g2 pawn go: after 5...Qxg2 6.Rg1 Qh3 you have four pieces out and the open g-file, while Black has only the queen. If Black declines with 5...Qb6, then 6.d4 Nf6 7.Ne5 keeps you well ahead in development.",
+			"enforces": {
+				"idea": "Let g2 go",
+				"text": "The pawn is bait: taking it costs Black more queen moves."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "g2g3",
+				"label": "mistake",
+				"before": "5.g3 guards g2 with a pawn move instead of a piece and loosens the light squares around your king. After 5...Bf5 6.d4 Nc6 Black develops freely and most of your lead is gone.",
+				"after": "5.Nf3 spends the move on a piece instead: the g2 pawn is bait, and taking it costs Black more queen moves while you develop.",
+				"idea": "Let g2 go"
+			}
 		]
 	},
 	"6819507096459648|f7f6": {
@@ -6517,23 +8002,173 @@
 		]
 	},
 	"7062831770535036|c1e3": {
-		"headline": "Push 7.d5 first and keep the b8 knight off c6",
-		"why": "7.Be3 lets Black develop with 7...Nc6, and after 8.d5 O-O-O 9.Nf4 Qxd1+ 10.Rxd1 Ne5 the queens are off and Black's knight sits comfortably in the centre, leaving you only a small edge. 7.d5 claims the centre before Black's queenside gets going and takes c6 away from the b8 knight, so it has to go to d7 instead. After 7...Nf6 8.Qd3 Nbd7 9.Be3 O-O-O 10.O-O-O you keep the queens on, more space and a clear advantage.",
-		"principle": "Before developing, ask where your opponent's next piece wants to go; a pawn move that takes that square away gains space and time at once.",
-		"principleId": "prophylaxis",
+		"headline": "Push 7.d5 first and keep Black's knight off c6",
+		"why": "7.Be3 lets Black develop with 7...Nc6, hitting your d4 pawn. After 8.d5 O-O-O 9.Nf4 Qxd1+ 10.Rxd1 Ne5 the queens are off, the knight is centralised and most of your lead is gone. 7.d5 takes c6 and e6 from Black's knights before 7...Nc6 can hit d4, so after 7...Nf6 8.Qd3 the b8 knight has to go to d7. After 8...Nbd7 9.Be3 O-O-O 10.O-O-O you keep the queens on, more space, and 11.Nf4 to hit the queen again.",
+		"principle": "With a lead in development and the opponent's king in the centre, gain central space at once rather than make quiet moves.",
+		"principleId": "development-lead",
 		"themes": [
 			"centre",
 			"space"
+		],
+		"sources": [
+			"Jeremy Silman, First Verbalize, Then Analyze (chess.com) | https://www.chess.com/article/view/first-verbalize-then-analyze-plus-one-from-the-rule-books",
+			"Scandinavian Defense Guide (Control The Center) | https://openings.controlthecenter.com/openings/scandinavian-defense/?side=white"
+		],
+		"ideas": [
+			{
+				"title": "Push d5 while you lead",
+				"side": "you",
+				"text": "Black's king is still on e8 and the queen is offside on h5. Push 7.d5 before Black is ready for it.",
+				"arrows": [
+					"d4d5"
+				],
+				"squares": [
+					"e8"
+				]
+			},
+			{
+				"title": "Take c6 and e6 from the knights",
+				"side": "you",
+				"text": "A pawn on d5 controls c6 and e6, so Black's b8 knight must go to d7 or a6 instead.",
+				"squares": [
+					"c6",
+					"e6"
+				]
+			},
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "The queen on h5 is still a target: your e2 knight can hit her from f4, as in 11.Nf4 Qg4.",
+				"arrows": [
+					"e2f4"
+				],
+				"squares": [
+					"h5"
+				]
+			},
+			{
+				"title": "Black's pressure on d4",
+				"side": "opponent",
+				"text": "Given time, 7...Nc6 and ...O-O-O hit your d4 pawn, and 9...Qxd1+ can trade queens.",
+				"arrows": [
+					"b8c6"
+				],
+				"squares": [
+					"d4"
+				]
+			}
+		],
+		"habit": {
+			"why": "7.Be3 lets Black develop with 7...Nc6, hitting your d4 pawn. After 8.d5 O-O-O 9.Nf4 Qxd1+ 10.Rxd1 Ne5 the queens are off, the knight is centralised and most of your lead is gone.",
+			"strays": {
+				"idea": "Black's pressure on d4",
+				"text": "7...Nc6 hits d4 and lets Black trade queens with check."
+			}
+		},
+		"taught": {
+			"why": "7.d5 takes c6 and e6 from Black's knights before 7...Nc6 can hit d4, so after 7...Nf6 8.Qd3 the b8 knight has to go to d7. After 8...Nbd7 9.Be3 O-O-O 10.O-O-O you keep the queens on, more space, and 11.Nf4 to hit the queen again.",
+			"enforces": {
+				"idea": "Push d5 while you lead",
+				"text": "The pawn gains space while Black's queen is offside on h5."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "e1h1",
+				"label": "inaccuracy",
+				"before": "7.O-O is safe and the most common club move (74%), but it gives Black time for 7...e6 and 9...c6. Black's pawns are then ready for any central push, and the knight jumps in with 10...Nb4.",
+				"after": "7.d5 comes before ...e6 and ...c6: it takes c6 and e6 from the knights while Black's queen is still offside on h5.",
+				"idea": "Push d5 while you lead"
+			},
+			{
+				"uci": "c1f4",
+				"label": "sound",
+				"before": "7.Bf4 is one of the best moves here: the bishop takes an active diagonal and hits c7, so Black has to guard it with 7...Na6, putting the knight on the edge.",
+				"after": "7.d5 and 7.Bf4 are about equally strong. 7.d5 takes c6 and e6 from the knights at once; 7.Bf4 develops first and pushes 8.d5 next move.",
+				"idea": "Push d5 while you lead"
+			}
 		]
 	},
 	"7062831770535036|e1h1": {
-		"headline": "Grab space with 7.d5 before Black sets up ...e6 and ...c6",
-		"why": "7.O-O is safe but lets Black build a solid shell with 7...e6 and 9...c6, and your edge shrinks. 7.d5 gains central space at once while Black's queen sits out of play on h5 and Black's light-squared bishop is already gone: the pawn takes c6 away from Black's knight, which has to go to d7. After 7...Nf6 8.Qd3 Nbd7 9.Be3 both sides castle queenside and you keep a clear edge.",
-		"principle": "Judge the differences: Black's queen is offside and their light-squared bishop has been traded, so use the moment to take central space they cannot challenge.",
-		"principleId": "imbalances",
+		"headline": "Grab space with 7.d5 before Black builds ...e6 and ...c6",
+		"why": "7.O-O is safe, but it gives Black time for 7...e6 and later 9...c6. After 8.Bf4 Na6 9.Qd3 c6 10.d5 Nb4 Black's pawns are ready for your d5 push and the knight jumps in on b4, so much of your lead is gone. 7.d5 takes c6 and e6 from Black's knights before 7...Nc6 can hit d4, so after 7...Nf6 8.Qd3 the b8 knight has to go to d7. After 8...Nbd7 9.Be3 O-O-O 10.O-O-O you keep the queens on, more space, and 11.Nf4 to hit the queen again.",
+		"principle": "With a lead in development and the opponent's king in the centre, gain central space at once rather than make quiet moves.",
+		"principleId": "development-lead",
 		"themes": [
 			"centre",
 			"space"
+		],
+		"sources": [
+			"Jeremy Silman, First Verbalize, Then Analyze (chess.com) | https://www.chess.com/article/view/first-verbalize-then-analyze-plus-one-from-the-rule-books",
+			"Scandinavian Defense Guide (Control The Center) | https://openings.controlthecenter.com/openings/scandinavian-defense/?side=white"
+		],
+		"ideas": [
+			{
+				"title": "Push d5 while you lead",
+				"side": "you",
+				"text": "Black's king is still on e8 and the queen is offside on h5. Push 7.d5 before Black is ready for it.",
+				"arrows": [
+					"d4d5"
+				],
+				"squares": [
+					"e8"
+				]
+			},
+			{
+				"title": "Take c6 and e6 from the knights",
+				"side": "you",
+				"text": "A pawn on d5 controls c6 and e6, so Black's b8 knight must go to d7 or a6 instead.",
+				"squares": [
+					"c6",
+					"e6"
+				]
+			},
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "The queen on h5 is still a target: your e2 knight can hit her from f4, as in 11.Nf4 Qg4.",
+				"arrows": [
+					"e2f4"
+				],
+				"squares": [
+					"h5"
+				]
+			},
+			{
+				"title": "Black's ...e6 and ...c6 wall",
+				"side": "opponent",
+				"text": "Given time, Black sets up 7...e6 and 9...c6, and your d5 push no longer gains space.",
+				"arrows": [
+					"e7e6",
+					"c7c6"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "7.O-O is safe, but it gives Black time for 7...e6 and later 9...c6. After 8.Bf4 Na6 9.Qd3 c6 10.d5 Nb4 Black's pawns are ready for your d5 push and the knight jumps in on b4, so much of your lead is gone.",
+			"strays": {
+				"idea": "Black's ...e6 and ...c6 wall",
+				"text": "Castling gives Black time to meet your d5 push with pawns."
+			}
+		},
+		"taught": {
+			"why": "7.d5 takes c6 and e6 from Black's knights before 7...Nc6 can hit d4, so after 7...Nf6 8.Qd3 the b8 knight has to go to d7. After 8...Nbd7 9.Be3 O-O-O 10.O-O-O you keep the queens on, more space, and 11.Nf4 to hit the queen again.",
+			"enforces": {
+				"idea": "Push d5 while you lead",
+				"text": "The pawn gains space while Black's queen is offside on h5."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1f4",
+				"label": "sound",
+				"before": "7.Bf4 is one of the best moves here: the bishop takes an active diagonal and hits c7, so Black has to guard it with 7...Na6, putting the knight on the edge.",
+				"after": "7.d5 and 7.Bf4 are about equally strong. 7.d5 takes c6 and e6 from the knights at once; 7.Bf4 develops first and pushes 8.d5 next move.",
+				"idea": "Push d5 while you lead"
+			}
 		]
 	},
 	"7121051583391236|f3c3": {
@@ -6755,16 +8390,79 @@
 		]
 	},
 	"7319360163413787|f3g5": {
-		"headline": "Ng5 hits nothing here; castle and keep developing",
-		"why": "6.Ng5 moves the knight again for a one-move attack on f7, which 6...e6 shuts down by blocking the bishop on c4. The knight then has nothing to do and returns with 10.Nf3, while Black catches up in development. 6.O-O keeps the time Black spent on ...Qd8: White castles and follows with 8.d4, taking space in the centre.",
-		"principle": "Black's queen went back to d8, so White is ahead in development; keep adding pieces and castle rather than spending moves on one knight.",
-		"principleId": "development",
+		"headline": "Ng5 hits nothing here: castle and keep developing",
+		"why": "6.Ng5 moves the knight again for a one-move attack on f7, and 6...e6 shuts it down by blocking your c4-bishop. After 7.O-O a6 8.Re1 Be7 9.Bf1 O-O 10.Nf3 Nd4 your knight and bishop have walked back, Black's knight lands on d4, and your edge is gone. 6.O-O brings your king to safety and keeps the lead in development that Black's ...Qd8 gave you. After 6...Bg4 7.h3 Bh5 8.d4 you take the centre, and 9.d5 drives the c6-knight to the edge.",
+		"principle": "Black's queen went back to d8, so you lead in development: keep adding pieces and castle instead of spending moves on one knight.",
+		"principleId": "same-piece-twice",
 		"themes": [
 			"development",
 			"king safety"
 		],
 		"sources": [
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qd8"
+		],
+		"ideas": [
+			{
+				"title": "Develop, castle, then d4",
+				"side": "you",
+				"text": "Black's queen went back to d8, so you're ahead in development: castle, then take the centre with 8.d4.",
+				"arrows": [
+					"e1g1",
+					"d2d4"
+				]
+			},
+			{
+				"title": "Black's ...e6 shuts the door",
+				"side": "opponent",
+				"text": "A knight and bishop against f7 achieve nothing once ...e6 blocks your c4-bishop's path to f7.",
+				"arrows": [
+					"e7e6"
+				],
+				"squares": [
+					"f7"
+				]
+			},
+			{
+				"title": "Move each piece once",
+				"side": "you",
+				"text": "6.Ng5 moves the knight a second time, and after 6...e6 it has to walk back with 10.Nf3 while Black catches up.",
+				"arrows": [
+					"f3g5"
+				],
+				"squares": [
+					"g5"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Ng5 moves the knight again for a one-move attack on f7, and 6...e6 shuts it down by blocking your c4-bishop. After 7.O-O a6 8.Re1 Be7 9.Bf1 O-O 10.Nf3 Nd4 your knight and bishop have walked back, Black's knight lands on d4, and your edge is gone.",
+			"strays": {
+				"idea": "Move each piece once",
+				"text": "The knight goes to g5 and back while Black develops."
+			}
+		},
+		"taught": {
+			"why": "6.O-O brings your king to safety and keeps the lead in development that Black's ...Qd8 gave you. After 6...Bg4 7.h3 Bh5 8.d4 you take the centre, and 9.d5 drives the c6-knight to the edge.",
+			"enforces": {
+				"idea": "Develop, castle, then d4",
+				"text": "Castle first, then 8.d4 takes the centre."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "d2d3",
+				"label": "inaccuracy",
+				"before": "6.d3 is solid but slow: after 6...a6 7.a3 Bf5 8.d4 you have spent two moves to get the pawn to d4.",
+				"after": "6.O-O castles and later reaches d4 in one step with 8.d4, a full move ahead of the 6.d3 line.",
+				"idea": "Develop, castle, then d4"
+			},
+			{
+				"uci": "d2d4",
+				"label": "sound",
+				"before": "6.d4 grabs the centre at once and is sound, but in the engine line Black later takes on f3 and grabs the pawn with 9...Qxd4, and you play 10.Bb3 a pawn down for development. Another move keeps your edge without giving a pawn.",
+				"after": "Both moves are equally good by the engine. 6.O-O castles first and takes the centre a little later with 8.d4; 6.d4 at once gives the d-pawn back for quick development.",
+				"idea": "Develop, castle, then d4"
+			}
 		]
 	},
 	"7372822453560713|d1b3": {
@@ -6927,17 +8625,78 @@
 		]
 	},
 	"7498176079464762|g1f3": {
-		"headline": "Against the misplaced queen on e6, push 5.d4 and gain time.",
-		"why": "The theory notes that 3...Qe6+ achieves little: the queen blocks Black's e-pawn and will have to move again. 5.Nf3 is natural but gives Black time to regroup with 5...Qd7 before White's centre arrives. 5.d4 claims the centre at once and threatens to push on and hit the queen on e6 and the knight on c6 together; after 5...Qd6 6.d5 Ne5 7.Qd4 White keeps chasing Black's pieces and gains more time.",
-		"principle": "When your opponent's queen and knight sit in front of your centre pawns, advance the pawns at them: every push gains space and costs Black another move.",
-		"principleId": "tempo",
+		"headline": "5.d4 threatens d5, hitting queen and knight at once",
+		"why": "5.Nf3 is natural but doesn't touch the queen, so Black regroups with 5...Qd7. After 6.d4 e6 7.O-O Nf6 Black has a solid position and part of your lead is gone. 5.d4 threatens 6.d5, hitting the queen and the knight together, so Black must react at once. After 5...Qd6 6.d5 Ne5 7.Qd4 c5 8.Qe3 you keep chasing Black's pieces and gain more time.",
+		"principle": "When a pawn push can fork two pieces, threaten it: the opponent must spend moves avoiding it while you gain space.",
+		"principleId": "pawn-chase",
 		"themes": [
-			"centre",
+			"pawn chase",
 			"early queen"
 		],
 		"sources": [
+			"Jeremy Silman, First Verbalize, Then Analyze (chess.com) | https://www.chess.com/article/view/first-verbalize-then-analyze-plus-one-from-the-rule-books",
+			"John Elburg, review of Jovanka Houska's Starting Out: The Scandinavian | http://chessbooks.nl/elburg141.html",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3"
-		]
+		],
+		"ideas": [
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "The queen on e6 blocks Black's e-pawn and must move again. 5.d4 makes her go now.",
+				"arrows": [
+					"d2d4"
+				],
+				"squares": [
+					"e6"
+				]
+			},
+			{
+				"title": "Push d5 while you lead",
+				"side": "you",
+				"text": "With the knight on c6 and the queen on e6, a pawn on d5 hits both, so Black must react to 5.d4 at once.",
+				"squares": [
+					"c6",
+					"e6"
+				]
+			},
+			{
+				"title": "Mind the pin on e2",
+				"side": "both",
+				"text": "The queen on e6 pins your e2 bishop to your king, so the bishop can't move yet.",
+				"arrows": [
+					"e6e1"
+				],
+				"squares": [
+					"e2"
+				]
+			},
+			{
+				"title": "Black's queen regroups",
+				"side": "opponent",
+				"text": "After a slow move, Black tucks the queen on d7 and follows with ...e6 and ...Nf6, as in 5.Nf3 Qd7 6.d4 e6.",
+				"arrows": [
+					"e6d7"
+				],
+				"squares": [
+					"d7"
+				]
+			}
+		],
+		"habit": {
+			"why": "5.Nf3 is natural but doesn't touch the queen, so Black regroups with 5...Qd7. After 6.d4 e6 7.O-O Nf6 Black has a solid position and part of your lead is gone.",
+			"strays": {
+				"idea": "Black's queen regroups",
+				"text": "It gives Black a free move to tuck the queen on d7."
+			}
+		},
+		"taught": {
+			"why": "5.d4 threatens 6.d5, hitting the queen and the knight together, so Black must react at once. After 5...Qd6 6.d5 Ne5 7.Qd4 c5 8.Qe3 you keep chasing Black's pieces and gain more time.",
+			"enforces": {
+				"idea": "Push d5 while you lead",
+				"text": "The threat of 6.d5 forces Black's pieces to move again."
+			}
+		},
+		"alternatives": []
 	},
 	"7521748049854142|b8c6": {
 		"headline": "Against 2.e3, put the knight on f6 and keep the c-pawn free",
@@ -6966,16 +8725,109 @@
 		]
 	},
 	"7528031277512488|c1e3": {
-		"headline": "Against 3...Qa5, develop with 6.Bc4 and keep d2 for the bishop",
-		"why": "6.Be3 puts the bishop where it can be hit and leaves your c3 knight pinned by the queen on a5; after 6...Bf5 7.Nh4 Nbd7 8.Nxf5 Qxf5 9.Bd3 Qg4 10.Qxg4 Nxg4 the queens are off and the knight attacks your bishop, so you keep little of your edge. Theory describes White's usual set-up as Nf3 and Bc4, with the d2 square freed for the bishop so the c3 knight can later move with tempo on the queen. 6.Bc4, played by masters 65.5% of the time, follows that plan: after 6...Bf5 7.Bd2 the pin is gone and you castle long with 9.O-O-O in the engine line.",
-		"principle": "Develop each piece to the square the opening's plan gives it, here Bc4 and then Bd2, instead of a square that gives your opponent targets.",
+		"headline": "Develop with 6.Bc4 and keep d2 for the other bishop",
+		"why": "6.Be3 doesn't break the pin on c3, since the bishop stands off the a5-e1 diagonal, and it gives Black's pieces a target. After 6...Bf5 7.Nh4 Nbd7 8.Nxf5 Qxf5 9.Bd3 Qg4 10.Qxg4 Nxg4 the queens are off and the knight hits your e3-bishop, so little of your edge remains. 6.Bc4 develops toward the centre and keeps d2 free, so after 6...Bf5 7.Bd2 the pin is broken. 6.Bc4 Bf5 is the Classical Line, which Lorenzini's survey treats as good for White; 8.Qe2 and 9.O-O-O can follow.",
+		"principle": "Develop each piece to the square the plan gives it, here Bc4 and then Bd2, instead of a square that leaves the pin and gives Black a target.",
 		"principleId": "development",
 		"themes": [
 			"development",
-			"tactics: pin"
+			"pins"
 		],
 		"sources": [
+			"GM Martin Lorenzini, Is the 3...Qa5-Scandinavian busted? (ChessBase) | https://en.chessbase.com/post/is-the-3-qa5-scandinavian-busted",
+			"Christian Bauer's survey: Evasive manoeuvres in the Scandinavian (ChessBase) | https://en.chessbase.com/post/scandinavian-evasive-manoeuvres-and-a-catalan-booster",
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
+			"GM Eugene Perelshteyn, Refute The Scandi! | https://eugeneperel.substack.com/p/refute-the-scandi",
+			"IM Alberto Chueca, Scandinavian Defense | https://www.albertochueca.com/blog/scandinavian-defense/",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Be3 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			},
+			{
+				"title": "Bd2, long castling, pawn storm",
+				"side": "you",
+				"text": "A good plan: bishops to c4 and d2, queen to e2, then long castling, as in 7.Bd2 Nbd7 8.Qe2 Qc7 9.O-O-O.",
+				"arrows": [
+					"f1c4",
+					"c1d2",
+					"d1e2"
+				]
+			},
+			{
+				"title": "Bishop out before ...e6/...c6",
+				"side": "opponent",
+				"text": "Black brings the bishop to f5 before ...e6, and the queen can drop back to c7 through the hole ...c6 made.",
+				"arrows": [
+					"c8f5",
+					"a5c7"
+				]
+			},
+			{
+				"title": "Hunt the f5 bishop",
+				"side": "you",
+				"text": "Once Black's bishop sits on f5, a knight on h4 or e5 and the g4 push can chase it, as in 10.Nh4 Bg6.",
+				"arrows": [
+					"f3h4"
+				],
+				"squares": [
+					"f5"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be3 doesn't break the pin on c3, since the bishop stands off the a5-e1 diagonal, and it gives Black's pieces a target. After 6...Bf5 7.Nh4 Nbd7 8.Nxf5 Qxf5 9.Bd3 Qg4 10.Qxg4 Nxg4 the queens are off and the knight hits your e3-bishop, so little of your edge remains.",
+			"strays": {
+				"idea": "The pin on c3",
+				"text": "The bishop goes to e3, so the c3-knight stays pinned."
+			}
+		},
+		"taught": {
+			"why": "6.Bc4 develops toward the centre and keeps d2 free, so after 6...Bf5 7.Bd2 the pin is broken. 6.Bc4 Bf5 is the Classical Line, which Lorenzini's survey treats as good for White; 8.Qe2 and 9.O-O-O can follow.",
+			"enforces": {
+				"idea": "Bd2, long castling, pawn storm",
+				"text": "6.Bc4 first keeps d2 free for the bishop that unpins the knight."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1d2",
+				"label": "sound",
+				"before": "6.Bd2 breaks the pin at once, so any knight move now uncovers an attack on the queen. It's fully sound; masters play it in 12% of games and prefer another move.",
+				"after": "6.Bd2 and 6.Bc4 usually meet: 6...Bf5 7.Bc4 reaches the same main line. Masters start with 6.Bc4 (66%) far more often.",
+				"idea": "The pin on c3"
+			},
+			{
+				"uci": "f1d3",
+				"label": "sound",
+				"before": "6.Bd3 develops and prepares castling, but after 6...Bg4 7.h3 Bh5 8.Bd2 e6 Black has the bishop outside the pawn chain. It's sound, though masters rarely play it (2%).",
+				"after": "6.Bc4 puts the bishop on a more active diagonal and is the masters' main move (66% to 2%); the engine rates the two close.",
+				"idea": "Bishop out before ...e6/...c6"
+			},
+			{
+				"uci": "f1e2",
+				"label": "sound",
+				"before": "6.Be2 is quiet and safe; after 6...Bf5 7.O-O e6 8.Ne5 you still get the knight jump and 9.g4 against the bishop. Masters play it in 3% of games.",
+				"after": "6.Bc4 puts the bishop on its most active square and is the masters' main choice (66% to 3%).",
+				"idea": "Hunt the f5 bishop"
+			},
+			{
+				"uci": "f3e5",
+				"label": "sound",
+				"before": "6.Ne5 jumps in at once: the knight can go on to c4 to hit the queen, and after 6...Be6 7.f4 a pawn backs it up. Masters play it in 14% of games.",
+				"after": "Masters prefer 6.Bc4, 66% to 14%: it develops a new piece first, and the knight jump to e5 can still come later.",
+				"idea": "Hunt the f5 bishop"
+			}
 		]
 	},
 	"7560471072032627|b1c3": {
@@ -7066,18 +8918,89 @@
 		]
 	},
 	"7560471072032627|g1f3": {
-		"headline": "Trade on d5 with 2.exd5 and gain time on the queen",
-		"why": "Black threatens 2...dxe4, and 2.Nf3 doesn't stop it: the pawn falls with tempo on your knight, and after 3.Ng5 e5 4.h4 h6 5.Nxe4 Be6 Black has a strong centre and the better game. Theory says 2.exd5 is almost always played because trading pawns is in White's interest. When Black recaptures with the queen, 2...Qxd5 3.Nc3 develops with tempo on her, and after 3...Qd8 4.d4 Nf6 5.Nf3 you have the freer development; masters choose 2.exd5 96.9% of the time.",
-		"principle": "When an exchange forces the enemy queen to recapture in the centre, make it: your pieces then develop with gain of time on her.",
-		"principleId": "early-queen",
+		"headline": "Trade with 2.exd5; 2.Nf3 just hands Black the e4 pawn",
+		"why": "2.Nf3 is the Tennison Gambit, and it doesn't stop 2...dxe4, which wins a pawn with a hit on your knight. After 3.Ng5 e5 4.h4 h6 5.Nxe4 Be6 you get the pawn back, but Black has a strong centre and the easier game. 2.exd5 removes Black's attacker, and after 2...Qxd5 3.Nc3 gains a tempo on the queen. After 3...Qd8 4.d4 Nf6 5.Nf3 you have the freer development; masters choose 2.exd5 in 97% of games.",
+		"principle": "When a centre pawn is attacked, trade it or defend it; leaving it hanging gives the opponent a free pawn with tempo.",
+		"principleId": "centre",
 		"themes": [
 			"centre",
-			"tempo"
+			"gambits"
 		],
 		"sources": [
+			"Matthew Astle, The Tennison Gambit (Chessable blog) | https://www.chessable.com/blog/tennison-gambit/",
+			"Anton Shuravin, How to Play the Tennison Gambit (ChessDoctrine) | https://chessdoctrine.com/chess-openings/flank/tennison-gambit/",
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense",
 			"Chess Opening Theory/1. e4/1...d5",
-			"Chess Opening Theory/1. e4/1...d5/2. Nf3",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5"
+		],
+		"ideas": [
+			{
+				"title": "Trade on d5 first",
+				"side": "you",
+				"text": "Black's pawn hits e4. 2.exd5 is almost always played, because trading pawns suits White.",
+				"arrows": [
+					"e4d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "If Black takes back with 2...Qxd5, then 3.Nc3 develops with a hit on the queen.",
+				"arrows": [
+					"b1c3"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Black's pawn hits e4",
+				"side": "opponent",
+				"text": "After 2.Nf3 dxe4 Black wins the pawn with a hit on your knight.",
+				"arrows": [
+					"d5e4"
+				],
+				"squares": [
+					"e4"
+				]
+			},
+			{
+				"title": "Bishop out before ...e6/...c6",
+				"side": "opponent",
+				"text": "If you push past to e5, Black brings the bishop to f5 first and plays ...e6 after, as in 5...Bf5 6.Nf3 e6.",
+				"arrows": [
+					"c8f5"
+				],
+				"squares": [
+					"f5"
+				]
+			}
+		],
+		"habit": {
+			"why": "2.Nf3 is the Tennison Gambit, and it doesn't stop 2...dxe4, which wins a pawn with a hit on your knight. After 3.Ng5 e5 4.h4 h6 5.Nxe4 Be6 you get the pawn back, but Black has a strong centre and the easier game.",
+			"strays": {
+				"idea": "Trade on d5 first",
+				"text": "Ignoring the pawn lets Black take e4 with tempo."
+			}
+		},
+		"taught": {
+			"why": "2.exd5 removes Black's attacker, and after 2...Qxd5 3.Nc3 gains a tempo on the queen. After 3...Qd8 4.d4 Nf6 5.Nf3 you have the freer development; masters choose 2.exd5 in 97% of games.",
+			"enforces": {
+				"idea": "Develop with tempo on the queen",
+				"text": "Taking first means 3.Nc3 later develops with a hit on the queen."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "e4e5",
+				"label": "inaccuracy",
+				"before": "2.e5 avoids the trade but poses Black no problems: 2...c5 clamps down on d4, and Black's bishop comes out to f5 before ...e6, as in 5...Bf5 6.Nf3 e6. Masters play it in only 0.4% of games.",
+				"after": "2.exd5 keeps the game open and gains time on Black's queen with 3.Nc3, instead of a French-type structure where Black's bishop is already outside the chain.",
+				"idea": "Bishop out before ...e6/...c6"
+			}
 		]
 	},
 	"7590461919375344|b8c6": {
@@ -7191,16 +9114,91 @@
 		]
 	},
 	"7780638886141553|c2c4": {
-		"headline": "Castle first: 6.O-O guards g2, while 6.c4 drops a pawn",
-		"why": "The queen on d5 already threatens 6...Qxg2. 6.c4 attacks her, but with your light-squared bishop traded off nothing defends c4, so 6...Qxc4 wins a pawn and Black is clearly better. 6.O-O, played in 96.6% of master games, guards g2 with the king and gets it out of the centre; c4 still comes, as 8.c4 in the main line once 7.Nd2 covers that square.",
-		"principle": "Black has the lead in development and a queen aimed at your king's side, so castle before starting pawn moves; the theory warns that White easily succumbs here if the centre opens before castling.",
+		"headline": "Castle first: 6.O-O guards g2 and tucks your king away",
+		"why": "6.c4 hits the queen, but nothing guards c4, so 6...Qxc4 wins a pawn and attacks your knight on e2. After 7.Na3 Qa6 8.Qb3 Nc6 9.Nb5 O-O-O Black is a pawn up, castled, while your king is still in the centre. 6.O-O puts your king on g1, where it guards g2 against ...Qxg2. Then 7.Nd2 covers c4, so 8.c4 Qd6 gains space with tempo on the queen.",
+		"principle": "Castle before you open the centre, especially when the opponent leads in development.",
 		"principleId": "king-safety",
 		"themes": [
 			"king safety",
-			"tactics: loose pawn"
+			"loose pawns"
 		],
 		"sources": [
-			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6/3. d4/3...Bg4"
+			"Eric Schiller, Gambit Openings Repertoire for Black | https://books.google.com/books?id=WSEYAQAAMAAJ",
+			"Carsten Hansen, Catastrophes & Tactics in the Chess Opening, Vol. 7 | https://books.google.com/books?id=kxZNDwAAQBAJ",
+			"David Smerdon, Smerdon's Scandinavian (publisher excerpt) | https://www.newinchess.com/media/wysiwyg/product_pdf/7537.pdf",
+			"Max Illingworth, Chess Grandmaster's Favourite Gambit vs. 1.e4! (chess.com) | https://www.chess.com/blog/Illingworth/chess-grandmasters-favourite-gambit-vs-1-e4"
+		],
+		"ideas": [
+			{
+				"title": "Castle before opening the centre",
+				"side": "you",
+				"text": "Your king is still in the middle and Black is ahead in development. Castle first; open the centre with c4 later.",
+				"arrows": [
+					"e1g1"
+				],
+				"squares": [
+					"g2"
+				]
+			},
+			{
+				"title": "Guard g2",
+				"side": "opponent",
+				"text": "With the light bishops traded, Black's queen on d5 eyes g2. If you ignore it, 6...Qxg2 7.Rg1 Qxh2 takes two pawns.",
+				"arrows": [
+					"d5g2"
+				],
+				"squares": [
+					"g2",
+					"h2"
+				]
+			},
+			{
+				"title": "Nothing guards c4",
+				"side": "opponent",
+				"text": "c4 attacks the queen, but no white piece covers that square, so 6...Qxc4 takes the pawn and hits your e2 knight.",
+				"arrows": [
+					"d5c4"
+				],
+				"squares": [
+					"c4",
+					"e2"
+				]
+			},
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "Once 7.Nd2 covers c4, 8.c4 gains space with tempo on the queen, as in the main line.",
+				"arrows": [
+					"b1d2",
+					"c2c4"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.c4 hits the queen, but nothing guards c4, so 6...Qxc4 wins a pawn and attacks your knight on e2. After 7.Na3 Qa6 8.Qb3 Nc6 9.Nb5 O-O-O Black is a pawn up, castled, while your king is still in the centre.",
+			"strays": {
+				"idea": "Castle before opening the centre",
+				"text": "You open the centre while your king is still on e1."
+			}
+		},
+		"taught": {
+			"why": "6.O-O puts your king on g1, where it guards g2 against ...Qxg2. Then 7.Nd2 covers c4, so 8.c4 Qd6 gains space with tempo on the queen.",
+			"enforces": {
+				"idea": "Castle before opening the centre",
+				"text": "Castling defends g2, and c4 follows once the square is covered."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "mistake",
+				"idea": "Guard g2",
+				"before": "6.Nbc3 develops with tempo on the queen but leaves g2 unguarded: 6...Qxg2 7.Rg1 Qh3 wins a pawn, and with the rook gone from h1 you can no longer castle short.",
+				"after": "6.O-O guards g2 first; masters castle here in 97% of games. The knight can come out later."
+			}
 		]
 	},
 	"7782133965544018|f1c4": {
@@ -8108,54 +10106,336 @@
 		]
 	},
 	"8706009982340637|b2b3": {
-		"headline": "Black's queen eyes e5: never open the long diagonal to a1",
-		"why": "5.b3 opens the long diagonal to the rook on a1, and 5...Qe5+ checks the king and attacks the rook at once; after 6.Be2 Qxa1 White is a rook down. In this Modern Scandinavian Black's queen reached d5 without losing time, so White should claim the centre with 5.d4 and open the bishop on c1 instead of handing her targets. It is the most popular master move here (38.2%).",
-		"principle": "With Black's queen in the centre, look at her checks before any quiet move: ...Qe5+ is always available, so keep the rook on a1 off her lines.",
-		"principleId": "forcing-moves",
+		"headline": "Claim the centre with 5.d4; 5.b3 opens a1 to a queen check",
+		"why": "5.b3 opens the long diagonal, and 5...Qe5+ checks your king and hits the rook on a1. After 6.Be2 Qxa1 you are a whole rook down. 5.d4 takes the centre and puts a pawn on the e5-a1 diagonal, then 6.Be3 and 7.Nf3 develop. If Black gives a pawn with 6...e5, after 8.dxe5 Qxd1+ 9.Kxd1 O-O-O+ the queens are off and you keep the extra pawn.",
+		"principle": "Before each move, check what the opponent's queen can reach: one pawn move can open a line to a loose rook.",
+		"principleId": "loose-pieces",
 		"themes": [
-			"tactics: fork",
+			"queen check",
 			"centre"
 		],
 		"sources": [
+			"Savielly Tartakower, The Hypermodern Game of Chess | https://books.google.com/books?id=MJFXDwAAQBAJ",
+			"Eric Schiller, Gambit Openings Repertoire for Black | https://books.google.com/books?id=WSEYAQAAMAAJ",
+			"Max Illingworth, Chess Grandmaster's Favourite Gambit vs. 1.e4! (chess.com) | https://www.chess.com/blog/Illingworth/chess-grandmasters-favourite-gambit-vs-1-e4",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Nf6"
+		],
+		"ideas": [
+			{
+				"title": "Watch the queen's checks",
+				"side": "opponent",
+				"text": "With your e-pawn gone, Black's queen can check on e5. 5.b3 opens the diagonal to a1, so 5...Qe5+ forks king and rook.",
+				"arrows": [
+					"d5e5"
+				],
+				"squares": [
+					"e1",
+					"a1"
+				]
+			},
+			{
+				"title": "No tempo on the queen",
+				"side": "opponent",
+				"text": "Black's queen reached d5 by a knight trade, not with you chasing it, so Black gets an easy game.",
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Claim the centre with d4",
+				"side": "you",
+				"text": "5.d4 takes the centre, covers e5 and opens your c1-bishop, ready for 6.Be3 and 7.Nf3.",
+				"arrows": [
+					"d2d4",
+					"c1e3"
+				],
+				"squares": [
+					"e5"
+				]
+			},
+			{
+				"title": "Trade off the active queen",
+				"side": "you",
+				"text": "5.Qf3 offers a queen trade; after 5...Be6 6.Bd3 Qxf3 7.Nxf3 Black's best piece is gone and the game is quiet.",
+				"arrows": [
+					"d1f3"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "5.b3 opens the long diagonal, and 5...Qe5+ checks your king and hits the rook on a1. After 6.Be2 Qxa1 you are a whole rook down.",
+			"strays": {
+				"idea": "Watch the queen's checks",
+				"text": "The pawn move opens a1 to a queen check on e5."
+			}
+		},
+		"taught": {
+			"why": "5.d4 takes the centre and puts a pawn on the e5-a1 diagonal, then 6.Be3 and 7.Nf3 develop. If Black gives a pawn with 6...e5, after 8.dxe5 Qxd1+ 9.Kxd1 O-O-O+ the queens are off and you keep the extra pawn.",
+			"enforces": {
+				"idea": "Claim the centre with d4",
+				"text": "The pawn takes the centre and covers e5 against a queen check."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "g1f3",
+				"label": "sound",
+				"idea": "Claim the centre with d4",
+				"before": "5.Nf3 develops and covers e5 against a queen check. It's sound, and the most common club move, but there's a stronger one.",
+				"after": "5.d4 takes the centre first; after 5.Nf3 Nc6 6.d4 Bg4 Black pins your knight and presses on d4. Masters prefer 5.d4, 38% to 22%."
+			},
+			{
+				"uci": "d1f3",
+				"label": "sound",
+				"idea": "Trade off the active queen",
+				"before": "5.Qf3 offers a queen trade, and after 5...Be6 6.Bd3 Qxf3 7.Nxf3 Black's lead in development fades. Sound, though there's a stronger move.",
+				"after": "5.d4 keeps the queens on and takes the centre; 5.Qf3 heads for a quiet, level ending. Masters choose the two about equally, 38% and 35%."
+			},
+			{
+				"uci": "d2d3",
+				"label": "slightly worse",
+				"idea": "Claim the centre with d4",
+				"before": "5.d3 is solid but passive: it shuts in your f1-bishop and doesn't contest the centre. After 5...Nc6 6.Nf3 Bf5 7.Be2 e5 Black takes the centre instead.",
+				"after": "5.d4 takes the space that 5.d3 gives up and keeps the f1-bishop's diagonal open."
+			}
 		]
 	},
 	"8716466597702343|b1c3": {
 		"headline": "Take the gambit pawn: 3.dxe6 keeps you a pawn up",
-		"why": "2...e6 hits your d5 pawn, and 3.Nc3 lets Black recapture with 3...exd5: material is level again and so is the game. 3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 4.Nf3 Nf6 5.d4 you are a clean pawn up with normal development. The theory rates 2...e6 an inferior gambit that does not give enough for the pawn.",
-		"principle": "Accept a gambit when you can develop normally afterwards: here Nf3 and d4 come easily, so take on e6 and keep the extra pawn.",
+		"why": "3.Nc3 develops but lets Black recapture with 3...exd5, and after 4.d4 Nf6 5.Nf3 Bd6 material is level in a symmetrical French Exchange structure. Even 6.Nb5 O-O 7.Nxd6 Qxd6 only wins the bishop pair, not the pawn. 3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 Black's only gain is a developed bishop. Then 4.Nf3 Nf6 5.d4 gives you a solid centre and easy development while you stay a clean pawn up.",
+		"principle": "When a gambit gives too little for the pawn, take it and develop rather than hand it straight back.",
 		"principleId": "gambits",
 		"themes": [
 			"gambits",
 			"material"
 		],
 		"sources": [
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5"
-		]
+		],
+		"ideas": [
+			{
+				"title": "Grab the gambit pawn, not the centre",
+				"side": "you",
+				"text": "Against 2...e6, take a second pawn with 3.dxe6. Other moves let Black win d5 back with an easy game.",
+				"arrows": [
+					"d5e6"
+				],
+				"squares": [
+					"e6"
+				]
+			},
+			{
+				"title": "Black wins d5 back",
+				"side": "opponent",
+				"text": "Black's e-pawn hits d5 and nothing defends it, so 3...exd5 would make material level.",
+				"arrows": [
+					"e6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Develop and keep the pawn",
+				"side": "you",
+				"text": "After 3...Bxe6, develop with 4.Nf3 and 5.d4 and castle; Black has too little for the pawn.",
+				"arrows": [
+					"g1f3",
+					"d2d4"
+				]
+			},
+			{
+				"title": "Symmetry lets Black off",
+				"side": "both",
+				"text": "3.Nc3 exd5 4.d4 gives a French Exchange structure: level material and symmetrical pawns, so your edge is gone.",
+				"arrows": [
+					"e6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.Nc3 develops but lets Black recapture with 3...exd5, and after 4.d4 Nf6 5.Nf3 Bd6 material is level in a symmetrical French Exchange structure. Even 6.Nb5 O-O 7.Nxd6 Qxd6 only wins the bishop pair, not the pawn.",
+			"strays": {
+				"idea": "Black wins d5 back",
+				"text": "Developing doesn't defend d5, so 3...exd5 makes material level."
+			}
+		},
+		"taught": {
+			"why": "3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 Black's only gain is a developed bishop. Then 4.Nf3 Nf6 5.d4 gives you a solid centre and easy development while you stay a clean pawn up.",
+			"enforces": {
+				"idea": "Grab the gambit pawn, not the centre",
+				"text": "Taking keeps the extra pawn; 2...e6 gives Black too little for it."
+			}
+		},
+		"alternatives": []
 	},
 	"8716466597702343|c2c4": {
 		"headline": "Take the second pawn with 3.dxe6; 3.c4 doesn't hold d5",
-		"why": "3.c4 doesn't stop Black from winning the pawn back: after 3...exd5 4.cxd5 Nf6 the d5 pawn stands alone and Black has easy development. 3.dxe6 simply takes: after 3...Bxe6 White is a clean pawn up, and 4.Nf3 and 5.d4 build a solid centre. Theory rates the 2...e6 gambit as not giving enough for the pawn.",
-		"principle": "Accept a gambit pawn when you can consolidate; capturing the attacker leaves no weak pawn for Black to win back.",
+		"why": "3.c4 keeps a pawn for now, but after 3...exd5 4.cxd5 it stands alone on d5 and Black develops with 4...Nf6 5.Bb5+ Nbd7 6.Nf3 Be7 7.O-O O-O. The d5 pawn is about to fall to Black's knights, and your edge is gone. 3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 Black's only gain is a developed bishop. Then 4.Nf3 Nf6 5.d4 gives you a solid centre and easy development while you stay a clean pawn up.",
+		"principle": "When a gambit gives too little for the pawn, take it and develop rather than hand it straight back.",
 		"principleId": "gambits",
 		"themes": [
-			"gambits"
+			"gambits",
+			"material"
 		],
 		"sources": [
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5"
+		],
+		"ideas": [
+			{
+				"title": "Grab the gambit pawn, not the centre",
+				"side": "you",
+				"text": "Against 2...e6, take a second pawn with 3.dxe6. Other moves let Black win d5 back with an easy game.",
+				"arrows": [
+					"d5e6"
+				],
+				"squares": [
+					"e6"
+				]
+			},
+			{
+				"title": "Black wins d5 back",
+				"side": "opponent",
+				"text": "Black's e-pawn hits d5 and nothing defends it, so 3...exd5 would make material level.",
+				"arrows": [
+					"e6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Develop and keep the pawn",
+				"side": "you",
+				"text": "After 3...Bxe6, develop with 4.Nf3 and 5.d4 and castle; Black has too little for the pawn.",
+				"arrows": [
+					"g1f3",
+					"d2d4"
+				]
+			},
+			{
+				"title": "A lonely pawn on d5",
+				"side": "opponent",
+				"text": "After 3.c4 exd5 4.cxd5 your d5 pawn has no neighbours, and Black's pieces win it back.",
+				"arrows": [
+					"e6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.c4 keeps a pawn for now, but after 3...exd5 4.cxd5 it stands alone on d5 and Black develops with 4...Nf6 5.Bb5+ Nbd7 6.Nf3 Be7 7.O-O O-O. The d5 pawn is about to fall to Black's knights, and your edge is gone.",
+			"strays": {
+				"idea": "A lonely pawn on d5",
+				"text": "The pawn left on d5 can't be held, so Black wins it back."
+			}
+		},
+		"taught": {
+			"why": "3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 Black's only gain is a developed bishop. Then 4.Nf3 Nf6 5.d4 gives you a solid centre and easy development while you stay a clean pawn up.",
+			"enforces": {
+				"idea": "Grab the gambit pawn, not the centre",
+				"text": "Taking keeps the extra pawn; 2...e6 gives Black too little for it."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "inaccuracy",
+				"before": "3.Nc3 develops but doesn't stop 3...exd5. After 4.d4 Nf6 5.Nf3 Bd6 material is level in a symmetrical French Exchange pawn structure.",
+				"after": "3.dxe6 keeps the extra pawn instead of letting Black recapture; after 3...Bxe6 4.Nf3 you develop a clean pawn up.",
+				"idea": "Black wins d5 back"
+			}
 		]
 	},
 	"8716466597702343|d2d4": {
 		"headline": "Take the gambit pawn with 3.dxe6: 2...e6 gives too little",
-		"why": "Black threatens 3...exd5 to win the pawn back, and 3.d4 does nothing about it: after 3.d4 exd5 you reach a symmetrical, quiet position where queens can come off with 6.Qe2+ Qe7 7.Qxe7+ Kxe7, and most of your advantage is gone. Theory lists 2...e6 among the Scandinavian gambits that are inferior and don't give enough for the pawn. 3.dxe6 Bxe6 simply keeps the extra pawn, and after 4.Nf3 Nf6 5.d4 you are developed and a clean pawn up.",
-		"principle": "When an unsound gambit offers you a pawn that you can keep without danger, take it and develop; giving it back only hands your opponent the equality they gambled for.",
+		"why": "3.d4 doesn't defend d5, so Black simply takes back with 3...exd5, reaching a French Exchange pawn structure. After 4.Nf3 Nf6 5.Bd3 Bd6 6.Qe2+ Qe7 7.Qxe7+ Kxe7 the queens are off and your edge is almost gone. 3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 Black's only gain is a developed bishop. Then 4.Nf3 Nf6 5.d4 gives you a solid centre and easy development while you stay a clean pawn up.",
+		"principle": "When a gambit gives too little for the pawn, take it and develop rather than hand it straight back.",
 		"principleId": "gambits",
 		"themes": [
 			"gambits",
 			"material"
 		],
 		"sources": [
+			"Scandinavian Defense (Wikipedia) | https://en.wikipedia.org/wiki/Scandinavian_Defense",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5"
+		],
+		"ideas": [
+			{
+				"title": "Grab the gambit pawn, not the centre",
+				"side": "you",
+				"text": "Against 2...e6, take a second pawn with 3.dxe6. Other moves let Black win d5 back with an easy game.",
+				"arrows": [
+					"d5e6"
+				],
+				"squares": [
+					"e6"
+				]
+			},
+			{
+				"title": "Black wins d5 back",
+				"side": "opponent",
+				"text": "Black's e-pawn hits d5 and nothing defends it, so 3...exd5 would make material level.",
+				"arrows": [
+					"e6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			},
+			{
+				"title": "Develop and keep the pawn",
+				"side": "you",
+				"text": "After 3...Bxe6, develop with 4.Nf3 and 5.d4 and castle; Black has too little for the pawn.",
+				"arrows": [
+					"g1f3",
+					"d2d4"
+				]
+			},
+			{
+				"title": "Symmetry lets Black off",
+				"side": "both",
+				"text": "3.d4 exd5 gives a French Exchange structure: level material and symmetrical pawns, so your edge is gone.",
+				"arrows": [
+					"e6d5"
+				],
+				"squares": [
+					"d5"
+				]
+			}
+		],
+		"habit": {
+			"why": "3.d4 doesn't defend d5, so Black simply takes back with 3...exd5, reaching a French Exchange pawn structure. After 4.Nf3 Nf6 5.Bd3 Bd6 6.Qe2+ Qe7 7.Qxe7+ Kxe7 the queens are off and your edge is almost gone.",
+			"strays": {
+				"idea": "Grab the gambit pawn, not the centre",
+				"text": "A centre move lets Black win d5 back at once."
+			}
+		},
+		"taught": {
+			"why": "3.dxe6 removes the attacker and takes a second pawn; after 3...Bxe6 Black's only gain is a developed bishop. Then 4.Nf3 Nf6 5.d4 gives you a solid centre and easy development while you stay a clean pawn up.",
+			"enforces": {
+				"idea": "Grab the gambit pawn, not the centre",
+				"text": "Taking keeps the extra pawn; 2...e6 gives Black too little for it."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "b1c3",
+				"label": "inaccuracy",
+				"before": "3.Nc3 develops but doesn't stop 3...exd5. After 4.d4 Nf6 5.Nf3 Bd6 material is level in a symmetrical French Exchange pawn structure.",
+				"after": "3.dxe6 keeps the extra pawn instead of letting Black recapture; after 3...Bxe6 4.Nf3 you develop a clean pawn up.",
+				"idea": "Black wins d5 back"
+			}
 		]
 	},
 	"8733953429179306|c6e5": {
@@ -8359,42 +10639,263 @@
 		]
 	},
 	"956431266193433|d2d3": {
-		"headline": "Hit the e5 queen with 5.Nf3 instead of a pawn move",
-		"why": "5.d3 is a quiet pawn move that lets Black catch up: 5...Bg4 6.Be3 Bxe2 7.Qxe2 Nf6 and your edge is gone. As the theory notes say, the early queen check achieves little and the queen will have to move again. 5.Nf3 develops the knight toward the centre and attacks the queen on e5; after 5...Qd6 6.d4 e6 7.Nb5 Qd8 she has been driven all the way home while you developed, and you keep a clear edge.",
-		"principle": "When the opponent's queen comes out early, develop with moves that attack it; every tempo she spends running is a developing move you gain.",
-		"principleId": "early-queen",
+		"headline": "Hit the e5 queen with 5.Nf3, not a quiet pawn move",
+		"why": "5.d3 attacks nothing, so Black develops at leisure with 5...Bg4 and trades off your light-squared bishop: 6.Be3 Bxe2 7.Qxe2 Nf6. Black's queen was your target, but after 8.f4 Qa5 she is safe and your lead is gone. 5.Nf3 develops a piece and attacks the queen on e5 at once. After 5...Qd6 6.d4 e6 7.Nb5 Qd8 she is back home, while you have three pieces out and a pawn on d4.",
+		"principle": "Against an early queen, choose developing moves that attack it; a quiet pawn move gives the opponent time to catch up.",
+		"principleId": "tempo",
 		"themes": [
 			"early queen",
-			"development"
+			"tempo"
 		],
 		"sources": [
+			"Jeremy Silman, First Verbalize, Then Analyze (chess.com) | https://www.chess.com/article/view/first-verbalize-then-analyze-plus-one-from-the-rule-books",
+			"John Elburg, review of Jovanka Houska's Starting Out: The Scandinavian | http://chessbooks.nl/elburg141.html",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3"
-		]
+		],
+		"ideas": [
+			{
+				"title": "Develop with tempo on the queen",
+				"side": "you",
+				"text": "5.Nf3 develops and hits the queen on e5; after 5...Qd6 6.d4 e6 7.Nb5 she is chased back to d8.",
+				"arrows": [
+					"g1f3"
+				],
+				"squares": [
+					"e5"
+				]
+			},
+			{
+				"title": "Mind the pin on e2",
+				"side": "both",
+				"text": "The queen on e5 pins your e2 bishop to your king; it can't move until she leaves the e-file.",
+				"arrows": [
+					"e5e1"
+				],
+				"squares": [
+					"e2"
+				]
+			},
+			{
+				"title": "Black's bishop trade on e2",
+				"side": "opponent",
+				"text": "Given time, Black plays 5...Bg4 and swaps off your e2 bishop, as after 6.Be3 Bxe2 7.Qxe2.",
+				"arrows": [
+					"c8g4"
+				],
+				"squares": [
+					"e2"
+				]
+			}
+		],
+		"habit": {
+			"why": "5.d3 attacks nothing, so Black develops at leisure with 5...Bg4 and trades off your light-squared bishop: 6.Be3 Bxe2 7.Qxe2 Nf6. Black's queen was your target, but after 8.f4 Qa5 she is safe and your lead is gone.",
+			"strays": {
+				"idea": "Develop with tempo on the queen",
+				"text": "A pawn move that hits nothing gives Black a free move."
+			}
+		},
+		"taught": {
+			"why": "5.Nf3 develops a piece and attacks the queen on e5 at once. After 5...Qd6 6.d4 e6 7.Nb5 Qd8 she is back home, while you have three pieces out and a pawn on d4.",
+			"enforces": {
+				"idea": "Develop with tempo on the queen",
+				"text": "Each move that hits the queen brings out another piece."
+			}
+		},
+		"alternatives": []
 	},
 	"961430540554751|c1e3": {
 		"headline": "Ask the g4 bishop at once: 6.h3 before Black develops",
-		"why": "6.Be3 gives Black time for 6...Nf6, and when h3 comes a move later the bishop escapes with 7...Bh5 8.g4 Bg6, exactly the retreat route the theory describes, and White's edge shrinks. 6.h3, played in 84.2% of master games, hits the bishop on g4 while it still has to decide: 6...Bxf3 7.Qxf3 gives you the bishop pair and an active queen, then 8.Bd2 unpins the knight on c3 and 9.O-O-O follows.",
-		"principle": "A bishop that pawns can attack is a target: kick it with the h-pawn right away, before Black's development lets it retreat to a safe square for free.",
+		"why": "6.Be3 leaves the c3-knight pinned, since the bishop stands off the a5-e1 diagonal, and it gives Black a free move. After 6...Nf6 7.h3 Bh5 8.g4 Bg6 the bishop escapes to g6 instead of being traded for your knight. 6.h3, the choice in 84% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 Nd7 8.Bd2 e6 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+		"principle": "A bishop that a pawn can attack is a target: hit it with the h-pawn right away, before Black's development lets it retreat for free.",
 		"principleId": "pawn-chase",
 		"themes": [
-			"pawn chase",
-			"bishop pair"
+			"bishop pair",
+			"pins"
 		],
 		"sources": [
+			"A Chess Terrorist's Guide to the Center Counter (Chess Life) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6.h3%22+Scandinavian+Qa5+%22Bxf3+7.Qxf3%22",
+			"Eric Schiller and others on ...Bg4 6 h3 in the 3...Qa5 Scandinavian (Google Books) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6+h3%22+Scandinavian+%22Qa5%22+%22c6%22",
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "Ask the Bg4 question with h3",
+				"side": "you",
+				"text": "h3 makes the g4-bishop decide now: after 6...Bxf3 7.Qxf3 you have the bishop pair and your queen is already active.",
+				"arrows": [
+					"h2h3"
+				],
+				"squares": [
+					"g4"
+				]
+			},
+			{
+				"title": "Bd2, long castling, pawn storm",
+				"side": "you",
+				"text": "Then 8.Bd2 unpins the c3-knight and 9.O-O-O follows; if the bishop retreats instead, g4 chases it to g6.",
+				"arrows": [
+					"c1d2",
+					"e1c1"
+				],
+				"squares": [
+					"c3"
+				]
+			},
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Be3 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			},
+			{
+				"title": "Bishop out before ...e6/...c6",
+				"side": "opponent",
+				"text": "Black's bishop came out before ...e6. Given a free move, it can dodge the h3 push via h5 to g6, as in 8...Bg6.",
+				"arrows": [
+					"g4h5"
+				],
+				"squares": [
+					"g6"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be3 leaves the c3-knight pinned, since the bishop stands off the a5-e1 diagonal, and it gives Black a free move. After 6...Nf6 7.h3 Bh5 8.g4 Bg6 the bishop escapes to g6 instead of being traded for your knight.",
+			"strays": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "h3 comes a move late, and the bishop escapes to g6."
+			}
+		},
+		"taught": {
+			"why": "6.h3, the choice in 84% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 Nd7 8.Bd2 e6 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+			"enforces": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "Black must trade on f3 or retreat right now."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "f1e2",
+				"label": "slightly worse",
+				"before": "6.Be2 answers the pin passively: after 6...Nd7 7.Nd2 Bxe2 8.Qxe2 Black trades the bishop on its own terms and develops calmly.",
+				"after": "6.h3 forces the bishop to decide while that still costs Black something; masters choose it in 84% of games and 6.Be2 in 5%.",
+				"idea": "Ask the Bg4 question with h3"
+			},
+			{
+				"uci": "c1d2",
+				"label": "sound",
+				"before": "6.Bd2 breaks the pin on c3 with a developing move, and after 6...e6 you still have the bishop question to settle. It's fully sound, though masters favour another move.",
+				"after": "Both work: 6.Bd2 e6 7.h3 Bxf3 8.Qxf3 reaches the same kind of position. Settling the bishop first is the masters' main choice (84%).",
+				"idea": "The pin on c3"
+			},
+			{
+				"uci": "f1c4",
+				"label": "sound",
+				"before": "6.Bc4 develops actively, but after 6...Nf6 Black's queen can swing to h5 to keep the pin on f3, and your bishop drops back with 8.Be2. Masters play it in 11% of games.",
+				"after": "6.h3 settles the bishop before Black can back it up with ...Qh5. Masters prefer it, 84% to 11%.",
+				"idea": "Ask the Bg4 question with h3"
+			}
 		]
 	},
 	"961430540554751|f1e2": {
-		"headline": "Question the g4 bishop with 6.h3 and take the bishop pair",
-		"why": "6.Be2 is passive: Black continues 6...Nd7 and trades off the light-squared bishop with 7...Bxe2, and half of your advantage is gone. 6.h3, the choice in 84.2% of master games, puts the question to the bishop at once. After 6...Bxf3 7.Qxf3 you have the bishop pair and an active queen, and 8.Bd2 and 9.O-O-O follow; if the bishop retreats instead, the theory notes it gets chased to g6.",
-		"principle": "Create imbalances that favour you: forcing the bishop to take on f3 gives you the bishop pair in an open position, while a passive bishop move lets Black swap off a piece cheaply.",
+		"headline": "Ask the g4 bishop at once with 6.h3",
+		"why": "6.Be2 answers the pin passively: after 6...Nd7 7.Nd2 Bxe2 8.Qxe2 Black trades the bishop on its own terms and develops calmly. You gave up the chance to win the bishop pair, and much of your edge is gone. 6.h3, the choice in 84% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 Nd7 8.Bd2 e6 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+		"principle": "Force the trade that favours you: after 6...Bxf3 7.Qxf3 you own the bishop pair, while a passive bishop move lets Black swap pieces on its own terms.",
 		"principleId": "imbalances",
 		"themes": [
 			"bishop pair",
 			"development"
 		],
 		"sources": [
+			"A Chess Terrorist's Guide to the Center Counter (Chess Life) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6.h3%22+Scandinavian+Qa5+%22Bxf3+7.Qxf3%22",
+			"Eric Schiller and others on ...Bg4 6 h3 in the 3...Qa5 Scandinavian (Google Books) | https://www.google.com/books/feeds/volumes?q=%22Bg4+6+h3%22+Scandinavian+%22Qa5%22+%22c6%22",
+			"IM John Bartholomew, Main Line Scandinavian (Chessiverse) | https://chessiverse.com/resources/openings/main-line-scandinavian",
 			"Chess Opening Theory/1. e4/1...d5/2. exd5/2...Qxd5/3. Nc3/3...Qa5"
+		],
+		"ideas": [
+			{
+				"title": "Ask the Bg4 question with h3",
+				"side": "you",
+				"text": "h3 makes the g4-bishop decide now: after 6...Bxf3 7.Qxf3 you have the bishop pair and your queen is already active.",
+				"arrows": [
+					"h2h3"
+				],
+				"squares": [
+					"g4"
+				]
+			},
+			{
+				"title": "Bd2, long castling, pawn storm",
+				"side": "you",
+				"text": "Then 8.Bd2 unpins the c3-knight and 9.O-O-O follows; if the bishop retreats instead, g4 chases it to g6.",
+				"arrows": [
+					"c1d2",
+					"e1c1"
+				],
+				"squares": [
+					"c3"
+				]
+			},
+			{
+				"title": "The pin on c3",
+				"side": "both",
+				"text": "Black's queen on a5 pins your c3-knight to the king. A bishop on d2 breaks the pin; 6.Be2 does not.",
+				"arrows": [
+					"c1d2"
+				],
+				"squares": [
+					"c3",
+					"a5"
+				]
+			},
+			{
+				"title": "Bishop out before ...e6/...c6",
+				"side": "opponent",
+				"text": "Black's bishop came out before ...e6. Given a free move, Black swaps it on its own terms, as with 7...Bxe2.",
+				"arrows": [
+					"g4e2"
+				],
+				"squares": [
+					"g4"
+				]
+			}
+		],
+		"habit": {
+			"why": "6.Be2 answers the pin passively: after 6...Nd7 7.Nd2 Bxe2 8.Qxe2 Black trades the bishop on its own terms and develops calmly. You gave up the chance to win the bishop pair, and much of your edge is gone.",
+			"strays": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "Black decides about the bishop on its own terms."
+			}
+		},
+		"taught": {
+			"why": "6.h3, the choice in 84% of master games, makes the bishop decide now. After 6...Bxf3 7.Qxf3 Nd7 8.Bd2 e6 9.O-O-O you have both bishops, an active queen and no pin on c3.",
+			"enforces": {
+				"idea": "Ask the Bg4 question with h3",
+				"text": "Black must trade on f3 or retreat right now."
+			}
+		},
+		"alternatives": [
+			{
+				"uci": "c1d2",
+				"label": "sound",
+				"before": "6.Bd2 breaks the pin on c3 with a developing move, and after 6...e6 you still have the bishop question to settle. It's fully sound, though masters favour another move.",
+				"after": "Both work: 6.Bd2 e6 7.h3 Bxf3 8.Qxf3 reaches the same kind of position. Settling the bishop first is the masters' main choice (84%).",
+				"idea": "The pin on c3"
+			},
+			{
+				"uci": "f1c4",
+				"label": "sound",
+				"before": "6.Bc4 develops actively, but after 6...Nf6 Black's queen can swing to h5 to keep the pin on f3, and your bishop drops back with 8.Be2. Masters play it in 11% of games.",
+				"after": "6.h3 settles the bishop before Black can back it up with ...Qh5. Masters prefer it, 84% to 11%.",
+				"idea": "Ask the Bg4 question with h3"
+			}
 		]
 	},
 	"962560137426404|a7a6": {

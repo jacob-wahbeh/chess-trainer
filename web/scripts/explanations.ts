@@ -58,8 +58,20 @@ if (command === 'todo') {
 			console.log(`✗ ${id}${card ? ` (${card.moves} ${card.habit.move})` : ''}\n  - ${problems.join('\n  - ')}`);
 			continue;
 		}
-		const { headline, why, principle, principleId, themes, sources } = answer as Explanation;
-		explanations[id] = { headline, why, principle, principleId, ...(themes?.length ? { themes } : {}), ...(sources?.length ? { sources } : {}) };
+		// Every field the app reads, the opening-ideas ones included (docs/opening-ideas-pipeline.md).
+		const { headline, why, principle, principleId, themes, sources, ideas, habit, taught, alternatives } = answer as Explanation;
+		explanations[id] = {
+			headline,
+			why,
+			principle,
+			principleId,
+			...(themes?.length ? { themes } : {}),
+			...(sources?.length ? { sources } : {}),
+			...(ideas?.length ? { ideas } : {}),
+			...(habit ? { habit } : {}),
+			...(taught ? { taught } : {}),
+			...(alternatives?.length ? { alternatives } : {})
+		};
 		added++;
 	}
 	if (command === 'check') {

@@ -34,7 +34,23 @@ The shapes go on the drill position (before the move), in the idea's side colour
 Check every arrow starts on the right piece with python-chess; `checkExplanation` checks the format and that
 every `strays` / `enforces` / alternative `idea` names an existing title.
 
-## Pipeline
+## Lean pipeline (since 2026-11-10)
+
+Per opening family, across every player (cards shared by players count once):
+1. `npx vite-node scripts/alternatives.ts <user> family:<Family>` (or `1000` for every card): club and master
+   alternatives, cards in parallel on all engines, merged into `data/<user>/alternatives.json`.
+2. `npx vite-node scripts/ideas.ts prep <Family>` -> `data/ideas/<slug>/input.json` with writer batches (≤ 12 cards,
+   whole variations together).
+3. The `opening-ideas` workflow (`.claude/workflows/opening-ideas.js`, args `{ family, slug, batches }`): one
+   researcher for the family's ideas (≥ 3 individual sources), one researcher per batch for the exact lines, one
+   writer per batch who runs `ideas.ts check` on its drafts until they pass, one spot-checker for ~10 claims.
+4. Review a few cards, then `npx vite-node scripts/ideas.ts merge <Family> data/ideas/<slug>/drafts-<n>.json`.
+
+`ideas.ts check` runs `checkExplanation` with the alternatives (moves in every text, `before` leaks, labels, every
+alternative covered, lengths, arrows on pieces), opens every source URL, and prints link advice for unnumbered
+piece moves.
+
+## Pipeline (the pilot's)
 
 1. **Club and master alternatives** — `npx vite-node scripts/alternatives.ts <user> <ids | top N>` →
    `data/<user>/alternatives.json`. Lichess *amateur* explorer (`explorer.lichess.org/lichess`, ratings

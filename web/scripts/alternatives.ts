@@ -1,9 +1,11 @@
 // For drill cards: the moves club players commonly choose in the card's position (Lichess database, 1000–1800,
 // blitz and rapid) and the sound master alternatives, each graded by Stockfish with its line. Feeds the written
 // explanations for moves other than the habit and the taught one.
-// Usage: npx vite-node scripts/alternatives.ts <user> <card ids, comma-separated | top N>
-//        -> data/<user>/alternatives.json (amateur lookups cached in data/<user>/amateur-cache.json)
+// Usage: npx vite-node scripts/alternatives.ts <user> <card ids, comma-separated | top N | family:<opening family>>
+//        -> data/<user>/alternatives.json, merged with what's there (amateur lookups cached in
+//        data/<user>/amateur-cache.json). Cards run in parallel on all engines.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpus } from 'node:os';
 import { Chess } from 'chessops/chess';
 import { makeFen, parseFen } from 'chessops/fen';
 import { parseSan } from 'chessops/san';
@@ -22,18 +24,40 @@ const MASTER_SHARE = 5;
 
 const [user = 'draco_jaco', which = '20'] = process.argv.slice(2);
 const cards = JSON.parse(readFileSync(new URL(`data/${user}/cards.json`, root), 'utf8')).cards as any[];
-const chosen = which.includes('|') ? which.split(',').map((id) => cards.find((c) => c.id === id)).filter(Boolean) : cards.slice(0, Number(which));
+const chosen = which.startsWith('family:')
+	? cards.filter((c) => (c.opening ?? '').split(':')[0].toLowerCase().startsWith(which.slice(7).toLowerCase()))
+	: which.includes('|')
+		? which.split(',').map((id) => cards.find((c) => c.id === id)).filter(Boolean)
+		: cards.slice(0, Number(which));
+const outFile = new URL(`data/${user}/alternatives.json`, root);
+const previous: any[] = existsSync(outFile) ? JSON.parse(readFileSync(outFile, 'utf8')) : [];
 const cacheFile = new URL(`data/${user}/amateur-cache.json`, root);
 const cache: Record<string, { total: number; moves: { san: string; uci: string; games: number }[] }> = existsSync(cacheFile)
 	? JSON.parse(readFileSync(cacheFile, 'utf8'))
 	: {};
 const token = lichessToken();
 
-async function amateur(fen: string) {
+/** Lookups one at a time (the explorer rate-limits), while the engines work in parallel. */
+let queue: Promise<unknown> = Promise.resolve();
+const amateur = (fen: string) => {
+	const next = queue.then(() => lookup(fen));
+	queue = next.catch(() => {});
+	return next;
+};
+
+async function lookup(fen: string) {
 	if (cache[fen]) return cache[fen];
 	const params = { variant: 'standard', speeds: 'blitz,rapid', ratings: '1000,1200,1400,1600,1800', fen, moves: '12', topGames: '0', recentGames: '0' };
-	for (;;) {
-		const res = await fetch(`https://explorer.lichess.org/lichess?${new URLSearchParams(params)}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+	for (let attempt = 1; ; attempt++) {
+		// A dropped connection is retried a few times before giving up.
+		const res = await fetch(`https://explorer.lichess.org/lichess?${new URLSearchParams(params)}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).catch((e) => {
+			if (attempt >= 5) throw e;
+			return null;
+		});
+		if (!res) {
+			await new Promise((r) => setTimeout(r, 5_000 * attempt));
+			continue;
+		}
 		if (res.status === 429) {
 			await new Promise((r) => setTimeout(r, 60_000));
 			continue;
@@ -46,7 +70,7 @@ async function amateur(fen: string) {
 	}
 }
 
-const pool = enginePool(6);
+const pool = enginePool(Math.max(2, cpus().length - 2));
 const sign = (pos: Chess) => (pos.turn === 'white' ? 1 : -1);
 const uciOf = (pos: Chess, san: string) => {
 	const m = parseSan(pos, san.replace(/^\d+\.+/, ''));
@@ -54,8 +78,7 @@ const uciOf = (pos: Chess, san: string) => {
 };
 const cpOf = (r: { cp?: number; mate?: number }) => (r.mate !== undefined ? (r.mate > 0 ? 100000 : -100000) : (r.cp ?? 0));
 
-const out = [];
-for (const card of chosen) {
+async function analyse(card: any) {
 	const pos = Chess.fromSetup(parseFen(card.fen).unwrap()).unwrap();
 	const habit = card.id.split('|')[1];
 	const taught = uciOf(pos, card.taught.move);
@@ -80,13 +103,19 @@ for (const card of chosen) {
 
 	const best = await pool.evaluate(card.fen, DEPTH);
 	const base = winPercent(sign(pos) * cpOf(best));
+	const graded = await Promise.all(
+		[...candidates].map(async ([uci, shares]) => {
+			const after = pos.clone();
+			const move = parseSan(pos, continuation(pos, [uci])[0]?.san ?? '');
+			if (!move) return null;
+			after.play(move);
+			return { uci, shares, after, r: await pool.evaluate(makeFen(after.toSetup()), DEPTH) };
+		})
+	);
 	const alternatives = [];
-	for (const [uci, shares] of candidates) {
-		const after = pos.clone();
-		const move = parseSan(pos, continuation(pos, [uci])[0]?.san ?? '');
-		if (!move) continue;
-		after.play(move);
-		const r = await pool.evaluate(makeFen(after.toSetup()), DEPTH);
+	for (const g of graded) {
+		if (!g) continue;
+		const { uci, shares, after, r } = g;
 		// The engine scores from the side to move after the move; evalWhite is from White's side.
 		const evalWhite = sign(after) * cpOf(r);
 		const drop = Math.max(0, base - winPercent(sign(pos) * evalWhite));
@@ -105,7 +134,7 @@ for (const card of chosen) {
 			lineUcis: line.map((p) => p.uci)
 		});
 	}
-	out.push({
+	const entry = {
 		id: card.id,
 		opening: card.opening,
 		color: card.color,
@@ -116,9 +145,15 @@ for (const card of chosen) {
 		habit: card.habit,
 		taught: card.taught,
 		alternatives
-	});
+	};
 	console.log(`${card.id} ${card.opening}: ${alternatives.map((a) => `${a.move} ${a.label} (club ${a.amateurShare ?? '–'}%, masters ${a.mastersShare ?? '–'}%)`).join(', ')}`);
+	return entry;
 }
+
+const PARALLEL = 4;
+const out: any[] = [];
+for (let i = 0; i < chosen.length; i += PARALLEL) out.push(...(await Promise.all(chosen.slice(i, i + PARALLEL).map(analyse))));
 pool.quit();
-writeFileSync(new URL(`data/${user}/alternatives.json`, root), JSON.stringify(out, null, '\t'));
-console.log(`wrote ${out.length} cards to data/${user}/alternatives.json`);
+const merged = [...previous.filter((p) => !out.some((o) => o.id === p.id)), ...out];
+writeFileSync(outFile, JSON.stringify(merged, null, '\t'));
+console.log(`wrote ${out.length} cards (${merged.length} in all) to data/${user}/alternatives.json`);

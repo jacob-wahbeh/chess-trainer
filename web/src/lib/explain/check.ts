@@ -3,7 +3,8 @@
 import { Chess } from 'chessops/chess';
 import { parseFen } from 'chessops/fen';
 import { makeSan } from 'chessops/san';
-import { makeSquare, parseUci } from 'chessops/util';
+import { makeSquare, parseSquare, parseUci } from 'chessops/util';
+import { findMoves } from '../chess/movelinks';
 import type { MainWhy } from '../drill/cards';
 import type { Color } from '../games/types';
 import { passTurn } from './facts';
@@ -89,7 +90,7 @@ const PIECE_ON = /\b(king|queen|rook|bishop|knight|pawn)s?\s+on\s+([a-h][1-8])\b
 const SQUARE_PIECE = /\b([a-h][1-8])[-\s](king|queen|rook|bishop|knight|pawn)\b/gi;
 
 /** SAN moves (also numbered: "3...Nf6") and piece placements on the way to the position and along its lines. */
-export function vocabulary(card: ExportCard): { moves: Set<string>; numbered: Set<string>; pieces: Set<string> } {
+export function vocabulary(card: ExportCard, extraLines: string[][] = []): { moves: Set<string>; numbered: Set<string>; pieces: Set<string> } {
 	const moves = new Set<string>();
 	const numbered = new Set<string>();
 	const pieces = new Set<string>();
@@ -111,7 +112,7 @@ export function vocabulary(card: ExportCard): { moves: Set<string>; numbered: Se
 	};
 	play(Chess.default(), card.check.path);
 	const pos = Chess.fromSetup(parseFen(card.fen).unwrap()).unwrap();
-	for (const line of card.check.lines) play(pos, line);
+	for (const line of [...card.check.lines, ...extraLines]) play(pos, line);
 	const passed = passTurn(pos);
 	if (passed) play(passed, card.check.threat);
 	for (const t of card.theory ?? []) quoted(t.text, moves, numbered);
@@ -146,8 +147,21 @@ function quoted(text: string, moves: Set<string>, numbered: Set<string>) {
 	}
 }
 
-/** Problems with a written explanation; empty when it can be shown. */
-export function checkExplanation(card: ExportCard, e: unknown): string[] {
+/** Another common move here and its engine line (scripts/alternatives.ts), for checking the texts about it. */
+export interface AlternativeLine {
+	uci: string;
+	label: string;
+	lineUcis: string[];
+}
+
+/** Word limits for the phone: texts above them are cut down, not shown in full. */
+const MAX_WORDS = { idea: 35, why: 75, link: 25, alternative: 50 };
+
+/**
+ * Problems with a written explanation; empty when it can be shown. With `alternatives` (the common moves from
+ * scripts/alternatives.ts), their lines count as known moves and every one of them needs a written entry.
+ */
+export function checkExplanation(card: ExportCard, e: unknown, alternatives?: AlternativeLine[]): string[] {
 	const x = e as Partial<Explanation> | null;
 	if (!x || typeof x.headline !== 'string' || typeof x.why !== 'string' || typeof x.principle !== 'string') {
 		return ['needs string fields headline, why and principle'];
@@ -157,8 +171,9 @@ export function checkExplanation(card: ExportCard, e: unknown): string[] {
 	const problems: string[] = [];
 	if (typeof x.principleId !== 'string' || !principleById.has(x.principleId)) problems.push(`principleId must be one of: ${[...principleById.keys()].join(', ')}`);
 	if (x.headline.split(/\s+/).length > MAX_HEADLINE_WORDS) problems.push(`headline is longer than ${MAX_HEADLINE_WORDS} words`);
-	const { moves, numbered, pieces } = vocabulary(card);
-	const text = [x.headline, x.why, x.principle].join('\n');
+	const { moves, numbered, pieces } = vocabulary(card, (alternatives ?? []).map((a) => a.lineUcis));
+	const rich = richTexts(x);
+	const text = [x.headline, x.why, x.principle, ...rich].join('\n');
 	for (const m of text.matchAll(MOVE)) {
 		const [, number, san] = m;
 		// A bare pawn push ("e4") may just be a square; only check it when it carries a move number.
@@ -175,21 +190,97 @@ export function checkExplanation(card: ExportCard, e: unknown): string[] {
 	for (const [, square, role] of text.matchAll(SQUARE_PIECE)) {
 		if (!pieces.has(`${role.toLowerCase()}@${square}`)) problems.push(`no ${role.toLowerCase()} stands on ${square} in the position or its lines`);
 	}
-	problems.push(...checkIdeas(x));
+	problems.push(...checkIdeas(x, card), ...checkRich(x, card, alternatives));
 	return [...new Set(problems)];
+}
+
+/** The texts of the opening-ideas format (docs/opening-ideas-pipeline.md). */
+function richTexts(x: Partial<Explanation>): string[] {
+	return [
+		...(x.ideas ?? []).map((i) => i.text),
+		x.habit?.why,
+		x.habit?.strays?.text,
+		x.taught?.why,
+		x.taught?.enforces?.text,
+		...(x.alternatives ?? []).flatMap((a) => [a.before, a.after])
+	].filter((t): t is string => typeof t === 'string');
+}
+
+const words = (t: string) => t.trim().split(/\s+/).length;
+
+/** Lengths, sides, the alternatives against the common moves, and `before` texts that give the taught move away. */
+function checkRich(x: Partial<Explanation>, card: ExportCard, alternatives?: AlternativeLine[]): string[] {
+	const problems: string[] = [];
+	for (const i of x.ideas ?? []) {
+		if (!['you', 'opponent', 'both'].includes(i.side)) problems.push(`idea "${i.title}": side must be you, opponent or both`);
+		if (words(i.text) > MAX_WORDS.idea) problems.push(`idea "${i.title}" is longer than ${MAX_WORDS.idea} words`);
+	}
+	if (x.ideas && (x.ideas.length < 2 || x.ideas.length > 5)) problems.push('give 2 to 5 ideas');
+	for (const [name, why] of [['habit.why', x.habit?.why], ['taught.why', x.taught?.why]] as const) {
+		if (why && words(why) > MAX_WORDS.why) problems.push(`${name} is longer than ${MAX_WORDS.why} words`);
+	}
+	for (const [name, link] of [['habit.strays', x.habit?.strays], ['taught.enforces', x.taught?.enforces]] as const) {
+		if (link && words(link.text) > MAX_WORDS.link) problems.push(`${name}.text is longer than ${MAX_WORDS.link} words`);
+	}
+	const taughtSan = card.taught?.move.replace(/^\d+\.+/, '').replace(/[+#]/g, '');
+	const given = new Map((alternatives ?? []).map((a) => [a.uci, a]));
+	for (const a of x.alternatives ?? []) {
+		const at = `alternative ${a.uci}`;
+		if (typeof a.before !== 'string' || typeof a.after !== 'string') {
+			problems.push(`${at} needs before and after texts`);
+			continue;
+		}
+		if (words(a.before) > MAX_WORDS.alternative || words(a.after) > MAX_WORDS.alternative) problems.push(`${at}: before and after must each be at most ${MAX_WORDS.alternative} words`);
+		if (taughtSan && [...a.before.matchAll(MOVE)].some((m) => m[2] === taughtSan)) problems.push(`${at}: before names the taught move ${taughtSan}; it shows while the player is still looking for it`);
+		if (alternatives) {
+			const g = given.get(a.uci);
+			if (!g) problems.push(`${at} is not one of the common moves given`);
+			else if (g.label !== a.label) problems.push(`${at}: label must be "${g.label}", as given`);
+		}
+	}
+	for (const g of alternatives ?? []) if (!(x.alternatives ?? []).some((a) => a.uci === g.uci)) problems.push(`alternative ${g.uci} (${g.label}) has no written entry`);
+	return problems;
+}
+
+/**
+ * Advice for writers, not a reason to reject: piece moves the app can't link to the board, which need a number
+ * ("4...Nf6") or to follow a numbered move ("4.Nc3 Nf6"). A move only talked about ("can't play Nc3") is fine.
+ */
+export function linkWarnings(e: unknown): string[] {
+	const x = e as Partial<Explanation> | null;
+	return x ? [...new Set(richTexts(x).flatMap(unlinked))] : [];
+}
+
+function unlinked(text: string): string[] {
+	const linked: [number, number][] = [];
+	let at = 0;
+	for (const seg of findMoves(text)) {
+		if (seg.move) linked.push([at, at + seg.text.length]);
+		at += seg.text.length;
+	}
+	const problems: string[] = [];
+	for (const m of text.matchAll(MOVE)) {
+		const san = m[2];
+		if (!/^[KQRBNO]/.test(san)) continue;
+		const start = m.index + m[0].indexOf(san);
+		if (!linked.some(([a, b]) => start >= a && start < b)) problems.push(`write ${san} with its move number ("5.${san}" or "5...${san}") so it links to the board`);
+	}
+	return problems;
 }
 
 const ARROW = /^([a-h][1-8])([a-h][1-8])$/;
 const SQUARE = /^[a-h][1-8]$/;
 
 /** The ideas' board shapes are well-formed, and every line's idea names one of them. */
-function checkIdeas(x: Partial<Explanation>): string[] {
+function checkIdeas(x: Partial<Explanation>, card: ExportCard): string[] {
+	const board = Chess.fromSetup(parseFen(card.fen).unwrap()).unwrap().board;
 	const problems: string[] = [];
 	const titles = new Set((x.ideas ?? []).map((i) => i.title));
 	for (const i of x.ideas ?? []) {
 		for (const a of i.arrows ?? []) {
 			const m = ARROW.exec(a);
 			if (!m || m[1] === m[2]) problems.push(`idea "${i.title}": arrow ${a} must be two different squares like e2e4`);
+			else if (!board.has(parseSquare(m[1])!)) problems.push(`idea "${i.title}": arrow ${a} starts on an empty square in the drill position`);
 		}
 		for (const q of i.squares ?? []) if (!SQUARE.test(q)) problems.push(`idea "${i.title}": square ${q} must look like f7`);
 	}

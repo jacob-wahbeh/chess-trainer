@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeFen } from 'chessops/fen';
 import { replayUcis } from '../chess/pgn';
-import { checkExplanation, sourceLink, type ExportCard } from './check';
+import { checkExplanation, linkWarnings, sourceLink, type ExportCard } from './check';
 
 // 1.e4 e5 2.Nf3 Bc5: the habit 3.Bc4 against the taught 3.Nxe5.
 const path = ['e2e4', 'e7e5', 'g1f3', 'f8c5'];
@@ -25,19 +25,44 @@ const explanation = (why: string) => ({ headline: 'Take the e5 pawn', why, princ
 
 describe('checkExplanation', () => {
 	it('checks the ideas\' arrows and squares, and that lines name an existing idea', () => {
-		const idea = { title: 'Hit f7', side: 'you' as const, text: 'Aim at f7.', arrows: ['c4f7'], squares: ['f7'] };
-		expect(checkExplanation(card, { ...explanation('Take it.'), ideas: [idea], taught: { why: 'Take it.', enforces: { idea: 'Hit f7', text: 'It does.' } } })).toEqual([]);
+		const idea = { title: 'Hit f7', side: 'you' as const, text: 'Aim at f7.', arrows: ['c5f2'], squares: ['f7'] };
+		const other = { title: 'Develop', side: 'both' as const, text: 'Bring the pieces out.' };
+		expect(checkExplanation(card, { ...explanation('Take it.'), ideas: [idea, other], taught: { why: 'Take it.', enforces: { idea: 'Hit f7', text: 'It does.' } } })).toEqual([]);
 		expect(
 			checkExplanation(card, {
 				...explanation('Take it.'),
-				ideas: [{ ...idea, arrows: ['c4c4', 'c4-f7'], squares: ['i9'] }],
+				ideas: [{ ...idea, arrows: ['c4c4', 'c4-f7', 'd4d5'], squares: ['i9'] }, other],
 				habit: { why: 'Slow.', strays: { idea: 'Hit f2', text: 'No.' } }
 			})
 		).toEqual([
 			'idea "Hit f7": arrow c4c4 must be two different squares like e2e4',
 			'idea "Hit f7": arrow c4-f7 must be two different squares like e2e4',
+			'idea "Hit f7": arrow d4d5 starts on an empty square in the drill position',
 			'idea "Hit f7": square i9 must look like f7',
 			'"Hit f2" is not one of the ideas\' titles'
+		]);
+	});
+
+	it('checks the alternatives against the common moves, and keeps the taught move out of before texts', () => {
+		const ideas = [
+			{ title: 'Centre', side: 'you' as const, text: 'Take the centre.' },
+			{ title: 'Develop', side: 'both' as const, text: 'Bring the pieces out.' }
+		];
+		const given = [
+			{ uci: 'd2d4', label: 'sound', lineUcis: ['d2d4', 'c5d4'] },
+			{ uci: 'b1c3', label: 'inaccuracy', lineUcis: ['b1c3', 'g8f6'] }
+		];
+		const alt = (uci: string, label: string, before: string) => ({ uci, label, before, after: 'Later.', idea: 'Centre' });
+		expect(checkExplanation(card, { ...explanation('Take it.'), ideas, alternatives: [alt('d2d4', 'sound', 'After 3.d4 Bxd4 the centre opens.'), alt('b1c3', 'inaccuracy', 'Slow.')] }, given)).toEqual([]);
+		expect(
+			checkExplanation(card, { ...explanation('Take it.'), ideas, alternatives: [alt('d2d4', 'inaccuracy', 'Better is 3.Nxe5, and Nf6 follows.')] }, given)
+		).toEqual([
+			'alternative d2d4: before names the taught move Nxe5; it shows while the player is still looking for it',
+			'alternative d2d4: label must be "sound", as given',
+			'alternative b1c3 (inaccuracy) has no written entry'
+		]);
+		expect(linkWarnings({ alternatives: [alt('d2d4', 'sound', 'After 3.d4 Bxd4 4.Nxd4, Nf6 follows.')] })).toEqual([
+			'write Nf6 with its move number ("5.Nf6" or "5...Nf6") so it links to the board'
 		]);
 	});
 
