@@ -774,10 +774,9 @@
 				.then(() => refreshDrill());
 		}
 		result = r;
-		// A sound alternative: the main move stays hidden so it can still be found, and the board stays on the drill position
-		// (the move shows as its arrow) so the next move can be tried at once.
+		// A sound alternative: the main move stays hidden so it can still be found. The move stays on the board; Try again
+		// (or back) returns to the drill position to look for the main move.
 		seeking = r.kind !== 'wrong' && main !== undefined && uci !== main;
-		if (seeking) pv = null;
 		phase = 'result';
 		void explain(card.card.id, r);
 	}
@@ -1407,7 +1406,7 @@
 						{:else if seeking}
 							<p class="dim seek">
 								{why === 'thematic' ? 'Masters mostly play another move.' : why === 'punish' ? `There’s a stronger way to punish ${slip}.` : 'The engine prefers another move.'}
-								Find it on the board.
+								Try again to find it.
 							</p>
 						{:else if result.kind === 'wrong' && why === 'punish' && !revealed && !narrow}
 							<p class="faint small">
