@@ -40,7 +40,9 @@ Per opening family, across every player (cards shared by players count once):
 1. `npx vite-node scripts/alternatives.ts <user> family:<Family>` (or `1000` for every card): club and master
    alternatives, cards in parallel on all engines, merged into `data/<user>/alternatives.json`.
 2. `npx vite-node scripts/ideas.ts prep <Family>` -> `data/ideas/<slug>/input.json` with writer batches (≤ 12 cards,
-   whole variations together).
+   whole variations together). Small families go in a named group: `prep Pirc-Modern "Pirc Defense" "Modern Defense"`
+   (check/merge read the list back from input.json). Several groups run side by side with a small wrapper that calls
+   `workflow('opening-ideas', group)` for each.
 3. The `opening-ideas` workflow (`.claude/workflows/opening-ideas.js`, args `{ family, slug, batches }`): one
    researcher for the family's ideas (≥ 3 individual sources), one researcher per batch for the exact lines, one
    writer per batch who runs `ideas.ts check` on its drafts until they pass, one spot-checker for ~10 claims.
@@ -106,7 +108,13 @@ For the full run:
 - Castling is `e1h1` / `e8h8` in the app's UCI (chessops), not `e1g1`.
 - Each localhost port has its own storage: a new port needs a fresh import.
 
-## Status and next steps (2026-11-10)
+## Status and next steps (2026-11-11)
+
+**Done (2026-11-11):** every current card (394, all three players) has research-backed ideas, made with the lean
+pipeline: Scandinavian, Italian, Sicilian, then 7 groups for the remaining 34 families. ~22-28k tokens per card;
+the spot-checkers fixed about one overstated or misattributed claim in three. Rare lines with no published
+analysis rest on Wikibooks and the engine lines, and say so in their sources. New cards from later imports need a
+run: `alternatives.ts`, `ideas.ts prep` for their family, the workflow, then merge.
 
 **Shipped:** the compressed format for three draco_jaco cards (Kennedy 3.c3, Alapin 2...d6, Evans 7.Ng5), shown
 in the drill: main ideas, "Strays from" / "Carries out" tags, and before/after whys for other common moves. The

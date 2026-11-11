@@ -1,5 +1,6 @@
 // Opening-idea explanations, one opening family at a time across every player (docs/opening-ideas-pipeline.md).
-//   prep  <family>         data/ideas/<family>/input.json: the family's cards from every player (run export-cards.ts
+//   prep  <family> [names] data/ideas/<family>/input.json (names: the opening families it groups, "Pirc Defense" "Modern
+//                          Defense"; default the family itself): the family's cards from every player (run export-cards.ts
 //                          and alternatives.ts first), with their club alternatives and current explanation, grouped
 //                          into writer batches of whole variations
 //   check <family> <file>  checks written explanations ({ "<card id>": Explanation }) with the common moves; also
@@ -14,7 +15,8 @@ import { root } from './harness';
 const BATCH = 12;
 const FIELDS = ['headline', 'why', 'principle', 'principleId', 'themes', 'sources', 'ideas', 'habit', 'taught', 'alternatives'] as const;
 
-const [command, family, file] = process.argv.slice(2);
+const [command, family, ...rest] = process.argv.slice(2);
+const file = rest[0];
 if (!command || !family) {
 	console.error('usage: ideas.ts prep|check|merge <family> [file]');
 	process.exit(1);
@@ -23,7 +25,9 @@ const slug = family.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, 
 const dir = new URL(`data/ideas/${slug}/`, root);
 const store = new URL('../static/explanations.json', import.meta.url);
 const read = <T>(url: URL, fallback: T): T => (existsSync(url) ? (JSON.parse(readFileSync(url, 'utf8')) as T) : fallback);
-const inFamily = (opening?: string) => (opening ?? '').split(':')[0].toLowerCase().startsWith(family.toLowerCase());
+/** The opening families this group covers: given to prep, then read back from its input.json. */
+const names: string[] = command === 'prep' ? (rest.length ? rest : [family]) : (read<{ families?: string[] }>(new URL('input.json', dir), {}).families ?? [family]);
+const inFamily = (opening?: string) => names.some((n) => (opening ?? '').split(':')[0].toLowerCase().startsWith(n.toLowerCase()));
 
 // Every player's cards and alternatives; a card (position + habit) shared by players is one card.
 const users = readdirSync(new URL('data/', root)).filter((u) => existsSync(new URL(`data/${u}/cards.json`, root)));
@@ -60,6 +64,7 @@ if (command === 'prep') {
 	}
 	const input = {
 		family,
+		families: names,
 		principles: PRINCIPLES,
 		variations: Object.fromEntries(byVariation),
 		batches,
