@@ -12,6 +12,7 @@
 	import { chessopsUci } from '$lib/analysis/runner';
 	import { formatEval, formatEvalShort, standingOf, standingSentence, whiteCp, type Eval } from '$lib/analysis/score';
 	import { continuation, formatPlies, positions, sanOf, walk, type Ply, type Walk } from '$lib/chess/line';
+	import { findMoves, plyIndex, type WrittenMove } from '$lib/chess/movelinks';
 	import { ACCEPT_DROP, dropOf, KNOWN_STREAK, statusOf, type CardRecord } from '$lib/drill/cards';
 	import { EnginePool, type EvalResult } from '$lib/engine/pool';
 	import { sourceLink, type Explanation } from '$lib/explain/check';
@@ -123,6 +124,10 @@
 	let narrow = $state(false);
 	/** The move row under the board, kept scrolled to the move on the board. */
 	let movesEl = $state<HTMLElement | undefined>();
+	/** Phones: what the Why sheet shows, a line (its chip) or the opening (ideas, principle, sources). */
+	let sheetView = $state<'line' | 'opening'>('line');
+	/** The opening view's open sections: idea titles, 'principle', 'sources'. */
+	let openSections = $state<Set<string>>(new Set());
 	/** Taps on the footer buttons are ignored until then: a double tap on one button mustn't land on the button that replaces it. */
 	let calmUntil = 0;
 	const settle = () => (calmUntil = performance.now() + 400);
@@ -346,8 +351,20 @@
 		const pos = setup?.isOk ? Chess.fromSetup(setup.value) : undefined;
 		return pos?.isOk ? pos.value : null;
 	});
+	/** The open ideas' arrows and squares (when the explanation has them), on the drill position. */
+	const IDEA_BRUSH = { you: 'green', opponent: 'yellow', both: 'blue' } as const;
+	const ideaShapes: DrawShape[] = $derived.by(() => {
+		if (!(narrow && sheet && sheetView === 'opening') || pv || cursor !== end || !written?.ideas) return [];
+		return written.ideas
+			.filter((i) => openSections.has(i.title))
+			.flatMap((i) => [
+				...(i.arrows ?? []).map((a) => ({ orig: a.slice(0, 2) as Key, dest: a.slice(2, 4) as Key, brush: IDEA_BRUSH[i.side] })),
+				...(i.squares ?? []).map((q) => ({ orig: q as Key, brush: IDEA_BRUSH[i.side] }))
+			]);
+	});
 	const shapes: DrawShape[] = $derived.by(() => {
 		if (phase !== 'result' || !result) return [];
+		if (sheet && sheetView === 'opening' && !pv && cursor === end) return ideaShapes;
 		const drawn = notesHere.flatMap((n) => toShapes(n.shapes));
 		if (pv) {
 			if (drawn.length) return drawn;
@@ -475,6 +492,104 @@
 	function boardTouch() {
 		if (phase === 'intro') finishIntro();
 		else if (phase === 'ask' && cursor < end && !pv) goTo(end);
+	}
+
+	/** The opening view of the Why sheet: the board goes back to the position, where an open idea can draw itself. */
+	function showOpening(focus?: string) {
+		if (!written || !card) return;
+		stopPlay();
+		sheetView = 'opening';
+		goTo(end);
+		// Ideas start as a list of titles, with the one this line relates to open (on older cards, the principle).
+		const related = focus ?? ideaTag(selected ?? '')?.idea;
+		openSections = new Set(written.ideas?.length ? (related ? [related] : []) : ['principle']);
+	}
+
+	function toggleSection(id: string) {
+		const next = new Set(openSections);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		openSections = next;
+		if (pv || cursor !== end) goTo(end);
+	}
+
+	/** The opening idea a line carries out or strays from, once the answer may be seen. */
+	function ideaTag(key: string): { idea: string; tone: 'good' | 'bad' | 'own' } | null {
+		if (!written || !card || !answerShown) return null;
+		if (key === card.card.wrong && written.habit?.strays) return { idea: written.habit.strays.idea, tone: 'bad' };
+		if (key === (main ?? '') && written.taught?.enforces) return { idea: written.taught.enforces.idea, tone: 'good' };
+		const alt = altOf(key);
+		return alt?.idea ? { idea: alt.idea, tone: 'own' } : null;
+	}
+
+	/** How the habit and the taught move relate to an idea, shown under it. */
+	function ideaMoves(title: string): { tone: 'good' | 'bad'; move: string; text: string }[] {
+		if (!written || !card) return [];
+		const out: { tone: 'good' | 'bad'; move: string; text: string }[] = [];
+		if (written.habit?.strays?.idea === title) out.push({ tone: 'bad', move: numbered(card.card.wrong), text: written.habit.strays.text });
+		if (written.taught?.enforces?.idea === title && main) out.push({ tone: 'good', move: numbered(main), text: written.taught.enforces.text });
+		return out;
+	}
+
+	type MoveLink = { key: string; n: number } | { cursor: number };
+	/** Where a move written in an explanation is on the board: in the line being read, another line under review, or the game. */
+	function linkOf(move: WrittenMove, prefer: string | null): MoveLink | null {
+		const keys = chips.map((c) => c.key);
+		if (prefer !== null && keys.includes(prefer)) keys.unshift(prefer);
+		for (const k of keys) {
+			const i = plyIndex(lineOf(k), move);
+			if (i >= 0) return { key: k, n: i + 1 };
+		}
+		const j = line ? plyIndex(line.plies, move) : -1;
+		return j >= 0 ? { cursor: j + 1 } : null;
+	}
+	/** Explanation text as plain runs and move links; consecutive moves ("4...Bc5 5.f4 Nc6") make one link, to the last of them. */
+	type Run = { text: string; first?: MoveLink; to?: MoveLink };
+	const follows = (a: MoveLink, b: MoveLink) =>
+		'key' in a && 'key' in b ? a.key === b.key && b.n === a.n + 1 : 'cursor' in a && 'cursor' in b && b.cursor === a.cursor + 1;
+	function linkRuns(text: string, prefer: string | null): Run[] {
+		const out: Run[] = [];
+		for (const seg of findMoves(text)) {
+			const to = seg.move ? linkOf(seg.move, prefer) : null;
+			const space = out.at(-1);
+			const run = out.at(-2);
+			if (to && space && !space.to && /^\s+$/.test(space.text) && run?.to && follows(run.to, to)) {
+				out.pop();
+				run.text += space.text + seg.text;
+				run.to = to;
+			} else out.push(to ? { text: seg.text, first: to, to } : { text: seg.text });
+		}
+		return out;
+	}
+	/** Whether the board is on a move of the run. */
+	const atRun = (r: Run) => {
+		const a = r.first, b = r.to;
+		if (!a || !b) return false;
+		if ('key' in a && 'key' in b) return pv?.key === a.key && pv.n >= a.n && pv.n <= b.n;
+		return 'cursor' in a && 'cursor' in b && !pv && cursor >= a.cursor && cursor <= b.cursor;
+	};
+	/** Shows a written move on the board, keeping the sheet on what's being read. */
+	function followLink(l: MoveLink) {
+		stopPlay();
+		finishIntro(cursor);
+		if ('key' in l) pv = { key: l.key, n: l.n };
+		else goTo(l.cursor);
+	}
+
+	/** The sheet's grabber: a tap toggles full height; a drag up expands, a drag down shrinks, then closes. */
+	let grabY: number | null = null;
+	function grabStart(e: PointerEvent) {
+		grabY = e.clientY;
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	}
+	function grabEnd(e: PointerEvent) {
+		if (grabY === null) return;
+		const dy = e.clientY - grabY;
+		grabY = null;
+		if (Math.abs(dy) < 10) sheetFull = !sheetFull;
+		else if (dy < 0) sheetFull = true;
+		else if (sheetFull) sheetFull = false;
+		else sheet = false;
 	}
 
 	/** Steps through the game up to the drill position, then on into the line under review. */
@@ -686,6 +801,7 @@
 	/** Phones: opens the explanation under the board, starting just below it so the board stays in view. */
 	function openSheet() {
 		settle();
+		sheetView = 'line';
 		// The page may be scrolled a little on short screens: bring the board fully into view first.
 		window.scrollTo(0, 0);
 		sheetFull = false;
@@ -951,6 +1067,13 @@
 	{/if}
 {/snippet}
 
+<!-- Explanation text with its moves linked to the board: a tap shows the move; the move on the board is highlighted. -->
+{#snippet linked(text: string, prefer: string | null)}
+	{#each linkRuns(text, prefer) as run, i (i)}
+		{#if run.to}{@const to = run.to}<button class="mv-link" class:current={atRun(run)} onclick={() => followLink(to)}>{run.text}</button>{:else}{run.text}{/if}
+	{/each}
+{/snippet}
+
 {#snippet moreMenu(pos: Chess)}
 	<details class="menu" bind:open={menuOpen} bind:this={menuEl}>
 		<summary aria-label="More options" title="More options">⋯</summary>
@@ -1157,7 +1280,19 @@
 						{#if phase === 'ask'}<p class="faint small">← → to step through the moves</p>{/if}
 					</div>
 				{:else if result}
-					<div class="verdict {tone}">
+					<!-- On phones the whole box opens the Why sheet (the › says so): the way in while looking for the taught move,
+					     when the footer holds Show it and Continue. -->
+					<!-- svelte-ignore a11y_no_static_element_interactions, a11y_no_noninteractive_tabindex -->
+					<div
+						class="verdict {tone}"
+						class:opens={narrow}
+						role={narrow ? 'button' : undefined}
+						tabindex={narrow ? 0 : undefined}
+						aria-label={narrow ? 'Why: open the explanation' : undefined}
+						onclick={() => narrow && calm(openSheet)()}
+						onkeydown={(e) => narrow && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openSheet())}
+					>
+						{#if narrow}<span class="opens-mark" aria-hidden="true"><Icon name="chevron-right" size={18} /></span>{/if}
 						<div class="headline">
 							<span class="badge-icon" aria-hidden="true"><Icon name={result.kind === 'wrong' ? 'close' : 'check'} size={18} /></span>
 							{@render verdictLabel(result)}
@@ -1165,7 +1300,7 @@
 							{#if result.eval}<span class="eval-pill num">{formatEval(result.eval)}</span>{/if}
 						</div>
 						<!-- While looking for the main move after a sound one, the box says just that (the top bar has the rest). -->
-						{#if !seeking && !(narrow && revealed && !found && result.kind === 'wrong')}<p class="dim">
+						{#if !seeking && !(narrow && result.played !== main && (revealed || found))}<p class="dim">
 							{#if result.kind === 'correct'}
 								{@const a = card.answers.find((x) => x.uci === result!.played)}
 								{#if result.played !== main}
@@ -1253,17 +1388,36 @@
 		{#if narrow && sheet && phase === 'result' && result}
 			{@const key = selected ?? (main ?? '')}
 			{@const said = storyFor(key)}
-			{@const length = lineOf(key).length}
-			{@const ply = viewKey === key && viewN > 0 ? lineOf(key)[viewN - 1] : undefined}
+			{@const at = pv ? lineOf(pv.key)[pv.n - 1] : undefined}
+			{@const stepKey = pv?.key ?? key}
+			{@const length = lineOf(stepKey).length}
+			{@const tag = ideaTag(key)}
+			{@const alt = altOf(key)}
+			{@const opening = !!written && answerShown}
 			<!-- Phones: the explanation under the board, so the board stays in view while reading. Swipes on the
 			     board do nothing while it's open; a tap there closes it. -->
 			<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
 			<div class="sheet-backdrop" onclick={() => (sheet = false)}></div>
 			<div class="sheet" class:full={sheetFull} style:top={sheetFull ? undefined : `${sheetTop}px`} role="dialog" aria-label="Why">
+				<!-- Tap to expand or shrink; drag up to expand, down to shrink or close. -->
+				<button
+					class="sheet-grab"
+					onpointerdown={grabStart}
+					onpointerup={grabEnd}
+					onpointercancel={() => (grabY = null)}
+					onclick={(e) => e.detail === 0 && (sheetFull = !sheetFull)}
+					aria-label={sheetFull ? 'Shrink' : 'Expand'}
+				>
+					<span class="grabber"></span>
+				</button>
 				<div class="sheet-head">
 					<div class="sheet-lines" role="group" aria-label="Lines">
 						{#each chips as c (c.key)}
-							<button class="chip-line {c.kind}" class:selected={selected === c.key} onclick={() => preview(c.key, 1)}>
+							<button
+								class="chip-line {c.kind}"
+								class:selected={sheetView === 'line' && selected === c.key}
+								onclick={() => ((sheetView = 'line'), preview(c.key, 1))}
+							>
 								<span class="mark" aria-hidden="true">
 									{#if c.kind === 'good'}<Icon name="check" size={13} />{:else if c.kind === 'bad'}<Icon name="close" size={13} />{:else}<span
 											class="dot"
@@ -1272,73 +1426,132 @@
 								<span class="num">{chipSan(c.key)}</span>
 							</button>
 						{/each}
+						{#if opening}
+							<!-- The opening as a whole: its ideas (or, on older cards, the principle) and sources, in one place
+							     instead of under every line. Room for more opening-level sections as the explanations grow. -->
+							<button class="chip-line opening" class:selected={sheetView === 'opening'} onclick={() => showOpening()}>
+								<Icon name="idea" size={16} />
+								<span>{written?.ideas?.length ? 'Ideas' : 'Principle'}</span>
+							</button>
+						{/if}
 					</div>
-					<button
-						class="icon-btn expand"
-						class:up={!sheetFull}
-						onclick={() => (sheetFull = !sheetFull)}
-						aria-label={sheetFull ? 'Show the board' : 'Expand'}
-						title={sheetFull ? 'Show the board' : 'Expand'}
-					>
-						<Icon name="chevron-down" size={20} />
-					</button>
-					<button class="icon-btn" onclick={() => (sheet = false)} aria-label="Close"><Icon name="close" size={18} /></button>
+					<button class="icon-btn sheet-close" onclick={() => (sheet = false)} aria-label="Close"><Icon name="close" size={18} /></button>
 				</div>
 
-				<!-- The move on the board and what happens on it: step through the line from here. -->
+				<!-- The move on the board: step through the line from here. -->
 				<div class="sheet-step">
-					<button class="icon-btn" onclick={() => step(-1)} aria-label="Previous move"><Icon name="chevron-left" size={20} /></button>
+					<button class="icon-btn" disabled={!canBack} onclick={() => step(-1)} aria-label="Previous move"><Icon name="chevron-left" size={20} /></button>
 					<div class="step-text">
-						<div class="step-move num {kindOf(key)}">
-							<span>
-								{#if ply}{formatPlies([ply])}<span class="faint">{` · ${viewN}/${length}`}</span>{:else if viewN === 0}The position{:else}Earlier in the game{/if}
-							</span>
-							{#if key === (main ?? '') && bookLine.length}
-								<button
-									class="engine-toggle"
-									aria-pressed={engineLine}
-									onclick={() => ((engineLine = !engineLine), preview(key, 1))}
-									title={engineLine ? 'Showing the engine’s line: tap for the line from the explanation' : 'Showing the line from the explanation: tap for the engine’s line'}
-								>
-									Engine line
-								</button>
-							{/if}
-						</div>
-						{#each notesHere as n, i (i)}<p class="step-note {n.tone}">{n.text}</p>{/each}
+						<span class="step-move num {pv ? kindOf(pv.key) : ''}">
+							{#if at && pv}{formatPlies([at])}<span class="faint">{` · ${pv.n}/${length}`}</span>{:else if cursor === end}The position{:else}Earlier in the game{/if}
+						</span>
+						{#if sheetView === 'line' && key === (main ?? '') && bookLine.length}
+							<button
+								class="engine-toggle"
+								aria-pressed={engineLine}
+								onclick={() => ((engineLine = !engineLine), preview(key, 1))}
+								title={engineLine ? 'Showing the engine’s line: tap for the line from the explanation' : 'Showing the line from the explanation: tap for the engine’s line'}
+							>
+								<span>Engine line</span>
+							</button>
+						{/if}
 					</div>
-					<button class="icon-btn" onclick={() => step(1)} aria-label="Next move"><Icon name="chevron-right" size={20} /></button>
-					<button class="play" class:on={playing === key} disabled={length < 2} onclick={() => play(key)} aria-label={playing === key ? 'Stop' : 'Play the line'}>
-						<Icon name={playing === key ? 'pause' : 'play'} size={18} />
+					<button class="icon-btn" disabled={!canForward} onclick={() => step(1)} aria-label="Next move"><Icon name="chevron-right" size={20} /></button>
+					<button class="play" class:on={playing === stepKey} disabled={length < 2} onclick={() => play(stepKey)} aria-label={playing === stepKey ? 'Stop' : 'Play the line'}>
+						<Icon name={playing === stepKey ? 'pause' : 'play'} size={18} />
 					</button>
 				</div>
 
 				<div class="sheet-body">
-					{#if written && answerShown && (key === (main ?? '') || key === card.card.wrong)}
-						<h3 class="sheet-headline">{written.headline}</h3>
-					{/if}
-					{#if said.length}
-						<p class="said">{said.join(' ')}</p>
-					{:else if summary(key)}
-						<p class="said">{summary(key)}</p>
-					{/if}
-					{@render lineExtras(key)}
-					{#if written && answerShown}
+					{#if sheetView === 'line'}
+						{#if tag}
+							<button class="idea-pill {tag.tone}" onclick={() => showOpening(tag.idea)} title="Show this idea">
+								{#if tag.tone === 'good'}<Icon name="check" size={14} />{:else if tag.tone === 'bad'}<Icon name="close" size={14} />{:else}<Icon
+										name="idea"
+										size={14}
+									/>{/if}
+								<span>{tag.tone === 'bad' ? 'Strays from ' : ''}<strong>{tag.idea}</strong></span>
+							</button>
+						{/if}
+						{#if written && answerShown && (key === (main ?? '') || key === card.card.wrong)}
+							<h3 class="sheet-headline">{written.headline}</h3>
+						{/if}
+						{#if said.length}
+							<p class="said">{@render linked(said.join(' '), key)}</p>
+						{:else if summary(key)}
+							<p class="said">{summary(key)}</p>
+						{/if}
+						<!-- A step's computed note, except on the first move when the written text already covers it. -->
+						{#if notesHere.length && !(viewN === 1 && said.length)}
+							<ul class="step-notes">
+								{#each notesHere as n, i (i)}<li class={n.tone}>{n.text}</li>{/each}
+							</ul>
+						{/if}
+						{#if alt && answerShown && main !== undefined}
+							<p class="after-head">
+								{alt.label === 'sound' || alt.label === 'slightly worse' ? `Compared with ${numbered(main)}` : `What ${numbered(main)} does better`}
+							</p>
+							<p class="said">{@render linked(alt.after, key)}</p>
+						{/if}
+					{:else if written}
 						{@const basis = principleById.get(written.principleId)}
-						{@render ideasList(written)}
-						<div class="principle">
-							<span class="principle-name">{basis?.title ?? 'Principle'}</span>
-							{written.principle}
+						<p class="opening-title">{card.opening ?? 'Opening'} <span class="faint">· as {color}</span></p>
+						<div class="opening-meta">
+							{#each written.themes ?? [] as t (t)}<span class="theme">{t}</span>{/each}
+							{#if written.ideas?.length}
+								<span class="side-key faint"><span class="side-dot you"></span>You <span class="side-dot opponent"></span>Them <span class="side-dot both"></span>Both</span>
+							{/if}
 						</div>
-						<p class="sources faint">
-							<span>{card.opening ?? 'Opening'} · as {color}</span>
-							{#if basis}<span>{basis.source}</span>{/if}
-							{#each written.sources ?? [] as src, i (i)}
-								{@const link = sourceLink(src)}
-								<span>{#if link.url}<a href={link.url} target="_blank" rel="noopener">{link.label}</a>{:else}{link.label}{/if}</span>
-							{/each}
-						</p>
-					{:else}
-						<p class="sources faint">{card.opening ?? 'Opening'} · as {color}</p>
+						{#if written.ideas?.length}
+							<ul class="idea-list">
+								{#each written.ideas as idea (idea.title)}
+									{@const isOpen = openSections.has(idea.title)}
+									<li>
+										<button class="idea-row" aria-expanded={isOpen} onclick={() => toggleSection(idea.title)}>
+											<span class="side-dot {idea.side}" title={idea.side === 'you' ? 'Your idea' : idea.side === 'both' ? 'Both sides' : 'Your opponent’s idea'}></span>
+											<span class="idea-title">{idea.title}</span>
+											<span class="chev" class:up={isOpen}><Icon name="chevron-down" size={16} /></span>
+										</button>
+										{#if isOpen}
+											<div class="idea-more">
+												<p>{@render linked(idea.text, null)}</p>
+												{#each ideaMoves(idea.title) as r, i (i)}
+													<p class="idea-move {r.tone}"><strong>{r.move}</strong> {@render linked(r.text, null)}</p>
+												{/each}
+											</div>
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						{/if}
+						<div class="section">
+							<button class="idea-row" aria-expanded={openSections.has('principle')} onclick={() => toggleSection('principle')}>
+								<span class="idea-title">Principle · {basis?.title ?? 'Why it works'}</span>
+								<span class="chev" class:up={openSections.has('principle')}><Icon name="chevron-down" size={16} /></span>
+							</button>
+							{#if openSections.has('principle')}
+								<div class="idea-more">
+									<p>{@render linked(written.principle, null)}</p>
+									{#if basis}<p class="faint small">{basis.source}</p>{/if}
+								</div>
+							{/if}
+						</div>
+						{#if written.sources?.length}
+							<div class="section">
+								<button class="idea-row" aria-expanded={openSections.has('sources')} onclick={() => toggleSection('sources')}>
+									<span class="idea-title">Sources ({written.sources.length})</span>
+									<span class="chev" class:up={openSections.has('sources')}><Icon name="chevron-down" size={16} /></span>
+								</button>
+								{#if openSections.has('sources')}
+									<ul class="source-list">
+										{#each written.sources as src, i (i)}
+											{@const link = sourceLink(src)}
+											<li>{#if link.url}<a href={link.url} target="_blank" rel="noopener">{link.label}</a>{:else}<span>{link.label}</span>{/if}</li>
+										{/each}
+									</ul>
+								{/if}
+							</div>
+						{/if}
 					{/if}
 				</div>
 			</div>
@@ -2108,39 +2321,66 @@
 		animation: rise 200ms var(--ease);
 	}
 
+	/* The grabber: a full-width strip, so it's easy to hit; tap or drag (see grabEnd). */
+	.sheet-grab {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 22px;
+		touch-action: none;
+	}
+
+	.grabber {
+		width: 36px;
+		height: 5px;
+		border-radius: 999px;
+		background: var(--text-3);
+		opacity: 0.6;
+	}
+
 	.sheet-head {
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding: 6px 6px 2px 12px;
+		gap: 8px;
+		padding: 0 8px 6px 12px;
+	}
+
+	.chip-line.opening {
+		gap: 6px;
+		padding: 0 14px 0 11px;
+		border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+		color: var(--accent);
+	}
+
+	.chip-line.opening.selected {
+		background: color-mix(in srgb, var(--accent) 16%, var(--bg-elev));
 	}
 
 	.sheet-lines {
 		flex: 1;
 		min-width: 0;
 		display: flex;
-		gap: 6px;
+		gap: 8px;
 		overflow-x: auto;
 		scrollbar-width: none;
+		mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
 	}
 
 	/* The move on the board and its note, with the arrows and Play beside it. */
 	.sheet-step {
 		display: flex;
 		align-items: center;
-		gap: 2px;
-		padding: 2px 8px 6px 4px;
+		gap: 8px;
+		padding: 2px 12px 8px 6px;
 		border-bottom: 1px solid var(--line);
 	}
 
 	.step-text {
 		flex: 1;
 		min-width: 0;
-		min-height: 40px;
 		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: 1px;
+		align-items: center;
+		gap: 4px;
 	}
 
 	.step-move {
@@ -2156,10 +2396,11 @@
 		color: var(--loss);
 	}
 
-	.step-note {
+	.step-notes {
 		margin: 0;
+		padding-left: 16px;
 		font-size: 14px;
-		line-height: 1.35;
+		line-height: 1.4;
 		color: color-mix(in srgb, var(--text) 78%, var(--bg-elev));
 	}
 
@@ -2167,8 +2408,8 @@
 		flex-shrink: 0;
 		display: inline-grid;
 		place-items: center;
-		width: 40px;
-		height: 40px;
+		width: 44px;
+		height: 44px;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--accent) 16%, var(--bg-elev));
 		border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
@@ -2206,25 +2447,226 @@
 	}
 
 	.step-move {
-		display: flex;
-		align-items: center;
-		gap: 8px;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	/* On: the taught move's line is the engine's; off: the line the explanation walks through. */
+	/* 44px to hit, a small pill to look at. */
 	.engine-toggle {
-		padding: 2px 9px;
+		flex-shrink: 0;
+		display: inline-grid;
+		place-items: center;
+		height: 44px;
+		padding: 0 4px;
+	}
+
+	.engine-toggle span {
+		padding: 5px 10px;
 		border-radius: 999px;
 		border: 1px solid var(--line);
 		color: var(--text-3);
-		font-size: 12px;
+		font-size: 13px;
 		font-weight: 600;
 	}
 
-	.engine-toggle[aria-pressed='true'] {
+	.engine-toggle[aria-pressed='true'] span {
 		color: var(--accent);
 		border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
 		background: color-mix(in srgb, var(--accent) 14%, var(--bg-elev));
+	}
+
+	/* A move written in the text: tap to see it on the board; the one on the board is filled. */
+	.mv-link {
+		display: inline;
+		padding: 1px 4px;
+		margin: 0 -1px;
+		border-radius: 6px;
+		font: inherit;
+		font-weight: 650;
+		color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
+		-webkit-box-decoration-break: clone;
+		box-decoration-break: clone;
+	}
+
+	.mv-link.current {
+		background: var(--accent);
+		color: var(--accent-ink);
+	}
+
+	/* The idea a line carries out (green), strays from (red) or relates to (blue): tap to open it. */
+	.idea-pill {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 36px;
+		max-width: 100%;
+		padding: 0 14px 0 11px;
+		border-radius: 999px;
+		border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line));
+		background: color-mix(in srgb, var(--c) 10%, var(--bg-elev));
+		color: var(--c);
+		font-size: 14px;
+		text-align: left;
+	}
+
+	.idea-pill span {
+		color: var(--text-2);
+	}
+
+	.idea-pill strong {
+		color: var(--text);
+	}
+
+	.idea-pill.good {
+		--c: var(--win);
+	}
+
+	.idea-pill.bad {
+		--c: var(--loss);
+	}
+
+	.idea-pill.own {
+		--c: var(--book);
+	}
+
+	/* The opening view: title, themes, then ideas and the principle as rows that open in place. */
+	.opening-title {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 650;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* Themes, then the colour key, on one row. */
+	.opening-meta {
+		margin-top: -4px;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.theme {
+		padding: 2px 9px;
+		border-radius: 999px;
+		background: var(--bg-elev-2);
+		color: var(--text-2);
+		font-size: 12px;
+	}
+
+	.side-key {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+	}
+
+	.side-key .side-dot + * {
+		margin-right: 6px;
+	}
+
+	.side-dot {
+		flex-shrink: 0;
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border-radius: 999px;
+	}
+
+	.side-dot.you {
+		background: var(--win);
+	}
+
+	.side-dot.opponent {
+		background: var(--inaccuracy);
+	}
+
+	.side-dot.both {
+		background: var(--book);
+	}
+
+	.idea-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.idea-list li,
+	.section {
+		border-top: 1px solid var(--line);
+	}
+
+	.idea-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 48px;
+		text-align: left;
+		font-size: 15px;
+		font-weight: 620;
+	}
+
+	.idea-title {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.chev {
+		display: inline-grid;
+		color: var(--text-3);
+		transition: transform 160ms var(--ease);
+	}
+
+	.chev.up {
+		transform: rotate(180deg);
+	}
+
+	.idea-more {
+		padding: 0 0 12px 20px;
+		font-size: 15px;
+		line-height: 1.45;
+		color: color-mix(in srgb, var(--text) 84%, var(--bg-elev));
+	}
+
+	.idea-more p {
+		margin: 0 0 6px;
+	}
+
+	.idea-move {
+		font-size: 14px;
+	}
+
+	.idea-move.good strong {
+		color: var(--win);
+	}
+
+	.idea-move.bad strong {
+		color: var(--loss);
+	}
+
+	.source-list {
+		margin: 0 0 8px;
+		padding: 0;
+		list-style: none;
+	}
+
+	.source-list li > * {
+		display: block;
+		padding: 12px 0 12px 20px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 14px;
+		color: var(--text-2);
 	}
 
 	.sheet-backdrop {
@@ -2246,14 +2688,6 @@
 
 	.sheet-lines {
 		touch-action: pan-x;
-	}
-
-	.expand :global(svg) {
-		transition: transform 160ms var(--ease);
-	}
-
-	.expand.up :global(svg) {
-		transform: rotate(180deg);
 	}
 
 	.sheet-body {
@@ -2433,6 +2867,22 @@
 			height: 42px;
 			min-height: 0;
 			overflow: hidden;
+		}
+
+		.verdict.opens {
+			position: relative;
+			padding-right: 34px;
+			cursor: pointer;
+		}
+
+		.opens-mark {
+			position: absolute;
+			right: 10px;
+			top: 50%;
+			transform: translateY(-50%);
+			display: inline-grid;
+			color: var(--c);
+			opacity: 0.8;
 		}
 
 		.verdict p {

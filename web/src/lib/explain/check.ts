@@ -21,7 +21,14 @@ export interface Explanation {
 	/** What it draws on: Wikibooks page titles ("Chess Opening Theory/1. e4/..."), URLs, or "Label | URL". */
 	sources?: string[];
 	/** The opening's main ideas, researched (docs/opening-ideas-pipeline.md). Shown once the answer is. */
-	ideas?: { title: string; side: 'you' | 'opponent' | 'both'; text: string }[];
+	ideas?: {
+		title: string;
+		side: 'you' | 'opponent' | 'both';
+		text: string;
+		/** Optional, for drawing the idea on the drill position: arrows as from-to squares ("e2e4"), and squares ("f7"). */
+		arrows?: string[];
+		squares?: string[];
+	}[];
 	/** Why the habit is worse, and which idea it neglects. Replaces splitting `why` when present. */
 	habit?: { why: string; strays?: IdeaLink };
 	/** Why the taught move is right, and which idea it carries out. */

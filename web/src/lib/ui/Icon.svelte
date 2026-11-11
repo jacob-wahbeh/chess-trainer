@@ -17,7 +17,8 @@
 		drill: '<path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M3 9.5v5"/><path d="M21 9.5v5"/><path d="M6.5 12h11"/>',
 		play: '<path d="M7 4.5v15l12-7.5z"/>',
 		pause: '<path d="M8 5v14"/><path d="M16 5v14"/>',
-		check: '<path d="M20 6 9 17l-5-5"/>'
+		check: '<path d="M20 6 9 17l-5-5"/>',
+		idea: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/>'
 	} as const;
 	export type IconName = keyof typeof PATHS;
 </script>
