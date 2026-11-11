@@ -22,7 +22,7 @@ async function startCard(card = CARD) {
 
 async function answer(uci) {
 	const mv = await playMove(uci);
-	await waitFor(`document.querySelector('.bar.answered .status') && document.querySelector('.verdict')`, 40_000, 'result');
+	await waitFor(`document.querySelector('.verdict .headline')`, 40_000, 'result');
 	console.log('stable', await waitStable(3000, 45_000));
 	return mv;
 }

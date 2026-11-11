@@ -39,7 +39,7 @@ Line numbers below are approximate and drift. Go by the selector or function nam
 
 ## Decisions (default in bold)
 
-On 2026-11-10 the owner said to go with the recommendations: 1 = into the box, 2 = yes, 3 = read-only (done), 5 = keep the sheet and fix its controls (because of the opening-ideas content), 6 = later. 4 (slip undo) is still open.
+On 2026-11-10 the owner said to go with the recommendations: 1 = into the box, 2 = yes, 3 = read-only (done), 5 = keep the sheet and fix its controls (because of the opening-ideas content), 6 = later. 4 (slip undo) = no (owner, 2026-11-10).
 
 1. **Verdict placement.** **Move it into the colored box (17px headline)**, or keep it in the top bar. If it stays in the top bar, the box is one line (42px) and the layout frees 26px.
 2. **Drop "Try again"** after a Good move (you find the taught move on the board instead) and after Show answer (a missed card comes back anyway). **Yes.**
@@ -148,7 +148,17 @@ Skipped on purpose (E4):
   - Tab bar inactive labels use `--text-2`.
 - [x] **E6. Service worker update.** Don't reload on `controllerchange` in the middle of a drill (`+layout.svelte`). Reload on Home or between cards, or show a "New version · Reload" chip.
 
-### F: fixed-height drill column (M-L, half a day; after A-C; decisions 1 and 3)
+### F: fixed-height drill column (M-L, half a day; after A-C; decisions 1 and 3). Done 2026-11-10
+
+As built:
+- The result ("✓ Correct Nxe5 +0.31") is in the box, plus one short line. On phones a miss reads "+0.31 → −0.50 · red arrow: Black's reply", or "… Hint: punish 5...h6." on punish cards.
+- The top bar shows ✕, the progress track, the streak and ⋯.
+- Phone column: `.drill` has `min-height: 100dvh − safe top`, and the footer gets `margin-top: auto`.
+- The arrows are directly under the board in every phase. The chips row and Play's slot are reserved while answering, so they don't move: measured at the same x/y in ask and every result state.
+- The bottom-right slot: Skip during the replay, "Back to the position" while browsing back.
+- The board runs edge to edge (G5): 393px.
+- Spacing trimmed to fit: eval bar 12, note 40, gaps 4/6. Worst case is about 2px to spare, bounded by the 2-line box clamp.
+
 
 - [ ] Follow `review.md`, "Recommended drill layout" (wireframes, height budget, slot table). In short:
   - **Column:** phone `main.focus { height: 100dvh; overflow: hidden; display: flex; flex-direction: column }`. Drill `.drill`, `.stage` and `.panel` become flex columns with `min-height: 0`.
@@ -207,6 +217,14 @@ The goals:
 - [ ] Keep the hide-until-shown rules (`answerShown` / `seeking`), and the fallback for cards without rich fields.
 
 ### G: later
+
+Done 2026-11-10:
+- G1: ‹ › repeat while held (400ms, then 150ms, with a tick); tested in ux-probe.
+- G2: on touch, a drop ring under the finger and a bigger, lifted dragged piece (`Board.svelte`). Needs the phone to check.
+- G3: Settings → Drills → "Move pieces by: Tap or drag / Tap / Drag"; saved in the settings cookie too.
+- G5: the drill board runs edge to edge.
+
+Not doing: slip undo (decision 4 = no).
 
 - [ ] **‹ › repeat while held:** 400ms delay, then every 150ms, with a haptic tick when repeating starts.
 - [ ] **Slip undo (decision 4).**
