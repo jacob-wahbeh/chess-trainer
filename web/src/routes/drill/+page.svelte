@@ -128,6 +128,8 @@
 	let sheetView = $state<'line' | 'opening'>('line');
 	/** The opening view's open sections: idea titles, 'principle', 'sources'. */
 	let openSections = $state<Set<string>>(new Set());
+	/** After Show answer: the taught move as the one arrow on the position, until the board goes elsewhere. */
+	let markMain = $state(false);
 	/** Taps on the footer buttons are ignored until then: a double tap on one button mustn't land on the button that replaces it. */
 	let calmUntil = 0;
 	const settle = () => (calmUntil = performance.now() + 400);
@@ -376,14 +378,11 @@
 		if (cursor !== end || (result.kind === 'wrong' && !revealed)) return [];
 		// Played the taught move: back at the position (Reset), the board stays clean.
 		if (result.kind === 'correct' && result.played === main) return [];
-		// The drill position: every line's first move, labelled with its eval, and the notes about the position.
+		// The drill position stays clean to try a move on: just the notes about it, and the taught move's arrow right after
+		// Show answer.
 		const labels = boardWidth >= LABEL_MIN_PX;
-		const overview = chips.flatMap((c) =>
-			arrow(c.key || lineOf(c.key)[0]?.uci, c.key === selected ? SOLID[c.kind] : PALE[c.kind]).map((s) =>
-				labels && evalOf(c.key) ? { ...s, label: { text: formatEvalShort(evalOf(c.key)) } } : s
-			)
-		);
-		return [...overview, ...drawn];
+		const answer = markMain && main !== undefined ? arrow(main, SOLID.good) : [];
+		return [...answer.map((s) => (labels && main !== undefined && evalOf(main) ? { ...s, label: { text: formatEvalShort(evalOf(main)) } } : s)), ...drawn];
 	});
 	/** The eval bar, once the card is answered: the drill position, or the line on the board. */
 	const shownEval: Eval | undefined = $derived.by(() => {
@@ -431,6 +430,7 @@
 		selected = null;
 		seeking = false;
 		found = false;
+		markMain = false;
 		tries = [];
 		fullPath = false;
 		if (i >= queue.length) {
@@ -508,7 +508,11 @@
 	function toggleSection(id: string) {
 		const next = new Set(openSections);
 		if (next.has(id)) next.delete(id);
-		else next.add(id);
+		else {
+			// One idea open at a time, so the board shows one idea's drawing.
+			for (const i of written?.ideas ?? []) next.delete(i.title);
+			next.add(id);
+		}
 		openSections = next;
 		if (pv || cursor !== end) goTo(end);
 	}
@@ -676,6 +680,7 @@
 	function preview(key: string, n: number) {
 		stopPlay();
 		finishIntro(cursor);
+		markMain = false;
 		selected = key;
 		if (n > 0) pv = { key, n };
 		else goTo(end);
@@ -840,6 +845,7 @@
 		result = null;
 		revealed = false;
 		seeking = false;
+		markMain = false;
 		pv = null;
 		selected = null;
 		tries = [];
@@ -867,6 +873,7 @@
 		seeking = false;
 		selected = main ?? '';
 		goTo(end);
+		markMain = true;
 	}
 
 	async function next() {
@@ -1250,8 +1257,8 @@
 					<button
 						class="chip-line home"
 						class:selected={!pv && cursor === end}
-						onclick={() => goTo(end)}
-						title="Back to the position, with every line as an arrow"
+						onclick={() => ((markMain = false), goTo(end))}
+						title="Back to the position, to try a move"
 					>
 						<Icon name="refresh" size={15} />
 						<span>Position</span>
@@ -1435,12 +1442,15 @@
 									{@render moreMenu(line.pos)}
 								</div>
 							{/if}
-							<div class="actions">
+							<!-- Try again whenever the taught move wasn't played or found, to answer from the position once more. -->
+							{@const again = main !== undefined && result.played !== main && !found}
+							<div class="actions" class:three={again && (seeking || narrow)}>
 								{#if seeking}
 									<button class="btn btn-quiet" onclick={calm(showMain)}>Show it</button>
 								{:else if narrow}
 									<button class="btn btn-quiet" onclick={calm(openSheet)} aria-haspopup="dialog">Why?</button>
 								{/if}
+								{#if again}<button class="btn btn-quiet" onclick={calm(retry)}>Try again</button>{/if}
 								<button class="btn btn-primary forward" onclick={calm(next)}>Continue</button>
 							</div>
 						{/if}
@@ -1502,7 +1512,8 @@
 					<button class="icon-btn sheet-close" onclick={() => (sheet = false)} aria-label="Close"><Icon name="close" size={18} /></button>
 				</div>
 
-				<!-- The move on the board: step through the line from here. -->
+				<!-- The move on the board: step through the line from here (not on the Ideas view, which stays on the position). -->
+				{#if sheetView === 'line'}
 				<div class="sheet-step">
 					<button class="icon-btn" disabled={!canBack} use:holdToRepeat={() => step(-1)} aria-label="Previous move"><Icon name="chevron-left" size={20} /></button>
 					<div class="step-text">
@@ -1525,6 +1536,7 @@
 						<Icon name={playing === stepKey ? 'pause' : 'play'} size={18} />
 					</button>
 				</div>
+				{/if}
 
 				<div class="sheet-body">
 					{#if sheetView === 'line'}
@@ -2938,6 +2950,17 @@
 
 		.actions .slot {
 			flex: 0 0 142px;
+		}
+
+		/* Three buttons: the two alternatives share the space with the forward one. */
+		.actions.three .btn {
+			flex: 1 1 0;
+			min-width: 0;
+			padding: 0 6px;
+		}
+
+		.actions.three .forward {
+			flex: 1.3 1 0;
 		}
 
 		.bar .menu-body .text-btn {

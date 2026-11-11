@@ -24,6 +24,23 @@ const card: ExportCard = {
 const explanation = (why: string) => ({ headline: 'Take the e5 pawn', why, principle: 'Grab a pawn your opponent leaves loose.', principleId: 'loose-pieces' });
 
 describe('checkExplanation', () => {
+	it('checks the ideas\' arrows and squares, and that lines name an existing idea', () => {
+		const idea = { title: 'Hit f7', side: 'you' as const, text: 'Aim at f7.', arrows: ['c4f7'], squares: ['f7'] };
+		expect(checkExplanation(card, { ...explanation('Take it.'), ideas: [idea], taught: { why: 'Take it.', enforces: { idea: 'Hit f7', text: 'It does.' } } })).toEqual([]);
+		expect(
+			checkExplanation(card, {
+				...explanation('Take it.'),
+				ideas: [{ ...idea, arrows: ['c4c4', 'c4-f7'], squares: ['i9'] }],
+				habit: { why: 'Slow.', strays: { idea: 'Hit f2', text: 'No.' } }
+			})
+		).toEqual([
+			'idea "Hit f7": arrow c4c4 must be two different squares like e2e4',
+			'idea "Hit f7": arrow c4-f7 must be two different squares like e2e4',
+			'idea "Hit f7": square i9 must look like f7',
+			'"Hit f2" is not one of the ideas\' titles'
+		]);
+	});
+
 	it('passes moves and pieces that appear in the lines', () => {
 		expect(checkExplanation(card, explanation('2...Bc5 leaves the e5 pawn loose, so 3.Nxe5 takes it; after 3...Qe7 4.Nf3 Qxe4+ the bishop on c5 is still out of play.'))).toEqual([]);
 	});

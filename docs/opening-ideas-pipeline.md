@@ -12,6 +12,7 @@ Per card (`${position key}|${habit uci}` in `explanations.json`), on top of the 
 | Field | Length | Shown |
 |---|---|---|
 | `ideas` | 3–4 × {title (2–5 words), side you/opponent/both, text ≤ 25 words} | once the answer is shown |
+| `ideas[].arrows` / `ideas[].squares` | 1–3 shapes per idea: arrows "e2e4", squares "f7" | drawn on the drill position while the idea is open |
 | `habit.why` | 2 sentences: the concrete reason (material, tactic, what it allows) with moves from its refutation | on the habit's line |
 | `habit.strays` | {idea title, ≤ 15 words} | on the habit's line |
 | `taught.why` | 2 sentences, concrete, with moves from its line | on the taught line, once shown |
@@ -21,6 +22,17 @@ Per card (`${position key}|${habit uci}` in `explanations.json`), on top of the 
 
 The long pilot texts were 600–900 words per card: far too long for a phone. Compress hard; drop meta talk ("the
 app accepts…", "the engine's label only means…") and evaluation numbers.
+
+### Drawing an idea
+
+The shapes go on the drill position (before the move), in the idea's side colour. What worked for the pilot:
+- arrows for the move or plan that carries the idea out (b1c3 for "Keep c3 for your knight", d7d5 for a break);
+- squares for the target or the key square (e4, f7, c3), or the pieces it's about (b1, c1 for development);
+- an arrow can show a move that isn't legal yet when the idea is about that (the pinned c3xd4 in the Evans);
+- no shapes for moves that the idea text doesn't mention; at most 3 per idea.
+
+Check every arrow starts on the right piece with python-chess; `checkExplanation` checks the format and that
+every `strays` / `enforces` / alternative `idea` names an existing title.
 
 ## Pipeline
 
@@ -81,14 +93,15 @@ For the full run:
 ## Status and next steps (2026-11-10)
 
 **Shipped:** the compressed format for three draco_jaco cards (Kennedy 3.c3, Alapin 2...d6, Evans 7.Ng5), shown
-in the drill: main ideas, "Strays from" / "Carries out" tags, and before/after whys for other common moves.
+in the drill: main ideas, "Strays from" / "Carries out" tags, and before/after whys for other common moves. The
+three cards' ideas have arrows and squares (2026-11-10).
 
 **Next (content):**
-1. Extend `checkExplanation` (`web/src/lib/explain/check.ts`) to validate the new fields — moves in
-   `alternatives` texts against `alternatives.json` lines, `before` texts never naming the taught move.
+1. Extend `checkExplanation` (`web/src/lib/explain/check.ts`) further — moves in `alternatives` texts against
+   `alternatives.json` lines, `before` texts never naming the taught move (idea shapes and titles are checked).
 2. Run the pipeline in batches (per player or opening family), lean setup above; confirm scope first.
-3. Add to the research output: squares/arrows per idea (for drawing ideas on the board) and a family-level ideas
-   file (for an Openings page).
+3. Add to the research output a family-level ideas file (for an Openings page); have the writer add arrows and
+   squares per idea (see "Drawing an idea").
 
 **Built in the phone Why sheet (2026-11-10, see docs/mobile-ux/fix-plan.md, batch W):**
 - an Ideas tab (chip);

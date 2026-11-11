@@ -175,5 +175,25 @@ export function checkExplanation(card: ExportCard, e: unknown): string[] {
 	for (const [, square, role] of text.matchAll(SQUARE_PIECE)) {
 		if (!pieces.has(`${role.toLowerCase()}@${square}`)) problems.push(`no ${role.toLowerCase()} stands on ${square} in the position or its lines`);
 	}
+	problems.push(...checkIdeas(x));
 	return [...new Set(problems)];
+}
+
+const ARROW = /^([a-h][1-8])([a-h][1-8])$/;
+const SQUARE = /^[a-h][1-8]$/;
+
+/** The ideas' board shapes are well-formed, and every line's idea names one of them. */
+function checkIdeas(x: Partial<Explanation>): string[] {
+	const problems: string[] = [];
+	const titles = new Set((x.ideas ?? []).map((i) => i.title));
+	for (const i of x.ideas ?? []) {
+		for (const a of i.arrows ?? []) {
+			const m = ARROW.exec(a);
+			if (!m || m[1] === m[2]) problems.push(`idea "${i.title}": arrow ${a} must be two different squares like e2e4`);
+		}
+		for (const q of i.squares ?? []) if (!SQUARE.test(q)) problems.push(`idea "${i.title}": square ${q} must look like f7`);
+	}
+	const named = [x.habit?.strays?.idea, x.taught?.enforces?.idea, ...(x.alternatives ?? []).map((a) => a.idea)];
+	for (const idea of named) if (idea !== undefined && !titles.has(idea)) problems.push(`"${idea}" is not one of the ideas' titles`);
+	return problems;
 }

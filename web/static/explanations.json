@@ -669,22 +669,46 @@
 			{
 				"title": "Unpin, then rebuild the centre",
 				"side": "you",
-				"text": "The a5-bishop pins your c3 pawn; once your king leaves e1, 8.cxd4 restores your pawns on e4 and d4."
+				"text": "The a5-bishop pins your c3 pawn; once your king leaves e1, 8.cxd4 restores your pawns on e4 and d4.",
+				"arrows": [
+					"e1g1",
+					"c3d4"
+				],
+				"squares": [
+					"c3"
+				]
 			},
 			{
 				"title": "Development is your compensation",
 				"side": "you",
-				"text": "You're two pawns down for time and open lines; moving pieces that are already out wastes that pay."
+				"text": "You're two pawns down for time and open lines; moving pieces that are already out wastes that pay.",
+				"squares": [
+					"b1",
+					"c1"
+				]
 			},
 			{
 				"title": "Hit f7 with tempo",
 				"side": "you",
-				"text": "Queen on b3 and bishop on c4 aim at f7. A knight jump to g5 only works once Black can no longer cover f7 from h6."
+				"text": "Queen on b3 and bishop on c4 aim at f7. A knight jump to g5 only works once Black can no longer cover f7 from h6.",
+				"arrows": [
+					"d1b3",
+					"c4f7"
+				],
+				"squares": [
+					"f7"
+				]
 			},
 			{
 				"title": "Greed needs a spare tempo",
 				"side": "both",
-				"text": "Taking a third pawn on c3 right after you castle is dangerous for Black; after a wasted move it is safe."
+				"text": "Taking a third pawn on c3 right after you castle is dangerous for Black; after a wasted move it is safe.",
+				"arrows": [
+					"d4c3"
+				],
+				"squares": [
+					"c3"
+				]
 			}
 		],
 		"habit": {
@@ -4018,22 +4042,49 @@
 			{
 				"title": "Settle the d4 tension",
 				"side": "both",
-				"text": "Black's pawn and knight both hit d4, so you must push, capture or defend it before 3...Nxd4."
+				"text": "Black's pawn and knight both hit d4, so you must push, capture or defend it before 3...Nxd4.",
+				"arrows": [
+					"e5d4",
+					"c6d4"
+				],
+				"squares": [
+					"d4"
+				]
 			},
 			{
 				"title": "Make the knight pay",
 				"side": "you",
-				"text": "Black's knight came out early; the best replies make it move again, as after 3.dxe5 Nxe5 and 5.f4."
+				"text": "Black's knight came out early; the best replies make it move again, as after 3.dxe5 Nxe5 and 5.f4.",
+				"arrows": [
+					"d4e5",
+					"f2f4"
+				],
+				"squares": [
+					"e5"
+				]
 			},
 			{
 				"title": "Keep c3 for your knight",
 				"side": "you",
-				"text": "Your knight belongs on c3, guarding e4 and d5. A pawn there leaves e4 loose."
+				"text": "Your knight belongs on c3, guarding e4 and d5. A pawn there leaves e4 loose.",
+				"arrows": [
+					"b1c3"
+				],
+				"squares": [
+					"e4",
+					"d5"
+				]
 			},
 			{
 				"title": "Black's ...d5 break",
 				"side": "opponent",
-				"text": "Against slow set-ups Black frees the game with ...d5, as after 3.c3 d5."
+				"text": "Against slow set-ups Black frees the game with ...d5, as after 3.c3 d5.",
+				"arrows": [
+					"d7d5"
+				],
+				"squares": [
+					"e4"
+				]
 			}
 		],
 		"habit": {
@@ -5200,22 +5251,47 @@
 			{
 				"title": "White wants two centre pawns",
 				"side": "opponent",
-				"text": "2.c3 prepares 3.d4, so White can retake with the c-pawn and keep pawns on d4 and e4."
+				"text": "2.c3 prepares 3.d4, so White can retake with the c-pawn and keep pawns on d4 and e4.",
+				"arrows": [
+					"d2d4",
+					"c3d4"
+				],
+				"squares": [
+					"e4"
+				]
 			},
 			{
 				"title": "No Nc3 for White",
 				"side": "you",
-				"text": "The c3 pawn takes the knight's square: White can't guard e4 with Nc3 or chase your pieces from d5."
+				"text": "The c3 pawn takes the knight's square: White can't guard e4 with Nc3 or chase your pieces from d5.",
+				"squares": [
+					"c3",
+					"d5"
+				]
 			},
 			{
 				"title": "Strike the centre at once",
 				"side": "you",
-				"text": "Black's best replies, 2...Nf6 and 2...d5, both hit e4 straight away; slow moves hand White the full centre."
+				"text": "Black's best replies, 2...Nf6 and 2...d5, both hit e4 straight away; slow moves hand White the full centre.",
+				"arrows": [
+					"g8f6",
+					"d7d5"
+				],
+				"squares": [
+					"e4"
+				]
 			},
 			{
 				"title": "Chip at the e5 pawn",
 				"side": "both",
-				"text": "After 3.e5 Nd5 the advanced pawn becomes a target for ...cxd4 and ...d6."
+				"text": "After 3.e5 Nd5 the advanced pawn becomes a target for ...cxd4 and ...d6.",
+				"arrows": [
+					"e4e5",
+					"d7d6"
+				],
+				"squares": [
+					"e5"
+				]
 			}
 		],
 		"habit": {
