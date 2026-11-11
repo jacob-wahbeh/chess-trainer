@@ -363,6 +363,11 @@ const api = {
 		await db.cards.update(id, { suspended: true });
 	},
 
+	/** Undoes suspendCard. */
+	async unsuspendCard(id: string) {
+		await db.cards.update(id, { suspended: false });
+	},
+
 	async resetCards() {
 		await db.cards.where('user').equals(user.toLowerCase()).delete();
 	},

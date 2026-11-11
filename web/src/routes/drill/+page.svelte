@@ -123,6 +123,19 @@
 	let narrow = $state(false);
 	/** The move row under the board, kept scrolled to the move on the board. */
 	let movesEl = $state<HTMLElement | undefined>();
+	/** Taps on the footer buttons are ignored until then: a double tap on one button mustn't land on the button that replaces it. */
+	let calmUntil = 0;
+	const settle = () => (calmUntil = performance.now() + 400);
+	const calm = (fn: () => unknown) => () => {
+		if (performance.now() < calmUntil) return;
+		void fn();
+	};
+	/** The card just stopped with "stop drilling this", while its Undo is offered. */
+	let stopped = $state<{ id: string; san: string } | null>(null);
+	let stoppedTimer: ReturnType<typeof setTimeout> | undefined;
+	/** The "more" menu (stop drilling this card): open state, and its element for closing on a touch outside it. */
+	let menuOpen = $state(false);
+	let menuEl = $state<HTMLElement | undefined>();
 	/** The chip row, kept scrolled to the selected line. */
 	let chipsEl = $state<HTMLElement | undefined>();
 	let explainRun = 0;
@@ -193,14 +206,16 @@
 		if (!card || !result || wrongMove === undefined) return [];
 		const share = card.answers.find((a) => a.uci === main)?.share;
 		const list: Chip[] = [];
-		if (answerShown) {
-			const tag = why === 'thematic' ? `Thematic${share ? ` · masters ${pct(share)}` : ''}` : why === 'punish' ? `Punishes ${slip}` : 'Engine’s choice';
-			list.push({ key: main ?? '', kind: 'good', tag });
-		}
+		const tag = why === 'thematic' ? `Thematic${share ? ` · masters ${pct(share)}` : ''}` : why === 'punish' ? `Punishes ${slip}` : 'Engine’s choice';
+		// Order stays put as the review goes on: the move played first, then the habit; the taught move, once it may be seen, is
+		// added after them (first only when it was the move played), so nothing shifts under the finger.
+		const playedMain = answerShown && result.played === main;
+		if (playedMain) list.push({ key: main ?? '', kind: 'good', tag });
 		if (result.kind !== 'wrong' && result.played !== main) list.push({ key: result.played, kind: 'own', tag: 'Your move · also good' });
 		const habit = `Your habit · ${card.wrongCount}× in your games`;
 		list.push({ key: wrongMove, kind: 'bad', tag: wrongMove === card.card.wrong ? habit : 'Your move' });
 		if (wrongMove !== card.card.wrong && answerShown) list.push({ key: card.card.wrong, kind: 'bad', tag: habit });
+		if (answerShown && !playedMain) list.push({ key: main ?? '', kind: 'good', tag });
 		for (const t of tries) {
 			if (list.some((c) => c.key === t.key)) continue;
 			list.push({ key: t.key, kind: t.sound === false ? 'bad' : 'own', tag: t.sound === null ? 'Checking…' : t.sound ? 'Also fine' : 'A mistake' });
@@ -413,6 +428,7 @@
 		if (!detail) return load(i + 1);
 		card = detail;
 		startIntro();
+		settle();
 	}
 
 	/** The whole deck in order of need (buildDeck), or the one card picked on the Mistakes page. */
@@ -454,6 +470,13 @@
 		phase = 'ask';
 	}
 
+	/** Any touch on the board skips the replay, or comes back to the position from earlier moves while answering. A pointerdown,
+	 *  because chessground cancels touchstart on and around pieces, so a click never fires there. */
+	function boardTouch() {
+		if (phase === 'intro') finishIntro();
+		else if (phase === 'ask' && cursor < end && !pv) goTo(end);
+	}
+
 	/** Steps through the game up to the drill position, then on into the line under review. */
 	function browse(by: number) {
 		const follow = phase === 'result' ? selected : null;
@@ -475,6 +498,10 @@
 	}
 
 	/** Arrow keys and the buttons under the board. */
+	const canBack = $derived(!!pv || cursor > 0);
+	const canForward = $derived(
+		pv ? pv.n < lineOf(pv.key).length : cursor < end || (phase === 'result' && selected !== null && lineOf(selected).length > 0)
+	);
 	function step(by: number) {
 		stopPlay();
 		finishIntro(cursor);
@@ -578,8 +605,10 @@
 				.then(() => refreshDrill());
 		}
 		result = r;
-		// A sound alternative: the main move stays hidden so it can still be found.
+		// A sound alternative: the main move stays hidden so it can still be found, and the board stays on the drill position
+		// (the move shows as its arrow) so the next move can be tried at once.
 		seeking = r.kind !== 'wrong' && main !== undefined && uci !== main;
+		if (seeking) pv = null;
 		phase = 'result';
 		void explain(card.card.id, r);
 	}
@@ -641,6 +670,7 @@
 	}
 
 	function retry() {
+		settle();
 		stopPlay();
 		sheet = false;
 		result = null;
@@ -655,6 +685,7 @@
 
 	/** Phones: opens the explanation under the board, starting just below it so the board stays in view. */
 	function openSheet() {
+		settle();
 		// The page may be scrolled a little on short screens: bring the board fully into view first.
 		window.scrollTo(0, 0);
 		sheetFull = false;
@@ -665,6 +696,7 @@
 
 	/** Shows the main move on the drill position, as the solid green arrow among the lines. */
 	function showMain() {
+		settle();
 		stopPlay();
 		revealed = true;
 		seeking = false;
@@ -674,6 +706,7 @@
 
 	async function next() {
 		if (!card || phase !== 'result') return;
+		settle();
 		const id = card.card.id;
 		phase = 'loading';
 		// A miss comes back a few cards later for practice (not in random order: that's purely a shuffle).
@@ -683,6 +716,14 @@
 			queue = [...queue.slice(0, at), id, ...queue.slice(at)];
 		}
 		await load(index + 1);
+	}
+
+	/** The streak in a few words, for the phone top bar after answering. */
+	function streakShort(c: CardRecord): string {
+		if (repeat) return 'Practice';
+		if (!firstTry) return 'Back to 0';
+		const n = c.streak + 1;
+		return n >= KNOWN_STREAK ? 'Known' : `${n} in a row`;
 	}
 
 	/** What the answer did to the card's streak, shown above Continue. */
@@ -708,10 +749,27 @@
 	}
 
 	async function skipForGood() {
-		if (!card) return;
-		await data().suspendCard(card.card.id);
-		queue = queue.filter((id, i) => i <= index || id !== card!.card.id);
+		if (!card || !line) return;
+		const id = card.card.id;
+		menuOpen = false;
+		await data().suspendCard(id);
+		queue = queue.filter((q, i) => i <= index || q !== id);
+		clearTimeout(stoppedTimer);
+		stopped = { id, san: sanOf(line.pos, card.card.wrong) };
+		stoppedTimer = setTimeout(() => (stopped = null), 5000);
 		await load(index + 1);
+	}
+
+	/** Undo for "stop drilling this": the card is drilled again and comes straight back. */
+	async function undoStop() {
+		if (!stopped) return;
+		const { id } = stopped;
+		clearTimeout(stoppedTimer);
+		stopped = null;
+		await data().unsuspendCard(id);
+		queue = [...queue.slice(0, index), id, ...queue.slice(index)];
+		await load(index);
+		void refreshDrill();
 	}
 
 	function onKey(e: KeyboardEvent) {
@@ -744,20 +802,36 @@
 		else await start();
 	});
 
+	/** Scrolls a sideways row just enough to show `item`, and not at all when it's already in view, so rows don't slide under the finger. */
+	function reveal(row: HTMLElement | undefined, item: HTMLElement | null | undefined) {
+		if (!row || !item) return;
+		const pad = 12;
+		const left = item.offsetLeft - row.offsetLeft;
+		if (left < row.scrollLeft + pad) row.scrollLeft = Math.max(0, left - pad);
+		else if (left + item.offsetWidth > row.scrollLeft + row.clientWidth - pad) row.scrollLeft = left + item.offsetWidth - row.clientWidth + pad;
+	}
+
 	// Keep the selected line's chip in view.
 	$effect(() => {
 		void [selected, chips.length];
-		const row = chipsEl;
-		const chip = row?.querySelector<HTMLElement>('.selected');
-		if (row && chip) row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+		reveal(chipsEl, chipsEl?.querySelector<HTMLElement>('.selected'));
 	});
 
 	// Keep the move on the board (or the move to find, or the line's first move) in view in the move row.
 	$effect(() => {
-		void [pv, cursor, phase, selected, lines];
+		void [pv, cursor, phase, selected];
 		const row = movesEl;
-		const chip = row && (row.querySelector<HTMLElement>('.current') ?? row.querySelector<HTMLElement>('.ask') ?? row.querySelector<HTMLElement>('.first'));
-		if (row && chip) row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' });
+		reveal(row, row && (row.querySelector<HTMLElement>('.current') ?? row.querySelector<HTMLElement>('.ask') ?? row.querySelector<HTMLElement>('.first')));
+	});
+
+	// The "more" menu closes on any touch outside it.
+	$effect(() => {
+		if (!menuOpen) return;
+		const close = (e: PointerEvent) => {
+			if (!menuEl?.contains(e.target as Node)) menuOpen = false;
+		};
+		document.addEventListener('pointerdown', close, true);
+		return () => document.removeEventListener('pointerdown', close, true);
 	});
 
 	// The first cards are created while the analysis runs: start as soon as they exist.
@@ -877,6 +951,15 @@
 	{/if}
 {/snippet}
 
+{#snippet moreMenu(pos: Chess)}
+	<details class="menu" bind:open={menuOpen} bind:this={menuEl}>
+		<summary aria-label="More options" title="More options">⋯</summary>
+		<div class="menu-body card">
+			<button class="text-btn quiet" onclick={skipForGood}>I play {sanOf(pos, card!.card.wrong)} on purpose · stop drilling this</button>
+		</div>
+	</details>
+{/snippet}
+
 {#snippet verdictLabel(r: Result)}
 	{#if r.kind === 'wrong'}Not quite{:else if main !== undefined && r.played !== main}Good move{:else}Correct{/if}
 {/snippet}
@@ -895,6 +978,11 @@
 			</div>
 		{/if}
 		<span class="num faint count">{Math.min(index + (phase === 'done' ? 0 : 1), queue.length)}/{queue.length}</span>
+		{#if narrow && phase === 'result' && result && line && card && (result.kind !== 'wrong' || revealed)}
+			<!-- Phones: the streak and the rarely used menu sit up here, far from Continue. -->
+			<span class="streak-top" class:miss={!firstTry}>{streakShort(card.card)}</span>
+			{@render moreMenu(line.pos)}
+		{/if}
 	</header>
 
 	{#if phase === 'empty'}
@@ -932,7 +1020,7 @@
 						<EvalBar value={shownEval} orientation={color} horizontal={narrow} />
 					</div>
 					<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
-					<div class="board" bind:clientWidth={boardWidth} onclick={() => phase === 'intro' && finishIntro()}>
+					<div class="board" bind:clientWidth={boardWidth} onpointerdown={boardTouch}>
 						<Board
 							fen={shown.fen}
 							orientation={color}
@@ -948,16 +1036,17 @@
 				</div>
 
 				{#if phase === 'result' && chips.length}
+					<div class="chips-row">
+					<button
+						class="chip-line home"
+						class:selected={!pv && cursor === end}
+						onclick={() => goTo(end)}
+						title="Back to the position, with every line as an arrow"
+					>
+						<Icon name="refresh" size={15} />
+						<span>Position</span>
+					</button>
 					<div class="chips" role="group" aria-label="Lines to review" bind:this={chipsEl}>
-						<button
-							class="chip-line home"
-							class:selected={!pv && cursor === end}
-							onclick={() => goTo(end)}
-							title="Back to the position, with every line as an arrow"
-						>
-							<Icon name="refresh" size={15} />
-							<span>Reset</span>
-						</button>
 						{#each chips as c, i (c.key)}
 							<button
 								class="chip-line {c.kind}"
@@ -973,13 +1062,14 @@
 								<span class="num">{chipSan(c.key)}</span>
 								{#if evalOf(c.key)}<span class="num ev">{formatEvalShort(evalOf(c.key))}</span>{/if}
 							</button>
-					{/each}
+						{/each}
+					</div>
 					</div>
 				{/if}
 
 				<!-- The game (folded to its last moves in the review), then the line under review; dots mark notes. -->
 				<div class="navrow">
-					<button class="icon-btn" onclick={() => step(-1)} aria-label="Previous move" title="Previous move (←)"><Icon name="chevron-left" size={18} /></button>
+					<button class="icon-btn" disabled={!canBack} onclick={() => step(-1)} aria-label="Previous move" title="Previous move (←)"><Icon name="chevron-left" size={18} /></button>
 					<nav class="moves" bind:this={movesEl} aria-label="Moves">
 						{#if from > 0}<button class="mv more" onclick={() => (fullPath = true)} title="Show the game’s moves">…</button>{/if}
 						{#each line.plies.slice(from) as ply, j (from + j)}
@@ -1005,7 +1095,7 @@
 							<span class="mv num ask">{#if line.pos.turn === 'white'}<span class="faint">{line.pos.fullmoves}.</span>{/if}?</span>
 						{/if}
 					</nav>
-					<button class="icon-btn" onclick={() => step(1)} aria-label="Next move" title="Next move (→)"><Icon name="chevron-right" size={18} /></button>
+					<button class="icon-btn" disabled={!canForward} onclick={() => step(1)} aria-label="Next move" title="Next move (→)"><Icon name="chevron-right" size={18} /></button>
 					{#if phase === 'result' && selected !== null}
 						{@const key = selected}
 						<button
@@ -1075,7 +1165,7 @@
 							{#if result.eval}<span class="eval-pill num">{formatEval(result.eval)}</span>{/if}
 						</div>
 						<!-- While looking for the main move after a sound one, the box says just that (the top bar has the rest). -->
-						{#if !seeking}<p class="dim">
+						{#if !seeking && !(narrow && revealed && !found && result.kind === 'wrong')}<p class="dim">
 							{#if result.kind === 'correct'}
 								{@const a = card.answers.find((x) => x.uci === result!.played)}
 								{#if result.played !== main}
@@ -1111,7 +1201,7 @@
 						{:else if seeking}
 							<p class="dim seek">
 								{why === 'thematic' ? 'Masters mostly play another move.' : why === 'punish' ? `There’s a stronger way to punish ${slip}.` : 'The engine prefers another move.'}
-								Find it, or <button class="text-btn" onclick={showMain}>show it</button>.
+								Find it on the board.
 							</p>
 						{:else if result.kind === 'wrong' && why === 'punish' && !revealed}
 							<p class="faint small">
@@ -1132,30 +1222,27 @@
 					{/if}
 
 					<div class="foot">
+						<!-- The right button always goes forward (Try again, or Continue) and the left one is the alternative, so a habitual
+						     or double tap lands on something harmless; taps are also ignored for 400 ms after the buttons change. -->
 						{#if result.kind === 'wrong' && !revealed}
 							<div class="actions">
-								<button class="btn btn-primary" onclick={retry}>Try again</button>
-								<button class="btn btn-quiet" onclick={showMain}>Show answer</button>
+								<button class="btn btn-quiet" onclick={calm(showMain)}>Show answer</button>
+								<button class="btn btn-primary forward" onclick={calm(retry)}>Try again</button>
 							</div>
 						{:else}
-							<div class="foot-row">
-								<p class="small streak" class:miss={!firstTry}>{outcome(card.card)}</p>
-								<details class="menu">
-									<summary aria-label="More options" title="More options">⋯</summary>
-									<div class="menu-body card">
-										<button class="text-btn quiet" onclick={skipForGood}>I play {sanOf(line.pos, card.card.wrong)} on purpose · stop drilling this</button>
-									</div>
-								</details>
-							</div>
-							<!-- Try again (after a sound move that isn't the taught one), Why (phones), and Continue in one row. -->
+							{#if !narrow}
+								<div class="foot-row">
+									<p class="small streak" class:miss={!firstTry}>{outcome(card.card)}</p>
+									{@render moreMenu(line.pos)}
+								</div>
+							{/if}
 							<div class="actions">
-								{#if result.played !== main && !found}
-									<button class="btn btn-quiet" onclick={retry}>Try again</button>
+								{#if seeking}
+									<button class="btn btn-quiet" onclick={calm(showMain)}>Show it</button>
+								{:else if narrow}
+									<button class="btn btn-quiet" onclick={calm(openSheet)} aria-haspopup="dialog">Why?</button>
 								{/if}
-								{#if narrow}
-									<button class="btn btn-quiet" onclick={openSheet} aria-haspopup="dialog">Why?</button>
-								{/if}
-								<button class="btn btn-primary continue" onclick={next}>Continue</button>
+								<button class="btn btn-primary forward" onclick={calm(next)}>Continue</button>
 							</div>
 						{/if}
 					</div>
@@ -1258,6 +1345,14 @@
 		{/if}
 	{:else}
 		<div class="center" aria-busy="true"></div>
+	{/if}
+
+	{#if stopped}
+		<!-- Undo for "stop drilling this", low on the screen where the next card has nothing yet. -->
+		<div class="toast" role="status">
+			<span>Stopped drilling <strong>{stopped.san}</strong></span>
+			<button class="btn btn-quiet" onclick={undoStop}>Undo</button>
+		</div>
 	{/if}
 </div>
 
@@ -1363,12 +1458,22 @@
 	}
 
 	/* One row of chips; more scroll sideways. */
+	/* Position stays put; the lines scroll sideways next to it, fading at the edge so a cut-off chip reads as "more". */
+	.chips-row {
+		display: flex;
+		gap: 8px;
+		min-width: 0;
+	}
+
 	.chips {
 		position: relative;
+		flex: 1;
+		min-width: 0;
 		display: flex;
-		gap: 5px;
+		gap: 8px;
 		overflow-x: auto;
 		scrollbar-width: none;
+		mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent);
 	}
 
 	.chips::-webkit-scrollbar,
@@ -1382,8 +1487,8 @@
 		flex-shrink: 0;
 		align-items: center;
 		gap: 6px;
-		height: 36px;
-		padding: 0 11px 0 5px;
+		height: 44px;
+		padding: 0 12px 0 7px;
 		border-radius: 999px;
 		border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line));
 		color: var(--text);
@@ -1445,14 +1550,12 @@
 	.navrow {
 		display: flex;
 		align-items: center;
-		gap: 2px;
+		gap: 8px;
 		min-width: 0;
 	}
 
 	.navrow .icon-btn {
 		flex-shrink: 0;
-		width: 34px;
-		height: 34px;
 	}
 
 	/* Play: a labelled button, big enough to hit, that plays the selected line from the move shown. */
@@ -1461,8 +1564,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		height: 38px;
-		margin-left: 4px;
+		height: 44px;
 		padding: 0 14px 0 11px;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--accent) 16%, var(--bg-elev));
@@ -1490,6 +1592,7 @@
 		overflow-x: auto;
 		scrollbar-width: none;
 		white-space: nowrap;
+		mask-image: linear-gradient(to right, transparent, #000 10px, #000 calc(100% - 10px), transparent);
 	}
 
 	.mv {
@@ -1570,15 +1673,6 @@
 	.note .notes {
 		flex: 1 1 100%;
 		color: var(--text);
-	}
-
-	.seek .text-btn {
-		display: inline;
-		padding: 0;
-		font: inherit;
-		color: var(--accent);
-		text-decoration: underline;
-		text-underline-offset: 2px;
 	}
 
 	.headline-note {
@@ -1734,7 +1828,7 @@
 		flex: 1;
 	}
 
-	.actions .continue {
+	.actions .forward {
 		flex: 1.6;
 	}
 
@@ -1961,8 +2055,31 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 	}
 
-	.continue {
-		width: 100%;
+	.toast {
+		position: fixed;
+		left: 12px;
+		right: 12px;
+		bottom: calc(12px + var(--safe-b));
+		z-index: 20;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		max-width: 480px;
+		margin: 0 auto;
+		padding: 6px 6px 6px 16px;
+		border-radius: 14px;
+		background: var(--bg-elev-2);
+		border: 1px solid var(--line);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+		font-size: 14px;
+		animation: rise 200ms var(--ease);
+	}
+
+	.toast .btn {
+		height: 44px;
+		background: var(--bg-elev);
+		color: var(--accent);
 	}
 
 	.line-source {
@@ -2232,9 +2349,98 @@
 			gap: 6px;
 		}
 
+		/* 36px to look at, 44px to hit. */
 		.bar .icon-btn {
-			width: 36px;
-			height: 36px;
+			width: 44px;
+			height: 44px;
+			margin: -4px;
+		}
+
+		/* After answering: the streak and the menu replace the card count. */
+		.bar.answered .count {
+			display: none;
+		}
+
+		.streak-top {
+			flex-shrink: 0;
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--win);
+			white-space: nowrap;
+		}
+
+		.streak-top.miss {
+			color: var(--text-3);
+		}
+
+		.bar .menu {
+			margin: -4px -4px -4px 0;
+		}
+
+		.bar .menu summary {
+			display: grid;
+			place-items: center;
+			width: 44px;
+			height: 44px;
+			padding: 0;
+			line-height: 1;
+		}
+
+		/* Footer: a fixed-width alternative on the left, the forward action filling the rest, with a 12px buffer between. */
+		.actions {
+			gap: 12px;
+		}
+
+		.actions .btn {
+			height: 48px;
+			flex: 0 0 142px;
+			padding: 0 12px;
+		}
+
+		.actions .forward {
+			flex: 1;
+		}
+
+		.bar .menu-body .text-btn {
+			display: flex;
+			align-items: center;
+			min-height: 48px;
+			text-align: left;
+		}
+
+		/* Opens downwards from the top bar, over the board. */
+		.bar .menu-body {
+			top: calc(100% + 4px);
+			bottom: auto;
+			z-index: 5;
+		}
+
+		/* The moves read as text on phones: the arrows and the chips do the navigating, so there are no 30px targets 1px apart. */
+		.moves .mv {
+			pointer-events: none;
+		}
+
+		.stage {
+			gap: 8px;
+		}
+
+		.panel {
+			gap: 8px;
+		}
+
+		/* Fixed heights, so text never pushes the buttons around: the note keeps two lines, the box two lines per paragraph. */
+		.note {
+			height: 42px;
+			min-height: 0;
+			overflow: hidden;
+		}
+
+		.verdict p {
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			overflow: hidden;
 		}
 
 		/* The opening's name is under the board while answering and at the top of the Why sheet afterwards. */

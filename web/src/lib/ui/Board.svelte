@@ -83,7 +83,9 @@
 				events: { after: delayed }
 			},
 			premovable: { enabled: false },
-			draggable: { enabled: !!dests },
+			// A drag needs 10px of movement every time; with chessground's default autoDistance, the next drag after a drag move
+			// starts at 0px, so a thumb rolling across a square edge became a (graded) move.
+			draggable: { enabled: !!dests, distance: 10, autoDistance: false },
 			selectable: { enabled: !!dests },
 			animation: { enabled: !viewOnly, duration: animationMs },
 			highlight: { lastMove: true, check: true },
