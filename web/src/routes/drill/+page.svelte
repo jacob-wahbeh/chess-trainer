@@ -617,6 +617,55 @@
 	const canForward = $derived(
 		pv ? pv.n < lineOf(pv.key).length : cursor < end || (phase === 'result' && selected !== null && lineOf(selected).length > 0)
 	);
+	/**
+	 * Hold to repeat (the arrows): a press steps once; held for 400 ms it repeats every 150 ms, with a tick when repeating
+	 * starts. Keyboard activation (a click with no pointer) still steps once.
+	 */
+	function holdToRepeat(node: HTMLButtonElement, fn: () => void) {
+		let wait: ReturnType<typeof setTimeout> | undefined;
+		let every: ReturnType<typeof setInterval> | undefined;
+		let pressed = false;
+		const stop = () => {
+			clearTimeout(wait);
+			clearInterval(every);
+			window.removeEventListener('pointerup', stop);
+			window.removeEventListener('pointercancel', stop);
+		};
+		const down = (e: PointerEvent) => {
+			if (node.disabled || e.button !== 0) return;
+			pressed = true;
+			fn();
+			window.addEventListener('pointerup', stop);
+			window.addEventListener('pointercancel', stop);
+			wait = setTimeout(() => {
+				feel('move');
+				every = setInterval(() => (node.disabled ? stop() : fn()), 150);
+			}, 400);
+		};
+		const click = (e: MouseEvent) => {
+			// The press already stepped; only a keyboard "click" steps here.
+			if (pressed || e.detail > 0) {
+				pressed = false;
+				return;
+			}
+			fn();
+		};
+		node.addEventListener('pointerdown', down);
+		node.addEventListener('pointerleave', stop);
+		node.addEventListener('click', click);
+		return {
+			update(next: () => void) {
+				fn = next;
+			},
+			destroy() {
+				stop();
+				node.removeEventListener('pointerdown', down);
+				node.removeEventListener('pointerleave', stop);
+				node.removeEventListener('click', click);
+			}
+		};
+	}
+
 	function step(by: number) {
 		stopPlay();
 		finishIntro(cursor);
@@ -1091,15 +1140,6 @@
 	<header class="bar" class:answered={phase === 'result' && !!result}>
 		<a class="icon-btn" href="{base}/" aria-label="End session" title="End session (Esc)"><Icon name="close" /></a>
 		<div class="track" aria-hidden="true"><span style:width="{100 * progress}%"></span></div>
-		{#if phase === 'result' && result && line}
-			<!-- On phones the result sits up here, so the board and the review fit the screen. -->
-			<div class="status {tone}">
-				<Icon name={result.kind === 'wrong' ? 'close' : 'check'} size={16} />
-				{@render verdictLabel(result)}
-				<strong>{sanOf(line.pos, result.played)}</strong>
-				{#if result.eval}<span class="num faint">{formatEval(result.eval)}</span>{/if}
-			</div>
-		{/if}
 		<span class="num faint count">{Math.min(index + (phase === 'done' ? 0 : 1), queue.length)}/{queue.length}</span>
 		{#if narrow && phase === 'result' && result && line && card && (result.kind !== 'wrong' || revealed)}
 			<!-- Phones: the streak and the rarely used menu sit up here, far from Continue. -->
@@ -1158,6 +1198,53 @@
 					</div>
 				</div>
 
+				<!-- The game (folded to its last moves in the review), then the line under review; dots mark notes. -->
+				<div class="navrow">
+					<button class="icon-btn" disabled={!canBack} use:holdToRepeat={() => step(-1)} aria-label="Previous move" title="Previous move (←)"><Icon name="chevron-left" size={18} /></button>
+					<nav class="moves" bind:this={movesEl} aria-label="Moves">
+						{#if from > 0}<button class="mv more" onclick={() => (fullPath = true)} title="Show the game’s moves">…</button>{/if}
+						{#each line.plies.slice(from) as ply, j (from + j)}
+							<button class="mv num past" class:current={!pv && cursor === from + j + 1} onclick={() => goTo(from + j + 1)}>
+								{#if ply.white}<span class="faint">{ply.moveNumber}.</span>{:else if j === 0}<span class="faint">{ply.moveNumber}…</span>{/if}{ply.san}
+							</button>
+						{/each}
+						{#if phase === 'result' && viewKey !== null}
+							{@const key = viewKey}
+							{#each lineOf(key) as ply, i (i)}
+								<button
+									class="mv num {kindOf(key)}"
+									class:first={i === 0}
+									class:current={pv?.key === key && pv.n === i + 1}
+									class:noted={viewNotes.some((n) => n.n === i + 1)}
+									onclick={() => preview(key, i + 1)}
+								>
+									{moveNo(ply, i)}{ply.san}
+								</button>
+							{/each}
+							{#if !lines[key]}<span class="mv faint">…</span>{/if}
+						{:else if phase !== 'result'}
+							<span class="mv num ask">{#if line.pos.turn === 'white'}<span class="faint">{line.pos.fullmoves}.</span>{/if}?</span>
+						{/if}
+					</nav>
+					<button class="icon-btn" disabled={!canForward} use:holdToRepeat={() => step(1)} aria-label="Next move" title="Next move (→)"><Icon name="chevron-right" size={18} /></button>
+					{#if phase === 'result' && selected !== null}
+						{@const key = selected}
+						<button
+							class="play"
+							class:on={playing === key}
+							disabled={lineOf(key).length < 2}
+							onclick={() => play(key)}
+							aria-label={playing === key ? 'Stop' : 'Play the line'}
+							title={playing === key ? 'Stop (P)' : 'Play the line from here (P)'}
+						>
+							<Icon name={playing === key ? 'pause' : 'play'} size={18} />
+							<span>{playing === key ? 'Stop' : 'Play'}</span>
+						</button>
+					{:else if narrow}
+						<span class="play reserved" aria-hidden="true"></span>
+					{/if}
+				</div>
+
 				{#if phase === 'result' && chips.length}
 					<div class="chips-row">
 					<button
@@ -1188,52 +1275,10 @@
 						{/each}
 					</div>
 					</div>
+				{:else if narrow}
+					<!-- Reserved while answering, so the rows below don't move when the chips arrive. -->
+					<div class="chips-row reserved" aria-hidden="true"></div>
 				{/if}
-
-				<!-- The game (folded to its last moves in the review), then the line under review; dots mark notes. -->
-				<div class="navrow">
-					<button class="icon-btn" disabled={!canBack} onclick={() => step(-1)} aria-label="Previous move" title="Previous move (←)"><Icon name="chevron-left" size={18} /></button>
-					<nav class="moves" bind:this={movesEl} aria-label="Moves">
-						{#if from > 0}<button class="mv more" onclick={() => (fullPath = true)} title="Show the game’s moves">…</button>{/if}
-						{#each line.plies.slice(from) as ply, j (from + j)}
-							<button class="mv num past" class:current={!pv && cursor === from + j + 1} onclick={() => goTo(from + j + 1)}>
-								{#if ply.white}<span class="faint">{ply.moveNumber}.</span>{:else if j === 0}<span class="faint">{ply.moveNumber}…</span>{/if}{ply.san}
-							</button>
-						{/each}
-						{#if phase === 'result' && viewKey !== null}
-							{@const key = viewKey}
-							{#each lineOf(key) as ply, i (i)}
-								<button
-									class="mv num {kindOf(key)}"
-									class:first={i === 0}
-									class:current={pv?.key === key && pv.n === i + 1}
-									class:noted={viewNotes.some((n) => n.n === i + 1)}
-									onclick={() => preview(key, i + 1)}
-								>
-									{moveNo(ply, i)}{ply.san}
-								</button>
-							{/each}
-							{#if !lines[key]}<span class="mv faint">…</span>{/if}
-						{:else if phase !== 'result'}
-							<span class="mv num ask">{#if line.pos.turn === 'white'}<span class="faint">{line.pos.fullmoves}.</span>{/if}?</span>
-						{/if}
-					</nav>
-					<button class="icon-btn" disabled={!canForward} onclick={() => step(1)} aria-label="Next move" title="Next move (→)"><Icon name="chevron-right" size={18} /></button>
-					{#if phase === 'result' && selected !== null}
-						{@const key = selected}
-						<button
-							class="play"
-							class:on={playing === key}
-							disabled={lineOf(key).length < 2}
-							onclick={() => play(key)}
-							aria-label={playing === key ? 'Stop' : 'Play the line'}
-							title={playing === key ? 'Stop (P)' : 'Play the line from here (P)'}
-						>
-							<Icon name={playing === key ? 'pause' : 'play'} size={18} />
-							<span>{playing === key ? 'Stop' : 'Play'}</span>
-						</button>
-					{/if}
-				</div>
 
 				<!-- What to do, or what's happening on the move on the board (its arrows are drawn). -->
 				<div class="note" aria-live="polite">
@@ -1260,7 +1305,7 @@
 					{:else if caption}
 						<p class="faint">{caption}</p>
 					{/if}
-					{#if away && phase !== 'result'}<button class="text-btn back" onclick={() => goTo(end)}>Back to the position</button>{/if}
+					{#if away && phase !== 'result' && !narrow}<button class="text-btn back" onclick={() => goTo(end)}>Back to the position</button>{/if}
 				</div>
 			</div>
 
@@ -1279,6 +1324,17 @@
 						{#if phase === 'intro'}<p class="faint small">Click the board to skip</p>{/if}
 						{#if phase === 'ask'}<p class="faint small">← → to step through the moves</p>{/if}
 					</div>
+					{#if narrow && (phase === 'intro' || (phase === 'ask' && away))}
+						<!-- Phones: the forward action stays in the bottom-right corner: skip the replay, or come back from earlier moves. -->
+						<div class="foot">
+							<div class="actions">
+								<span class="slot"></span>
+								<button class="btn btn-quiet forward" onclick={() => (phase === 'intro' ? finishIntro() : goTo(end))}>
+									{phase === 'intro' ? 'Skip' : 'Back to the position'}
+								</button>
+							</div>
+						</div>
+					{/if}
 				{:else if result}
 					<!-- On phones the whole box opens the Why sheet (the › says so): the way in while looking for the taught move,
 					     when the footer holds Show it and Continue. -->
@@ -1321,6 +1377,14 @@
 								{/if}
 							{:else if result.kind === 'also'}
 								{#if card.eval}The best move keeps {kept(card.eval)}.{/if}
+							{:else if narrow}
+								<!-- Phones: one compact line under the result. -->
+								{[
+									result.eval && card.eval ? `${formatEval(card.eval)} → ${formatEval(result.eval)}` : '',
+									why !== 'punish' && result.reply ? `red arrow: ${line.pos.turn === 'white' ? 'Black' : 'White'}’s reply` : ''
+								]
+									.filter(Boolean)
+									.join(' · ')}{why === 'punish' && !revealed ? `. Hint: punish ${slip}.` : ''}
 							{:else}
 								{#if result.played === card.card.wrong}Your habit: {card.wrongCount}× in your games.{/if}
 								{#if result.eval && card.eval}It takes the game from {stateOf(card.eval)} to {stateOf(result.eval)}.{/if}
@@ -1338,7 +1402,7 @@
 								{why === 'thematic' ? 'Masters mostly play another move.' : why === 'punish' ? `There’s a stronger way to punish ${slip}.` : 'The engine prefers another move.'}
 								Find it on the board.
 							</p>
-						{:else if result.kind === 'wrong' && why === 'punish' && !revealed}
+						{:else if result.kind === 'wrong' && why === 'punish' && !revealed && !narrow}
 							<p class="faint small">
 								{`Hint: ${slip} was a slip. Find the move that punishes it.`}
 							</p>
@@ -1440,7 +1504,7 @@
 
 				<!-- The move on the board: step through the line from here. -->
 				<div class="sheet-step">
-					<button class="icon-btn" disabled={!canBack} onclick={() => step(-1)} aria-label="Previous move"><Icon name="chevron-left" size={20} /></button>
+					<button class="icon-btn" disabled={!canBack} use:holdToRepeat={() => step(-1)} aria-label="Previous move"><Icon name="chevron-left" size={20} /></button>
 					<div class="step-text">
 						<span class="step-move num {pv ? kindOf(pv.key) : ''}">
 							{#if at && pv}{formatPlies([at])}<span class="faint">{` · ${pv.n}/${length}`}</span>{:else if cursor === end}The position{:else}Earlier in the game{/if}
@@ -1456,7 +1520,7 @@
 							</button>
 						{/if}
 					</div>
-					<button class="icon-btn" disabled={!canForward} onclick={() => step(1)} aria-label="Next move"><Icon name="chevron-right" size={20} /></button>
+					<button class="icon-btn" disabled={!canForward} use:holdToRepeat={() => step(1)} aria-label="Next move"><Icon name="chevron-right" size={20} /></button>
 					<button class="play" class:on={playing === stepKey} disabled={length < 2} onclick={() => play(stepKey)} aria-label={playing === stepKey ? 'Stop' : 'Play the line'}>
 						<Icon name={playing === stepKey ? 'pause' : 'play'} size={18} />
 					</button>
@@ -1595,34 +1659,6 @@
 		height: 100%;
 		background: var(--accent);
 		transition: width 300ms var(--ease);
-	}
-
-	.status {
-		display: none;
-		flex: 1;
-		min-width: 0;
-		align-items: center;
-		gap: 7px;
-		font-weight: 650;
-		color: var(--c);
-		white-space: nowrap;
-		overflow: hidden;
-	}
-
-	.status.correct {
-		--c: var(--win);
-	}
-
-	.status.also {
-		--c: var(--book);
-	}
-
-	.status.wrong {
-		--c: var(--loss);
-	}
-
-	.status strong {
-		color: var(--text);
 	}
 
 	.count {
@@ -2361,7 +2397,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 0 8px 6px 12px;
+		padding: 4px 8px 6px 12px;
 	}
 
 	.chip-line.opening {
@@ -2785,13 +2821,50 @@
 	}
 
 	@media (max-width: 899px) {
-		/* The result goes in the top bar; the board, lines, moves and note fill the screen above Continue. */
-		.bar.answered .track {
-			display: none;
+		/* One fixed-height column: board, arrows, chips, note, result box, then the footer at the bottom of the screen, so
+		   nothing moves between answering and the review. */
+		.drill {
+			min-height: calc(100dvh - var(--safe-t) - 4px);
 		}
 
-		.bar.answered .status {
+		.stage {
+			flex: 1;
 			display: flex;
+			flex-direction: column;
+		}
+
+		.panel {
+			flex: 1;
+			gap: 6px;
+		}
+
+		.foot {
+			margin-top: auto;
+			padding: 6px 0 calc(6px + var(--safe-b));
+		}
+
+		.chips-row.reserved {
+			height: 44px;
+		}
+
+		/* The board runs edge to edge (393px on an iPhone); everything else keeps a 6px margin. */
+		.bar,
+		.evalbar,
+		.navrow,
+		.chips-row,
+		.note,
+		.panel,
+		.center {
+			margin-inline: 6px;
+		}
+
+		.navrow .play {
+			flex: 0 0 88px;
+			justify-content: center;
+		}
+
+		.play.reserved {
+			visibility: hidden;
 		}
 
 		.desktop {
@@ -2799,7 +2872,16 @@
 		}
 
 		.drill {
-			gap: 6px;
+			gap: 4px;
+		}
+
+		/* A slimmer eval bar on phones (its label is 10px). */
+		.evalbar {
+			height: 12px;
+		}
+
+		.board-row {
+			gap: 3px;
 		}
 
 		/* 36px to look at, 44px to hit. */
@@ -2854,6 +2936,10 @@
 			flex: 1;
 		}
 
+		.actions .slot {
+			flex: 0 0 142px;
+		}
+
 		.bar .menu-body .text-btn {
 			display: flex;
 			align-items: center;
@@ -2874,16 +2960,16 @@
 		}
 
 		.stage {
-			gap: 8px;
+			gap: 6px;
 		}
 
 		.panel {
-			gap: 8px;
+			gap: 6px;
 		}
 
 		/* Fixed heights, so text never pushes the buttons around: the note keeps two lines, the box two lines per paragraph. */
 		.note {
-			height: 42px;
+			height: 40px;
 			min-height: 0;
 			overflow: hidden;
 		}
@@ -2933,13 +3019,29 @@
 			order: 4;
 		}
 
-		/* The top bar already says Correct / Not quite: keep just the detail. */
+		/* The box carries the result: "✓ Correct Nxe5 +0.31", then one short line. */
 		.verdict .headline {
-			display: none;
+			gap: 7px;
+			font-size: 17px;
+			line-height: 1.2;
+		}
+
+		.verdict .badge-icon {
+			width: 22px;
+			height: 22px;
+		}
+
+		.verdict .eval-pill {
+			padding: 1px 7px;
+			font-size: 12px;
 		}
 
 		.verdict {
-			padding: 10px 14px;
+			padding: 8px 14px;
+		}
+
+		.verdict .headline + p {
+			margin-top: 2px;
 		}
 
 		.verdict > p:first-of-type {

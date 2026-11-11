@@ -204,6 +204,19 @@
 			<button aria-pressed={settings.introSpeed === speed} onclick={() => ((settings.introSpeed = speed), saveSettings())}>{label}</button>
 		{/each}
 	</div>
+	<div class="dim small">Move pieces by</div>
+	<div class="segmented" role="group" aria-label="Move pieces by">
+		{#each [['both', 'Tap or drag'], ['tap', 'Tap'], ['drag', 'Drag']] as const as [how, label] (how)}
+			<button aria-pressed={settings.moveInput === how} onclick={() => ((settings.moveInput = how), saveSettings())}>{label}</button>
+		{/each}
+	</div>
+	<div class="faint small">
+		{settings.moveInput === 'tap'
+			? 'Tap a piece, then its square. Dragging is off, so a slip of the thumb can’t play a move.'
+			: settings.moveInput === 'drag'
+				? 'Drag pieces to move them; tapping a piece doesn’t pick it up.'
+				: 'Tap a piece then its square, or drag it.'}
+	</div>
 	<div class="dim small">Card order</div>
 	<div class="segmented" role="group" aria-label="Card order">
 		{#each [['need', 'By need'], ['random', 'Random']] as const as [order, label] (order)}

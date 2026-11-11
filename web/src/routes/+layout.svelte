@@ -233,8 +233,9 @@
 	@media (max-width: 899px) {
 		main.focus {
 			padding-top: calc(var(--safe-t) + 4px);
-			padding-left: 6px;
-			padding-right: 6px;
+			/* The board runs edge to edge; the drill pads its other rows itself. */
+			padding-left: 0;
+			padding-right: 0;
 			/* Continue's sticky footer already clears the home bar. */
 			padding-bottom: 0;
 		}

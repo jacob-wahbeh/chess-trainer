@@ -7,6 +7,7 @@
 	import type { Key } from 'chessground/types';
 	import 'chessground/assets/chessground.base.css';
 	import 'chessground/assets/chessground.cburnett.css';
+	import { settings } from '$lib/state.svelte';
 
 	interface Props {
 		fen: string;
@@ -41,6 +42,22 @@
 
 	let el: HTMLDivElement;
 	let cg: Api | undefined;
+
+	/** While a piece is dragged by touch: the square under the finger, ringed so the drop is visible under the lifted piece. */
+	let over = $state<Key | null>(null);
+	const track = (e: TouchEvent) => {
+		const t = e.touches[0];
+		over = t && cg?.state.draggable.current?.started ? (cg.getKeyAtDomPos([t.clientX, t.clientY]) ?? null) : null;
+	};
+	const untrack = () => (over = null);
+	/** The ring's place: a circle two squares wide, centred on the square. */
+	const ringAt = (key: Key) => {
+		const file = key.charCodeAt(0) - 97;
+		const rank = Number(key[1]) - 1;
+		const col = orientation === 'white' ? file : 7 - file;
+		const row = orientation === 'white' ? 7 - rank : rank;
+		return { left: `${col * 12.5 - 6.25}%`, top: `${row * 12.5 - 6.25}%` };
+	};
 
 	// Chessground reports a move a moment later (setTimeout), outside the touch that made it, and iPhone only
 	// plays haptics during a touch. So a move finished during a touch is handed over right away, and the
@@ -85,8 +102,8 @@
 			premovable: { enabled: false },
 			// A drag needs 10px of movement every time; with chessground's default autoDistance, the next drag after a drag move
 			// starts at 0px, so a thumb rolling across a square edge became a (graded) move.
-			draggable: { enabled: !!dests, distance: 10, autoDistance: false },
-			selectable: { enabled: !!dests },
+			draggable: { enabled: !!dests && settings.moveInput !== 'tap', distance: 10, autoDistance: false },
+			selectable: { enabled: !!dests && settings.moveInput !== 'drag' },
 			animation: { enabled: !viewOnly, duration: animationMs },
 			highlight: { lastMove: true, check: true },
 			drawable: { enabled: true, visible: true, autoShapes: shapes }
@@ -99,7 +116,13 @@
 		window.addEventListener('touchstart', snapshot, { capture: true, passive: true });
 		document.addEventListener('touchstart', settle, { passive: true });
 		document.addEventListener('touchend', settle, { passive: true });
+		document.addEventListener('touchmove', track, { passive: true });
+		document.addEventListener('touchend', untrack, { passive: true });
+		document.addEventListener('touchcancel', untrack, { passive: true });
 		return () => {
+			document.removeEventListener('touchmove', track);
+			document.removeEventListener('touchend', untrack);
+			document.removeEventListener('touchcancel', untrack);
 			window.removeEventListener('touchstart', snapshot, { capture: true });
 			document.removeEventListener('touchstart', settle);
 			document.removeEventListener('touchend', settle);
@@ -113,7 +136,10 @@
 	});
 </script>
 
-<div class="board"><div bind:this={el}></div></div>
+<div class="board">
+	<div bind:this={el}></div>
+	{#if over}{@const at = ringAt(over)}<span class="drop-ring" style:left={at.left} style:top={at.top} aria-hidden="true"></span>{/if}
+</div>
 
 <style>
 	.board {
@@ -127,5 +153,26 @@
 	.board > div {
 		position: absolute;
 		inset: 0;
+	}
+
+	/* Above the resting pieces, below the dragged one (chessground gives it z-index 11). */
+	.drop-ring {
+		position: absolute;
+		z-index: 3;
+		width: 25%;
+		height: 25%;
+		border-radius: 50%;
+		background: rgba(20, 85, 30, 0.3);
+		pointer-events: none;
+	}
+
+	/* Touch: the dragged piece is drawn bigger and lifted above the thumb, so it isn't hidden under it. It still lands on
+	   the square under the finger, which the ring marks. */
+	@media (pointer: coarse) {
+		.board :global(cg-board piece.dragging) {
+			width: 20%;
+			height: 20%;
+			margin: -15% 0 0 -3.75%;
+		}
 	}
 </style>

@@ -20,11 +20,13 @@ export interface Settings {
 	drillOrder: 'need' | 'random';
 	/** A tap when a piece lands, a tick for a right answer and two for a miss (see haptics.ts). */
 	haptics: boolean;
+	/** How pieces are moved: tap a piece then a square, drag it, or either. */
+	moveInput: 'both' | 'tap' | 'drag';
 }
 
 const STORAGE_KEY = 'chess-trainer/settings';
 const LICHESS_KEY = 'chess-trainer/lichess';
-const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, introSpeed: 'normal', drillOrder: 'need', haptics: true };
+const DEFAULTS: Settings = { username: '', timeClasses: ['blitz', 'rapid'], periodMonths: 12, minReach: 3, introSpeed: 'normal', drillOrder: 'need', haptics: true, moveInput: 'both' };
 /** Re-sync in the background when the last sync is older than this. */
 const STALE_SECONDS = 6 * 3600;
 /** Local Stockfish depth: matched deep Lichess evals as well as native Stockfish in the research. */
