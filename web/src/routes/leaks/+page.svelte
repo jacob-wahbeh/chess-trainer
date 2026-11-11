@@ -1,3 +1,8 @@
+<script module lang="ts">
+	/** The search, kept while away (in a drill) so coming back shows the same results. */
+	let kept = '';
+</script>
+
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
@@ -5,10 +10,11 @@
 	import { analysis, app } from '$lib/state.svelte';
 	import { data } from '$lib/worker/client';
 	import type { Color } from '$lib/games/types';
-	import type { LeakList } from '$lib/worker/data.worker';
+	import type { LeakList, LeakView } from '$lib/worker/data.worker';
 	import { count, pct } from '$lib/format';
 	import AnalysisStatus from '$lib/ui/AnalysisStatus.svelte';
 	import LeakCard from '$lib/ui/LeakCard.svelte';
+	import { matches, searchText } from '$lib/leaks/search';
 
 	/** Played as a first mistake at least this often: a habit worth drilling first. */
 	const HABIT = 5;
@@ -44,15 +50,28 @@
 		};
 	});
 
-	// Each colour starts with the first page again.
+	// Each colour and search starts with the first page again.
 	$effect(() => {
 		void color;
+		void query;
 		habitsShown = PAGE;
 		oneOffsShown = PAGE;
 	});
 
-	const habits = $derived(list?.leaks.filter((l) => l.first >= HABIT) ?? []);
-	const oneOffs = $derived(list?.leaks.filter((l) => l.first < HABIT) ?? []);
+	let query = $state(kept);
+	$effect(() => {
+		kept = query;
+	});
+	/** Each mistake's searchable text, made once per list. */
+	const texts = $derived.by(() => (void list, new Map<LeakView, string>()));
+	const textOf = (l: LeakView) => {
+		let t = texts.get(l);
+		if (!t) texts.set(l, (t = searchText(l)));
+		return t;
+	};
+	const found = $derived(query.trim() ? (list?.leaks.filter((l) => matches(textOf(l), query)) ?? []) : (list?.leaks ?? []));
+	const habits = $derived(found.filter((l) => l.first >= HABIT));
+	const oneOffs = $derived(found.filter((l) => l.first < HABIT));
 	const points = $derived(list?.leaks.reduce((s, l) => s + l.points, 0) ?? 0);
 	const show = (c?: Color) => goto(`${base}/leaks${c ? `?c=${c}` : ''}`, { replaceState: true, noScroll: true, keepFocus: true });
 </script>
@@ -77,6 +96,24 @@
 
 <AnalysisStatus />
 
+{#if list?.leaks.length}
+	<input
+		class="input search"
+		type="search"
+		bind:value={query}
+		placeholder="Search openings or moves: Kennedy, 3.c3, 2...d6"
+		aria-label="Search your first mistakes"
+		autocapitalize="off"
+		autocomplete="off"
+		spellcheck="false"
+		enterkeyhint="search"
+		onkeydown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+	/>
+	{#if query.trim()}
+		<p class="faint small results">{found.length ? `${found.length} of ${list.leaks.length}` : 'No first mistakes match.'}</p>
+	{/if}
+{/if}
+
 {#if list && habits.length}
 	<h2 class="section">Habits <span class="faint">· first mistake in {HABIT}+ games</span></h2>
 	<div class="grid">
@@ -97,7 +134,7 @@
 	{/if}
 {/if}
 
-{#if list && !list.leaks.length && !analysis.running}
+{#if list && !list.leaks.length && !analysis.running && !query.trim()}
 	<p class="faint">No first mistakes found in your common lines with these filters.</p>
 {/if}
 
@@ -136,6 +173,14 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
 		gap: 10px;
+	}
+
+	.search {
+		margin-top: 4px;
+	}
+
+	.results {
+		margin: 6px 2px 0;
 	}
 
 	.more {
