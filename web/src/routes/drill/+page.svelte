@@ -290,7 +290,19 @@
 		if (!written || !line || !card || !answerShown) return null;
 		return splitWritten(written.why, sanOf(line.pos, card.card.wrong), main ? sanOf(line.pos, main) : '');
 	});
-	const storyFor = (key: string) => (!story ? [] : key === card?.card.wrong ? story.wrong : key === (main ?? '') ? story.main : []);
+	/** The written entry for another common move here (club or master), if the explanation has one. */
+	const altOf = (key: string) => written?.alternatives?.find((a) => a.uci === key);
+	/** What the written explanation says about a line: the habit, the taught move, or another common move. */
+	const storyFor = (key: string): string[] => {
+		if (!written || !card) return [];
+		const alt = altOf(key);
+		// Written never to name the taught move, so it shows as soon as the move is played.
+		if (alt) return [alt.before];
+		if (key === card.card.wrong && written.habit) return answerShown ? [written.habit.why] : [];
+		if (key === (main ?? '') && written.taught) return answerShown ? [written.taught.why] : [];
+		return !story ? [] : key === card.card.wrong ? story.wrong : key === (main ?? '') ? story.main : [];
+	};
+	const sideName = (side: 'you' | 'opponent' | 'both') => (side === 'you' ? 'You' : side === 'both' ? 'Both' : color === 'white' ? 'Black' : 'White');
 
 	const feel = (kind: Haptic) => settings.haptics && haptic(kind);
 	const evaluate = async (fen: string, depth: number) => (await (engine ??= EnginePool.create(1))).evaluate(fen, depth);
@@ -772,7 +784,7 @@
 {#snippet mainNote(pos: Chess, detail: CardDetail)}
 	{@const m = detail.main}
 	{#if m?.why === 'thematic'}
-		The thematic move is <strong>{sanOf(pos, m.uci)}</strong> (the green arrow), played by masters {pct(detail.answers.find((x) => x.uci === m.uci)?.share ?? 0)} of the time.
+		The thematic move is <strong>{sanOf(pos, m.uci)}</strong>, the green arrow.
 	{:else if m?.why === 'punish'}
 		<strong>{sanOf(pos, m.uci)}</strong> (the green arrow) punishes {slip} most directly.
 	{:else if m}
@@ -800,6 +812,7 @@
 		{/if}
 		{#if summary(key)}<p class="said">{summary(key)}</p>{/if}
 		{#each said as s, i (i)}<p class="said">{s}</p>{/each}
+		{@render lineExtras(key)}
 		{#if listed.length}
 			<ul class="notes">
 				{#each listed as n, i (i)}
@@ -818,6 +831,7 @@
 	{@const basis = principleById.get(w.principleId)}
 	<section class="idea">
 		<p class="idea-head">{w.headline}</p>
+		{@render ideasList(w)}
 		<div class="principle">
 			<span class="principle-name">{basis?.title ?? 'Principle'}</span>
 			{w.principle}
@@ -832,6 +846,35 @@
 			</p>
 		{/if}
 	</section>
+{/snippet}
+
+<!-- How a line relates to the opening's ideas, and (for another common move) how it compares, once shown. -->
+{#snippet lineExtras(key: string)}
+	{@const alt = altOf(key)}
+	{#if answerShown && written}
+		{#if key === card?.card.wrong && written.habit?.strays}
+			<p class="idea-tag bad">Strays from <strong>{written.habit.strays.idea}</strong>: {written.habit.strays.text}</p>
+		{:else if key === (main ?? '') && written.taught?.enforces}
+			<p class="idea-tag good">Carries out <strong>{written.taught.enforces.idea}</strong>: {written.taught.enforces.text}</p>
+		{:else if alt && main !== undefined}
+			<p class="after-head">{alt.label === 'sound' || alt.label === 'slightly worse' ? `Compared with ${numbered(main)}` : `What ${numbered(main)} does instead`}</p>
+			<p class="said">{alt.after}</p>
+		{/if}
+	{/if}
+{/snippet}
+
+<!-- The opening's main ideas, researched: one line each. -->
+{#snippet ideasList(w: Explanation)}
+	{#if w.ideas?.length}
+		<section class="ideas">
+			<p class="ideas-head">Main ideas</p>
+			<ul>
+				{#each w.ideas as idea (idea.title)}
+					<li><strong>{idea.title}</strong><span class="side">{sideName(idea.side)}</span>{idea.text}</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 {/snippet}
 
 {#snippet verdictLabel(r: Result)}
@@ -1031,7 +1074,8 @@
 							<span class="san">{sanOf(line.pos, result.played)}</span>
 							{#if result.eval}<span class="eval-pill num">{formatEval(result.eval)}</span>{/if}
 						</div>
-						<p class="dim">
+						<!-- While looking for the main move after a sound one, the box says just that (the top bar has the rest). -->
+						{#if !seeking}<p class="dim">
 							{#if result.kind === 'correct'}
 								{@const a = card.answers.find((x) => x.uci === result!.played)}
 								{#if result.played !== main}
@@ -1041,8 +1085,7 @@
 									{@const engine = card.answers.find((x) => x.why === 'engine' && x.uci !== main)}
 									The thematic move: masters play it {pct(a?.share ?? 0)} of the time.
 									{#if engine}
-										The engine’s first choice is <strong>{sanOf(line.pos, engine.uci)}</strong>{#if engine.eval}
-											({formatEval(engine.eval)}){/if}.
+										The engine’s first choice is <strong>{sanOf(line.pos, engine.uci)}</strong>{engine.eval ? ` (${formatEval(engine.eval)})` : ''}.
 									{/if}
 								{:else if why === 'punish'}
 									It punishes {slip}{#if card.opponentBefore && card.eval}, which took the game from {stateOf(card.opponentBefore)} to
@@ -1058,7 +1101,7 @@
 								{#if result.eval && card.eval}It takes the game from {stateOf(card.eval)} to {stateOf(result.eval)}.{/if}
 								{#if result.reply}The red arrow shows {line.pos.turn === 'white' ? 'Black' : 'White'}’s answer.{/if}
 							{/if}
-						</p>
+						</p>{/if}
 						{#if result.kind !== 'wrong' && main !== undefined && result.played !== main && !seeking}
 							{#if found}
 								<p class="found"><Icon name="check" size={15} /> You found it: <strong>{numbered(main)}</strong> is {theMain}.</p>
@@ -1067,8 +1110,8 @@
 							{/if}
 						{:else if seeking}
 							<p class="dim seek">
-								{why === 'thematic' ? 'Masters mostly play something else here.' : why === 'punish' ? `There’s a stronger way to punish ${slip}.` : 'The engine prefers another move.'}
-								Try again to find it, or <button class="text-btn" onclick={showMain}>show it</button>.
+								{why === 'thematic' ? 'Masters mostly play another move.' : why === 'punish' ? `There’s a stronger way to punish ${slip}.` : 'The engine prefers another move.'}
+								Find it, or <button class="text-btn" onclick={showMain}>show it</button>.
 							</p>
 						{:else if result.kind === 'wrong' && why === 'punish' && !revealed}
 							<p class="faint small">
@@ -1174,15 +1217,7 @@
 								</button>
 							{/if}
 						</div>
-						{#if notesHere.length}
-							{#each notesHere as n, i (i)}<p class="step-note {n.tone}">{n.text}</p>{/each}
-						{:else if lineSummary}
-							<p class="step-note">{lineSummary}</p>
-						{:else if ply && viewN === 1 && chipOf(key)}
-							<p class="step-note">{chipOf(key)?.tag}</p>
-						{:else if viewN === 0}
-							<p class="step-note faint">Step through the line with the arrows, or press Play.</p>
-						{/if}
+						{#each notesHere as n, i (i)}<p class="step-note {n.tone}">{n.text}</p>{/each}
 					</div>
 					<button class="icon-btn" onclick={() => step(1)} aria-label="Next move"><Icon name="chevron-right" size={20} /></button>
 					<button class="play" class:on={playing === key} disabled={length < 2} onclick={() => play(key)} aria-label={playing === key ? 'Stop' : 'Play the line'}>
@@ -1199,8 +1234,10 @@
 					{:else if summary(key)}
 						<p class="said">{summary(key)}</p>
 					{/if}
+					{@render lineExtras(key)}
 					{#if written && answerShown}
 						{@const basis = principleById.get(written.principleId)}
+						{@render ideasList(written)}
 						<div class="principle">
 							<span class="principle-name">{basis?.title ?? 'Principle'}</span>
 							{written.principle}
@@ -2115,6 +2152,59 @@
 	/* Long explanations scroll the sheet instead of squeezing a section until its text spills over the next. */
 	.sheet-body > * {
 		flex: none;
+	}
+
+	/* How a line relates to the opening's ideas: "Strays from …" / "Carries out …". */
+	.idea-tag {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.4;
+		color: var(--text-2);
+	}
+
+	.idea-tag.bad strong {
+		color: var(--loss);
+	}
+
+	.idea-tag.good strong {
+		color: var(--win);
+	}
+
+	.after-head {
+		margin: 2px 0 -4px;
+		font-size: 13px;
+		font-weight: 650;
+		color: var(--accent);
+	}
+
+	.ideas-head {
+		margin: 0 0 4px;
+		font-size: 11px;
+		font-weight: 650;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--text-3);
+	}
+
+	.ideas ul {
+		margin: 0;
+		padding-left: 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		font-size: 14px;
+		line-height: 1.4;
+		color: color-mix(in srgb, var(--text) 84%, var(--bg-elev));
+	}
+
+	.ideas .side {
+		margin: 0 6px;
+		padding: 0 6px;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		font-size: 11px;
+		color: var(--text-3);
+		vertical-align: 1px;
 	}
 
 	@keyframes rise {

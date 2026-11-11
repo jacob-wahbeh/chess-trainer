@@ -83,6 +83,12 @@ parallel sessions; each validates its answers with `npm run explain:check -- <us
 
 Redeploy afterwards so the app picks up the new file. Note that the file is public on the hosted site.
 
+Richer, research-backed explanations (the opening's main ideas, where the habit strays from them and the taught move
+carries them out, and written whys for the other moves club players and masters commonly choose) use the optional
+`ideas`, `habit`, `taught` and `alternatives` fields. `scripts/alternatives.ts` finds and grades those other moves
+(Lichess club database + Stockfish); the research → write → check process and its costs are in
+[`../docs/opening-ideas-pipeline.md`](../docs/opening-ideas-pipeline.md). Three cards have them so far.
+
 `npm run masters` gathers the masters data the exports looked up (every `../data/<user>/web-cache.json`) into
 `static/masters.json`, so the app knows book moves and teaches the masters' move without a Lichess login, matching
 the explanations. Lookups the app makes itself (with a login) take precedence. Rerun it after exporting cards.

@@ -664,10 +664,67 @@
 		]
 	},
 	"15856967415293|f3g5": {
-		"headline": "Castle with 7.O-O; the lone 7.Ng5 raid is easily parried",
-		"why": "7.Ng5 moves the knight again to hit f7, but 7...Nh6 covers it, and after 8.O-O dxc3 9.Qb3 O-O 10.Nxc3 Black has castled and you are two pawns down with no attack left. 7.O-O, the top master choice (58.7%), gets your king safe and keeps the gambit's lead in development: after 7...Nf6 8.cxd4 Nxe4 9.d5 Ne7 10.Qd4 you gain time against Black's knights and the game is about level. 7.Qb3 is the other main move.",
-		"principle": "In a gambit your compensation is development, so spend each move bringing a new piece out or castling, not on a one-move threat with a piece that is already out.",
-		"principleId": "development",
+		"headline": "Castle to break the pin on c3, then retake with 8.cxd4",
+		"ideas": [
+			{
+				"title": "Unpin, then rebuild the centre",
+				"side": "you",
+				"text": "The a5-bishop pins your c3 pawn; once your king leaves e1, 8.cxd4 restores your pawns on e4 and d4."
+			},
+			{
+				"title": "Development is your compensation",
+				"side": "you",
+				"text": "You're two pawns down for time and open lines; moving pieces that are already out wastes that pay."
+			},
+			{
+				"title": "Hit f7 with tempo",
+				"side": "you",
+				"text": "Queen on b3 and bishop on c4 aim at f7. A knight jump to g5 only works once Black can no longer cover f7 from h6."
+			},
+			{
+				"title": "Greed needs a spare tempo",
+				"side": "both",
+				"text": "Taking a third pawn on c3 right after you castle is dangerous for Black; after a wasted move it is safe."
+			}
+		],
+		"habit": {
+			"why": "7.Ng5 moves the same knight again while your queenside pieces sleep, and 7...Nh6 covers f7 with a developing move. You castle a move late and Black safely takes a third pawn: 8.O-O dxc3 9.Qb3 O-O 10.Nxc3 d6 leaves you two pawns down with no centre.",
+			"strays": {
+				"idea": "Unpin, then rebuild the centre",
+				"text": "The pin on c3 stays, giving Black time to guard f7 and grab c3."
+			}
+		},
+		"taught": {
+			"why": "Castling ends the pin, so 8.cxd4 is threatened at once. After 7...Nf6 8.cxd4 Nxe4 you gain time with every move, 9.d5 hitting the c6-knight and 10.Qd4 forking the loose e4-knight and g7, and the game stays roughly level despite the pawns.",
+			"enforces": {
+				"idea": "Unpin, then rebuild the centre",
+				"text": "With your king off e1, 8.cxd4 puts a pawn back beside e4."
+			}
+		},
+		"principle": "Your c3 pawn is pinned to your king, so deal with the pin first: 7.O-O makes 8.cxd4 possible at once, while 7.Ng5 gives Black time for 7...Nh6 and 8...dxc3.",
+		"principleId": "pins",
+		"alternatives": [
+			{
+				"uci": "d1b3",
+				"label": "sound",
+				"idea": "Hit f7 with tempo",
+				"before": "Your queen joins the c4-bishop against f7, so Black must spend the reply defending it, as with 7...Qf6. Masters play it in 41% of games.",
+				"after": "7.O-O is just as good and more popular (59%): it breaks the pin first and keeps your queen free for 10.Qd4, while 7.Qb3 makes Black defend f7 first and castles a move later."
+			},
+			{
+				"uci": "f3d4",
+				"label": "mistake",
+				"idea": "Unpin, then rebuild the centre",
+				"before": "7.Nxd4 wins one pawn back and nothing more: after 7...Nge7 Black develops calmly, stays a pawn up, and your e4 pawn stands alone.",
+				"after": "7.O-O keeps the recapture for the c-pawn: after 7...Nf6 8.cxd4 you have pawns on e4 and d4 again. GM Mihail Marin calls 7.Nxd4 illogical for giving that up."
+			}
+		],
+		"sources": [
+			"https://en.wikipedia.org/wiki/Evans_Gambit",
+			"GM Mihail Marin, Beating the Open Games (2008) | https://www.sjakkbutikken.no/media/productimages/preview-beating-the-open-games.pdf",
+			"Chess Opening Theory/1. e4/1...e5/2. Nf3/2...Nc6/3. Bc4/3...Bc5/4. b4/4...Bxb4/5. c3"
+		],
+		"why": "7.Ng5 moves the same knight again while your queenside pieces sleep, and 7...Nh6 covers f7 with a developing move. You castle a move late and Black safely takes a third pawn: 8.O-O dxc3 9.Qb3 O-O 10.Nxc3 d6 leaves you two pawns down with no centre. Castling ends the pin, so 8.cxd4 is threatened at once. After 7...Nf6 8.cxd4 Nxe4 you gain time with every move, 9.d5 hitting the c6-knight and 10.Qd4 forking the loose e4-knight and g7, and the game stays roughly level despite the pawns.",
 		"themes": [
 			"development",
 			"gambits",
@@ -3956,16 +4013,71 @@
 		]
 	},
 	"4886445385944472|c2c3": {
-		"headline": "Resolve the tension with 3.dxe5; 3.c3 invites ...d5",
-		"why": "Black threatens 3...Nxd4, and 3.c3 holds the pawn but lets Black hit back with 3...d5; after 4.dxe5 Be6 5.exd5 Qxd5 6.Nf3 Qxd1+ 7.Kxd1 O-O-O+ the queens are off, your king is in the open and your advantage has vanished. Theory says that both pushing the pawn and taking on e5 are very good for White. 3.dxe5, played by masters 43% of the time, liquidates the centre on your terms: the knight recaptures with 3...Nxe5, and after 4.Nc3 Bc5 5.f4 your pawn kicks it again with gain of space.",
-		"principle": "When your opponent attacks a centre pawn twice, settle the tension on your terms by exchanging or advancing, rather than propping the pawn up in a way that lets them open the centre themselves.",
-		"principleId": "centre",
+		"headline": "Take on e5 and keep c3 for your knight",
+		"ideas": [
+			{
+				"title": "Settle the d4 tension",
+				"side": "both",
+				"text": "Black's pawn and knight both hit d4, so you must push, capture or defend it before 3...Nxd4."
+			},
+			{
+				"title": "Make the knight pay",
+				"side": "you",
+				"text": "Black's knight came out early; the best replies make it move again, as after 3.dxe5 Nxe5 and 5.f4."
+			},
+			{
+				"title": "Keep c3 for your knight",
+				"side": "you",
+				"text": "Your knight belongs on c3, guarding e4 and d5. A pawn there leaves e4 loose."
+			},
+			{
+				"title": "Black's ...d5 break",
+				"side": "opponent",
+				"text": "Against slow set-ups Black frees the game with ...d5, as after 3.c3 d5."
+			}
+		],
+		"habit": {
+			"why": "3.c3 lets Black strike with 3...d5 at your e4 pawn, which no piece defends. After 4.dxe5 Be6 5.exd5 Qxd5 you can't chase the queen with Nc3, and after 6.Nf3 Qxd1+ 7.Kxd1 O-O-O+ your king is stuck in the middle and the game is level.",
+			"strays": {
+				"idea": "Keep c3 for your knight",
+				"text": "The pawn takes the knight's square, so nothing guards e4 against 3...d5."
+			}
+		},
+		"taught": {
+			"why": "3.dxe5 captures first, and after 3...Nxe5 the knight stands in the centre with nothing defending it. 4.Nc3 develops onto the square 3.c3 would have taken, and after 4...Bc5 5.f4 Nc6 the knight is back on c6 while your pawns on e4 and f4 hold the centre.",
+			"enforces": {
+				"idea": "Make the knight pay",
+				"text": "Black's knight spends three moves to end up back on c6 while you gain space."
+			}
+		},
+		"principle": "A knight in the centre with no pawn to protect it is a target: 5.f4 gains space and sends it back, while 3.c3 attacks nothing.",
+		"principleId": "pawn-chase",
+		"alternatives": [
+			{
+				"uci": "d4d5",
+				"label": "sound",
+				"idea": "Make the knight pay",
+				"before": "3.d5 gains space and sends the knight on a long trip, 3...Nce7 4.Nf3 Ng6, and 5.h4 threatens to kick it again.",
+				"after": "3.dxe5 is just as good but keeps the game open: you chase the knight with 4.Nc3 Bc5 5.f4 instead of playing on the wings around a locked centre. Masters prefer it, 43% to 31%."
+			},
+			{
+				"uci": "g1f3",
+				"label": "inaccuracy",
+				"idea": "Black's ...d5 break",
+				"before": "3.Nf3 turns the game into a sound Scotch Game, but after 3...exd4 4.Nxd4 Nf6 5.Nxc6 bxc6 6.Bd3 d5 your knight has moved three times only to be swapped off, and the position is level.",
+				"after": "3.dxe5 keeps your e4 pawn alone in the centre and your knight on c3 guards d5, so Black gets no easy ...d5 and your small edge stays."
+			}
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...Nc6/2. d4/2...e5",
+			"John Watson, Taming Wild Chess Openings (2015) | https://books.google.com/books?id=fidBCwAAQBAJ&pg=PA273",
+			"Nigel Davies, Gambiteer I (2007) | https://books.google.com/books?id=U1SZEQAAQBAJ",
+			"Andrew Martin on the Nimzowitsch (ChessBase) | https://en.chessbase.com/post/andrew-martin-nimzowitsch-defence-1-e4-nc6-review"
+		],
+		"why": "3.c3 lets Black strike with 3...d5 at your e4 pawn, which no piece defends. After 4.dxe5 Be6 5.exd5 Qxd5 you can't chase the queen with Nc3, and after 6.Nf3 Qxd1+ 7.Kxd1 O-O-O+ your king is stuck in the middle and the game is level. 3.dxe5 captures first, and after 3...Nxe5 the knight stands in the centre with nothing defending it. 4.Nc3 develops onto the square 3.c3 would have taken, and after 4...Bc5 5.f4 Nc6 the knight is back on c6 while your pawns on e4 and f4 hold the centre.",
 		"themes": [
 			"centre",
 			"tempo"
-		],
-		"sources": [
-			"Chess Opening Theory/1. e4/1...Nc6/2. d4/2...e5"
 		]
 	},
 	"4907156095699170|c8f5": {
@@ -5083,18 +5195,79 @@
 		]
 	},
 	"6104332673881535|d7d6": {
-		"headline": "Use the Alapin's drawback: 2...Nf6 hits e4 when Nc3 is impossible",
-		"why": "2...d6 is too slow against 2.c3: White plays 3.d4 at once, and after 3...Nf6 4.Bd3 cxd4 5.cxd4 has the two-pawn centre the Alapin aims for, with a comfortable edge. 2...Nf6 develops with an attack on e4, and since the c3 square is taken by a pawn, White cannot defend it with a knight. The main line runs 3.e5 Nd5 4.d4 cxd4 5.cxd4, and 5...d6 then starts chipping at White's pawn chain, with equal chances.",
-		"principle": "Develop with a threat when the opponent's set-up has a hole in its defence: the attacked pawn forces White to react instead of building the centre.",
-		"principleId": "tempo",
+		"headline": "Against 2.c3, hit e4 with 2...Nf6 while White can't play Nc3",
+		"ideas": [
+			{
+				"title": "White wants two centre pawns",
+				"side": "opponent",
+				"text": "2.c3 prepares 3.d4, so White can retake with the c-pawn and keep pawns on d4 and e4."
+			},
+			{
+				"title": "No Nc3 for White",
+				"side": "you",
+				"text": "The c3 pawn takes the knight's square: White can't guard e4 with Nc3 or chase your pieces from d5."
+			},
+			{
+				"title": "Strike the centre at once",
+				"side": "you",
+				"text": "Black's best replies, 2...Nf6 and 2...d5, both hit e4 straight away; slow moves hand White the full centre."
+			},
+			{
+				"title": "Chip at the e5 pawn",
+				"side": "both",
+				"text": "After 3.e5 Nd5 the advanced pawn becomes a target for ...cxd4 and ...d6."
+			}
+		],
+		"habit": {
+			"why": "2...d6 attacks nothing, so White plays 3.d4 and gets the full centre for free. After 3...Nf6 4.Bd3 cxd4 5.cxd4 White has pawns on d4 and e4 and a lasting space edge.",
+			"strays": {
+				"idea": "Strike the centre at once",
+				"text": "2...d6 makes no threat, so 2.c3 gets exactly what it was played for."
+			}
+		},
+		"taught": {
+			"why": "2...Nf6 attacks e4, and with no Nc3 available White usually pushes 3.e5. After 3...Nd5 4.d4 cxd4 5.cxd4 d6 you hit the e5 pawn and the chances are equal.",
+			"enforces": {
+				"idea": "No Nc3 for White",
+				"text": "The knight hits e4 and then sits safely on d5, since no white knight can reach c3."
+			}
+		},
+		"principle": "Contest the centre your opponent is building: 2.c3 prepares 3.d4, so attack e4 with 2...Nf6 now instead of letting White set up pawns on d4 and e4.",
+		"principleId": "centre",
+		"alternatives": [
+			{
+				"uci": "b8c6",
+				"label": "slightly worse",
+				"idea": "White wants two centre pawns",
+				"before": "2...Nc6 develops but lets White play 3.d4, and after 3...cxd4 4.cxd4 White has the two-pawn centre. It's the most common club move here, but rare among masters.",
+				"after": "2...Nf6 gives White no free 3.d4: after 3.e5 Nd5 4.d4 cxd4 5.cxd4 d6 you are already attacking the centre."
+			},
+			{
+				"uci": "e7e6",
+				"label": "slightly worse",
+				"idea": "Strike the centre at once",
+				"before": "2...e6 is solid, but after 3.d4 d5 4.e5 you're in an Advance French, with your light-squared bishop shut in behind the e6 pawn.",
+				"after": "2...Nf6 keeps it a Sicilian: after 3.e5 Nd5 4.d4 cxd4 5.cxd4 d6 the e5 pawn is under attack and your c8-bishop's diagonal stays open."
+			},
+			{
+				"uci": "d7d5",
+				"label": "sound",
+				"idea": "No Nc3 for White",
+				"before": "2...d5 hits back in the centre: after 3.exd5 Qxd5 your queen stands well because no white knight can hit it from c3. It's the old main line, played in a third of master games.",
+				"after": "2...Nf6 is more popular with masters (45% to 33%) and fully level, while 2...d5 opens the centre and often leads to isolated-pawn middlegames or an early queen trade."
+			}
+		],
+		"sources": [
+			"Chess Opening Theory/1. e4/1...c5/2. c3",
+			"Evgeny Sveshnikov, The Complete c3 Sicilian (2010) | https://www.newinchess.com/media/wysiwyg/product_pdf/944.pdf",
+			"https://en.wikipedia.org/wiki/Sicilian_Defence,_Alapin_Variation",
+			"GM Bryan Smith, the c3 Sicilian (chess.com) | https://www.chess.com/article/view/from-opening-to-endgame-the-c3-sicilian"
+		],
+		"why": "2...d6 attacks nothing, so White plays 3.d4 and gets the full centre for free. After 3...Nf6 4.Bd3 cxd4 5.cxd4 White has pawns on d4 and e4 and a lasting space edge. 2...Nf6 attacks e4, and with no Nc3 available White usually pushes 3.e5. After 3...Nd5 4.d4 cxd4 5.cxd4 d6 you hit the e5 pawn and the chances are equal.",
 		"themes": [
 			"development",
 			"centre",
 			"tempo"
-		],
-		"sources": [
-			"Chess Opening Theory/1. e4/1...c5/2. c3",
-			"Chess Opening Theory/1. e4/1...c5/2. c3/2...Nf6"
 		]
 	},
 	"612982152772711|d1b3": {

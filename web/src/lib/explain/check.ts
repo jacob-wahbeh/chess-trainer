@@ -18,8 +18,25 @@ export interface Explanation {
 	/** ...and the foundational one it comes from (principles.ts). */
 	principleId: string;
 	themes?: string[];
-	/** What it draws on: Wikibooks page titles ("Chess Opening Theory/1. e4/...") or URLs. */
+	/** What it draws on: Wikibooks page titles ("Chess Opening Theory/1. e4/..."), URLs, or "Label | URL". */
 	sources?: string[];
+	/** The opening's main ideas, researched (docs/opening-ideas-pipeline.md). Shown once the answer is. */
+	ideas?: { title: string; side: 'you' | 'opponent' | 'both'; text: string }[];
+	/** Why the habit is worse, and which idea it neglects. Replaces splitting `why` when present. */
+	habit?: { why: string; strays?: IdeaLink };
+	/** Why the taught move is right, and which idea it carries out. */
+	taught?: { why: string; enforces?: IdeaLink };
+	/**
+	 * Other common moves here (club or master): `before` is shown as soon as one is played and never names the
+	 * taught move; `after` once the taught move is found or shown.
+	 */
+	alternatives?: { uci: string; label: string; before: string; after: string; idea?: string }[];
+}
+
+/** An opening idea (by title) and a short line on how a move relates to it. */
+export interface IdeaLink {
+	idea: string;
+	text: string;
 }
 
 /** Everything the explanation writer gets for a card (scripts/export-cards.ts). */
@@ -51,6 +68,8 @@ export function sourceLink(source: string): { label: string; url?: string } {
 		const url = `https://en.wikibooks.org/wiki/${encodeURIComponent(source.replaceAll(' ', '_')).replaceAll('%2F', '/')}`;
 		return { label: `Wikibooks, ${source.split('/').at(-1)}`, url };
 	}
+	const [label, url] = source.split(' | ');
+	if (url && /^https?:\/\//.test(url)) return { label, url };
 	if (/^https?:\/\//.test(source)) return { label: new URL(source).hostname.replace(/^www\./, ''), url: source };
 	return { label: source };
 }
