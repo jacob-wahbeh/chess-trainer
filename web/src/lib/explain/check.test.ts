@@ -112,6 +112,10 @@ describe('sourceLink', () => {
 			label: 'Wikibooks, 2...Bc5',
 			url: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...e5/2._Nf3/2...Bc5'
 		});
+		expect(sourceLink('Chess Opening Theory/1. e4/1...c5 | https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...c5')).toEqual({
+			label: 'Wikibooks, 1...c5',
+			url: 'https://en.wikibooks.org/wiki/Chess_Opening_Theory/1._e4/1...c5'
+		});
 		expect(sourceLink('https://www.chess.com/article/view/x')).toEqual({ label: 'chess.com', url: 'https://www.chess.com/article/view/x' });
 		expect(sourceLink('Reuben Fine, The Ideas Behind the Chess Openings')).toEqual({ label: 'Reuben Fine, The Ideas Behind the Chess Openings' });
 	});

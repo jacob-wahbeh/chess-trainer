@@ -72,11 +72,11 @@ export interface ExportCard {
 
 /** A source as a link: Wikibooks theory pages by their last move, URLs by host. */
 export function sourceLink(source: string): { label: string; url?: string } {
-	if (source.startsWith('Chess Opening Theory/')) {
-		const url = `https://en.wikibooks.org/wiki/${encodeURIComponent(source.replaceAll(' ', '_')).replaceAll('%2F', '/')}`;
-		return { label: `Wikibooks, ${source.split('/').at(-1)}`, url };
-	}
 	const [label, url] = source.split(' | ');
+	if (label.startsWith('Chess Opening Theory/')) {
+		const page = `https://en.wikibooks.org/wiki/${encodeURIComponent(label.replaceAll(' ', '_')).replaceAll('%2F', '/')}`;
+		return { label: `Wikibooks, ${label.split('/').at(-1)}`, url: url && /^https?:\/\//.test(url) ? url : page };
+	}
 	if (url && /^https?:\/\//.test(url)) return { label, url };
 	if (/^https?:\/\//.test(source)) return { label: new URL(source).hostname.replace(/^www\./, ''), url: source };
 	return { label: source };
