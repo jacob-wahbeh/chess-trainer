@@ -13,7 +13,9 @@ const log = (s) => {
 };
 
 if (!process.argv.includes('--resume')) {
-	log('load: ' + JSON.stringify(await load(`${BASE}/?user=draco_jaco&period=3&reach=5`)));
+	// --period=N --reach=N override the quick defaults (3 months, reach 5), e.g. to get cards from a longer history.
+	const arg = (k, d) => process.argv.find((x) => x.startsWith(`--${k}=`))?.split('=')[1] ?? d;
+	log('load: ' + JSON.stringify(await load(`${BASE}/?user=draco_jaco&period=${arg('period', 3)}&reach=${arg('reach', 5)}`)));
 }
 const t0 = Date.now();
 let seen = false;

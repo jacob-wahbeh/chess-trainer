@@ -90,7 +90,21 @@ in the drill: main ideas, "Strays from" / "Carries out" tags, and before/after w
 3. Add to the research output: squares/arrows per idea (for drawing ideas on the board) and a family-level ideas
    file (for an Openings page).
 
-**UI ideas from reviewing the pilot on a phone** (for the UI work; nothing built yet):
+**Built in the phone Why sheet (2026-11-10, see docs/mobile-ux/fix-plan.md, batch W):**
+- an Ideas tab (chip);
+- the line's idea as a pill;
+- coloured side dots;
+- "Sources (n)";
+- moves in any text linked to the board;
+- the step note hidden on move 1 when written text covers it;
+- ideas collapsed to titles, with the related one open.
+
+**Content hooks the UI already reads:**
+- `ideas[].arrows` ("e2e4") and `ideas[].squares` ("f7") draw an open idea on the drill position;
+- `themes` shows as tags in the Ideas view;
+- new opening-level sections belong in that view, not under each line.
+
+**UI ideas from reviewing the pilot on a phone** (the original list; see above for what's built):
 1. Tabs in the Why sheet — [This move] [Opening ideas] — instead of appending the ideas under every line.
 2. The line's idea as a pill above its text (✓ Make the knight pay / ✗ Strays from: …) instead of a trailing
    sentence that repeats the paragraph; tapping it opens that idea.

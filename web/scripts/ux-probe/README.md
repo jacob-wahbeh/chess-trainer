@@ -30,7 +30,7 @@ mkdir -p /tmp/ux-probe/bin
 swiftc -O wk/browser.swift -o /tmp/ux-probe/bin/browser          # ~30 s, once per reboot
 (/tmp/ux-probe/bin/browser http://localhost:5174/ > /tmp/ux-probe/browser.out 2>&1 &)
 node smoke.mjs                   # sanity check: viewport, safe areas, trusted clicks
-node prep-wk.mjs                 # import draco_jaco (3 months, reach 5) and wait for cards; a few minutes
+node prep-wk.mjs                 # import draco_jaco (3 months, reach 5; --period=12 --reach=3 for more cards) and wait; ~1 min
 node run-drill.mjs [ask|correct|good|wrong|deck]   # drill states on the Petrov test card
 node run-home.mjs; node run-pages.mjs [home|leaks|lines|explore|settings]
 node summarize.mjs               # one line per target: size, nearest neighbour, gap, SMALL/TIGHT flags

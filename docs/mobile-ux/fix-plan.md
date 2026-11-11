@@ -155,7 +155,31 @@ As built:
   - On the phone, `100dvh` = 852 in the Home Screen app.
   - Copy that's too long for the clamps: check a few cards with `/drill?card=<id>`.
 
-### W: the Why sheet, shorter and more visual (M-L, after A-C; replaces the Why item in G)
+### W: the Why sheet, shorter and more visual (M-L). Built 2026-11-10, waiting for the owner's phone check
+
+**As built:**
+- **Line view:**
+  - an idea pill: ✓ carries out, ✗ strays from, ● relates to; tapping it opens that idea;
+  - the card headline (habit and taught lines only, once shown);
+  - the line's explanation, then "Compared with…" for alternatives;
+  - a step's computed note, except on move 1 when written text covers it.
+- **Moves in the text are links** (`lib/chess/movelinks.ts`, tested). Consecutive moves make one link, to the last of them. The move on the board is filled in. Moves are looked up only in lines already shown as chips, so nothing is revealed early.
+- **Ideas / Principle chip** (after the answer is shown):
+  - the opening name, the `themes` tags and the colour key;
+  - ideas as 48px rows that open in place, with how the habit and taught move relate to each;
+  - the principle, and "Sources (n)".
+  - Ideas start collapsed, with the one the current line relates to open. Older cards get a "Principle" chip instead.
+- **Ready for more content:**
+  - an idea with optional `arrows: ["e2e4"]` / `squares: ["f7"]` (now on the `Explanation` type) draws itself on the drill position while open;
+  - new opening-level sections (themes, plans…) go in the opening view as more rows, not under each line.
+- **Controls:**
+  - a full-width grabber (tap: expand or shrink; drag up or down) replaces the chevron that sat 4px from ✕;
+  - chips are 44px with 8px gaps; ✕ is 8px from the chips;
+  - ‹ › and Play are 44px with 8px gaps;
+  - "Engine line" is a 44px hit area.
+- **The result box opens the sheet on phones** (with a ›): the way in while looking for the taught move, when the footer is [Show it] [Continue].
+- **Measured on the Kennedy card:** every state fits the page; line views need 0-66px of scroll inside the sheet (214px window). The only sub-44px targets left are inline move links.
+
 
 The owner's reaction to the rich cards on the phone: the content is good, but the Why sheet is long and scroll-heavy, some things repeat, and it isn't visual enough.
 
